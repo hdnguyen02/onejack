@@ -1,0 +1,12 @@
+# Build output
+build/
+*.o
+
+# Claude Code local settings
+.claude/settings.local.json
+
+# Large files / videos
+*.iso
+*.qcow2
+*.mp4
+*.webm
