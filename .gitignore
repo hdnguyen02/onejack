@@ -10,3 +10,4 @@ build/
 *.qcow2
 *.mp4
 *.webm
+.superpowers/
