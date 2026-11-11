@@ -58,7 +58,7 @@ File này giải thích từ cơ bản tới các phần dùng trong demo. Đọ
 | **DoS (Denial of Service)** | Tấn công từ chối dịch vụ: làm server hoặc mạng quá tải để người dùng thật không dùng được. |
 | **DDoS** | DoS từ **nhiều** máy cùng lúc (botnet). Demo chỉ mô phỏng **một** máy tấn công cho dễ hiểu. |
 | **Flood** | Kiểu tấn công gửi dồn dập thật nhiều gói. Demo dùng **UDP flood**: 5000 gói/s, mỗi gói 1000 byte, tức khoảng 40 Mbit/s, gấp 4 lần băng thông nút cổ chai. |
-| **IP giả mạo (spoofing)** | Kẻ tấn công ghi IP nguồn giả vào gói, nên chặn theo IP sẽ khó. Demo **không** xử lý trường hợp này (xem mục 9). |
+| **IP giả mạo (spoofing)** | Kẻ tấn công ghi IP nguồn giả vào gói, nên chặn theo IP sẽ khó. Demo **không** xử lý trường hợp này (xem mục 10). |
 
 ---
 
