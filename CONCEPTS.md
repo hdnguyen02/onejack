@@ -154,6 +154,7 @@ Giảng viên thường đánh giá cao khi bạn tự nêu ra hạn chế:
 3. **Chỉ có một kẻ tấn công.** DDoS thật đến từ hàng nghìn máy.
 4. **Chặn vĩnh viễn.** Chưa có cơ chế tự gỡ chặn sau một thời gian (TTL).
 5. **Gửi cảnh báo tới tất cả.** Với mạng lớn cần cơ chế lan truyền thông minh hơn (gossip, gửi theo đường đi của gói).
+6. **Mạng điều khiển là một switch chung.** Ngoài đời, R1, R2, R3 có thể cách nhau hàng trăm km nên không cắm chung switch được. Switch trong demo tượng trưng cho một kênh liên lạc riêng, xem câu hỏi ở mục 11.
 
 **Các hướng phát triển có thật ngoài thực tế:** Remote Triggered Black Hole (RTBH), BGP FlowSpec (các router của nhà mạng báo nhau chặn lưu lượng tấn công), các dịch vụ chống DDoS như Cloudflare. Chúng dùng đúng ý tưởng của đề tài này ở quy mô Internet.
 
@@ -166,4 +167,12 @@ Giảng viên thường đánh giá cao khi bạn tự nêu ra hạn chế:
 - **"Sao client bị trễ mà không mất gói?"** Hàng đợi ở nút cổ chai giới hạn theo số byte. Gói rác 1000 byte tới khi hàng đợi gần đầy thì bị vứt, còn gói truy vấn của client rất nhỏ nên vẫn chen vào được, chỉ phải chờ khoảng 400 ms. Với ứng dụng thật như gọi điện hay game, trễ 400 ms đã là không dùng được.
 - **"Vì sao giới hạn link xuống 10 Mbit/s?"** Để mô phỏng một nút cổ chai thật. Link ảo trong máy tính quá nhanh nên sẽ không thấy nghẽn.
 - **"Cảnh báo bị flood làm mất thì sao?"** Cảnh báo đi trên mạng điều khiển riêng nên không bị ảnh hưởng.
+- **"Ngoài đời các router ở xa nhau, làm sao nối chung một switch?"** Đúng là không nối được, switch trong demo là để đơn giản hóa. Ngoài thực tế, kênh này có thể là:
+  - **Mạng quản lý riêng (out-of-band):** đường truyền riêng chỉ dùng để quản lý thiết bị, tách khỏi đường chở dữ liệu.
+  - **VPN:** đi chung Internet nhưng được mã hóa và tách riêng.
+  - **Đi chung đường nhưng được ưu tiên (QoS):** gói cảnh báo được chen lên đầu hàng đợi.
+  - **BGP FlowSpec:** nhà mạng truyền lệnh chặn từng chặng, từ router này sang router kế bên.
+
+  Ý tưởng của đề tài giữ nguyên: cảnh báo phải đi trên kênh không bị đường đang bị tấn công làm ảnh hưởng.
+- **"R3 có phải là một phần của server không?"** Không. R3 là router riêng đứng ngay trước server, giống router hoặc firewall ở cửa vào mạng của công ty sở hữu server. R1 thường là router của nhà mạng, do bên khác quản lý. Vì vậy R3 không tự cấu hình R1 được mà phải gửi cảnh báo nhờ R1 chặn.
 - **"Kẻ xấu giả cảnh báo thì sao?"** Đó là hạn chế số 1. Hướng khắc phục là xác thực cảnh báo.

@@ -229,6 +229,7 @@ Khi nhận Ctrl+C hoặc SIGTERM, `guard` xóa chain `GUARD` để trả mạng 
 3. **Chỉ có một kẻ tấn công.** DDoS thật đến từ hàng nghìn máy.
 4. **Chặn vĩnh viễn.** Chưa tự gỡ chặn sau một thời gian (TTL).
 5. **Gửi cảnh báo tới mọi node.** Mạng lớn cần cách lan truyền thông minh hơn.
+6. **Mạng điều khiển là một switch chung.** Ngoài thực tế, các router cách nhau rất xa nên không cắm chung một switch được. Kênh này thường là đường truyền quản lý riêng (out-of-band), VPN, hoặc đi chung đường nhưng được ưu tiên (QoS). Nhà mạng còn truyền lệnh chặn từng chặng qua kết nối có sẵn giữa các router (BGP FlowSpec). Ý tưởng giữ nguyên: cảnh báo phải đi trên kênh không bị đường đang bị tấn công làm ảnh hưởng.
 
 Ngoài thực tế, ý tưởng này đã được dùng ở quy mô Internet: BGP FlowSpec, RTBH (Remote Triggered Black Hole).
 
