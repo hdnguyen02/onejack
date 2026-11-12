@@ -42,6 +42,14 @@ stamp() {
     date +%H:%M:%S.%3N
 }
 
+# Đóng dấu giờ lại bằng đồng hồ của máy chạy demo.sh, vì đồng hồ các node EVE
+# lệch nhau tới cả giây. Bỏ giờ do guard tự in (chữ đầu dòng), thay bằng giờ ở đây.
+restamp() {
+    while IFS= read -r line; do
+        echo "$(stamp) ${line#* }"
+    done
+}
+
 "$ROOT/scripts/reset.sh"
 : > "$EVENTS"
 
@@ -50,11 +58,11 @@ echo "=== Lượt '$MODE' bắt đầu (LAB=$LAB) ==="
 "$RUN" server "$BIN/server" > "$OUT/server_$MODE.log" 2>&1 &
 
 if [ "$MODE" = "on" ]; then
-    "$RUN" r3 "$BIN/guard -n R3 -d -i eth1 -t $THRESHOLD $WHITE -P 10.0.99.1 -P 10.0.99.2" >> "$EVENTS" 2>&1 &
-    "$RUN" r1 "$BIN/guard -n R1 -l -b 10.0.99.1 $WHITE" >> "$EVENTS" 2>&1 &
-    "$RUN" r2 "$BIN/guard -n R2 -l -b 10.0.99.2 $WHITE" >> "$EVENTS" 2>&1 &
+    "$RUN" r3 "$BIN/guard -n R3 -d -i eth1 -t $THRESHOLD $WHITE -P 10.0.99.1 -P 10.0.99.2" 2>&1 | restamp >> "$EVENTS" &
+    "$RUN" r1 "$BIN/guard -n R1 -l -b 10.0.99.1 $WHITE" 2>&1 | restamp >> "$EVENTS" &
+    "$RUN" r2 "$BIN/guard -n R2 -l -b 10.0.99.2 $WHITE" 2>&1 | restamp >> "$EVENTS" &
 else
-    "$RUN" r3 "$BIN/guard -n R3 -d -i eth1 -t $THRESHOLD $WHITE" >> "$EVENTS" 2>&1 &
+    "$RUN" r3 "$BIN/guard -n R3 -d -i eth1 -t $THRESHOLD $WHITE" 2>&1 | restamp >> "$EVENTS" &
 fi
 sleep 2
 

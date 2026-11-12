@@ -23,12 +23,14 @@ if [ "$LAB" = "netns" ]; then
     done
 else
     # EVE-NG: mỗi node là một máy ảo riêng nên dừng theo tên là an toàn.
+    # Node Alpine dùng busybox: pkill -x không khớp tên chạy bằng đường dẫn
+    # (/root/guard), nên dùng killall.
     for n in r1 r2 r3; do
-        "$RUN" "$n" "pkill -INT -x guard" >/dev/null 2>&1
+        "$RUN" "$n" "killall -INT guard" >/dev/null 2>&1
     done
     sleep 1
     for n in $NODES; do
-        "$RUN" "$n" "pkill -x guard; pkill -x server; pkill -x client; pkill -x attacker; pkill -f linkmon.sh" >/dev/null 2>&1
+        "$RUN" "$n" "killall guard server client attacker; pkill -f linkmon.sh" >/dev/null 2>&1
     done
 fi
 
