@@ -3,6 +3,7 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <poll.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -96,7 +97,7 @@ int main(int argc, char **argv)
         // Chờ trả lời tối đa 1ms.
         struct pollfd pfd = { .fd = fd, .events = POLLIN };
         if (poll(&pfd, 1, 1) > 0 && (pfd.revents & POLLIN)) {
-            for (;;) {
+            while (true) {
                 ssize_t n = recv(fd, buf, sizeof(buf), MSG_DONTWAIT);
                 if (n < 0) {
                     break;

@@ -1,6 +1,7 @@
 // attacker: flood truy vấn UDP tới server với tốc độ cố định (gói/giây).
 #include <arpa/inet.h>
 #include <netinet/in.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -71,7 +72,7 @@ int main(int argc, char **argv)
     int t = 0;
     struct timespec one_ms = { .tv_sec = 0, .tv_nsec = 1000000 };
 
-    for (;;) {
+    while (true) {
         uint64_t now = now_us();
         if (now >= end) {
             break;

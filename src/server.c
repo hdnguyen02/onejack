@@ -4,6 +4,7 @@
 #include <errno.h>
 #include <netinet/in.h>
 #include <poll.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -97,7 +98,7 @@ int main(int argc, char **argv)
     uint32_t replied = 0;
     char buf[2048];
 
-    for (;;) {
+    while (true) {
         struct pollfd pfd = { .fd = fd, .events = POLLIN };
         poll(&pfd, 1, 100);
 
