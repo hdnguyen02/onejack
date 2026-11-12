@@ -67,4 +67,15 @@ Mở `http://192.168.122.88` (đăng nhập `admin` / `eve`), vào lab `collab-d
 
 ## Bước 5: Chạy demo trên EVE-NG
 
-*(Claude sẽ điền khi tới bước này.)*
+Làm theo mục 5 trong `README.md`. Tóm tắt (không cần sudo):
+
+```
+virsh -c qemu:///system start eve-ng
+ssh root@192.168.122.88
+cd /root/onejack && scripts/lab-up.sh
+scripts/tmux-demo.sh off
+scripts/tmux-demo.sh on
+scripts/plot.sh
+```
+
+- [ ] Quay màn hình hai lượt `off` và `on` làm video dự phòng (Ubuntu: Ctrl + Shift + Alt + R để bắt đầu/dừng quay).
