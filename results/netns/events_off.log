@@ -1,0 +1,4 @@
+10:32:50.544 [R3] khởi động: phát hiện=eth1, nghe cảnh báo=TẮT, hợp tác=TẮT, ngưỡng=200 gói/s
+10:33:07.530 [demo] BẮT ĐẦU TẤN CÔNG
+10:33:07.950 [R3] PHÁT HIỆN 10.0.1.10 (479 gói/s) → CHẶN
+10:33:53.607 [R3] dừng, đã xóa các rule iptables
