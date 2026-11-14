@@ -75,6 +75,8 @@ ssh root@192.168.122.88
 cd /root/onejack && scripts/lab-up.sh
 scripts/tmux-demo.sh off
 scripts/tmux-demo.sh on
+scripts/tmux-demo.sh inband
+scripts/qos-check.sh
 scripts/plot.sh
 ```
 

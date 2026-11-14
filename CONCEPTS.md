@@ -85,6 +85,9 @@ File này giải thích từ cơ bản tới các phần dùng trong demo. Đọ
 | **Chặn ở gần nạn nhân** | Chỉ chặn ở R3, cạnh server. Server được bảo vệ, nhưng link R1→R2→R3 vẫn bị rác làm nghẽn. |
 | **Mạng điều khiển (control / out-of-band network)** | Mạng riêng `10.0.99.0/24` chỉ dùng để gửi cảnh báo. Vì tách khỏi đường đang bị flood nên cảnh báo luôn tới nơi. Mạng thật cũng hay có mạng quản lý riêng kiểu này. |
 | **Data plane / control plane** | Data plane là đường đi của dữ liệu thật (truy vấn). Control plane là đường đi của thông tin điều khiển (cảnh báo). |
+| **Gửi cảnh báo chung đường (in-band)** | Cảnh báo không đi mạng riêng mà đi chung đường với dữ liệu R3 → R2 → R1. Giống thực tế hơn, nhưng cần QoS để cảnh báo không bị kẹt sau đống rác. |
+| **QoS (Quality of Service)** | Phân loại gói và ưu tiên gói quan trọng, giống xe cứu thương được chen lên đầu hàng khi kẹt xe. Gói được **đánh dấu** bằng một ô trong phần đầu gói IP (DSCP, demo dùng giá trị EF, byte TOS = `0xB8`). Router chia hàng đợi làm 2 làn, gói có dấu đi **làn ưu tiên**, luôn được gửi trước. |
+| **Trust boundary** | Ranh giới tin cậy: router ở cửa vào xóa dấu ưu tiên trên gói đến từ bên ngoài, để kẻ tấn công không tự đánh dấu gói rác là ưu tiên. Demo chưa làm bước này. |
 
 **Vì sao node gần server làm nhiệm vụ phát hiện?** Vì node gần nạn nhân thấy rõ nhất ai đang dồn truy vấn vào server. Node ở cửa vào (R1) thì không biết lưu lượng nào là xấu, cho tới khi được báo.
 
@@ -102,7 +105,8 @@ File này giải thích từ cơ bản tới các phần dùng trong demo. Đọ
 | Lượt | Chuyện gì xảy ra | Kết quả mong đợi |
 |---|---|---|
 | **off**, không hợp tác | R3 phát hiện và tự chặn. R1, R2 không biết gì. | Server được bảo vệ, nhưng link R1→R2→R3 vẫn đầy rác, client bị **trễ cao**: RTT từ khoảng 0,2 ms tăng lên khoảng 400 ms. |
-| **on**, có hợp tác | R3 phát hiện, chặn, rồi **gửi cảnh báo** cho R1, R2. R1 chặn ngay ở cửa vào. | Trong 1–2 giây, rác biến mất khỏi mạng, client **trở lại bình thường**. |
+| **on**, có hợp tác | R3 phát hiện, chặn, rồi **gửi cảnh báo** cho R1, R2 qua mạng điều khiển riêng. R1 chặn ngay ở cửa vào. | Trong 1–2 giây, rác biến mất khỏi mạng, client **trở lại bình thường**. |
+| **inband**, có hợp tác | Giống on, nhưng cảnh báo đi **chung đường** R3 → R2 → R1 và được **ưu tiên bằng QoS**. | Giống on: R1 chặn 5 ms sau khi R3 phát hiện. |
 
 **Các chương trình C:**
 
@@ -154,7 +158,8 @@ Giảng viên thường đánh giá cao khi bạn tự nêu ra hạn chế:
 3. **Chỉ có một kẻ tấn công.** DDoS thật đến từ hàng nghìn máy.
 4. **Chặn vĩnh viễn.** Chưa có cơ chế tự gỡ chặn sau một thời gian (TTL).
 5. **Gửi cảnh báo tới tất cả.** Với mạng lớn cần cơ chế lan truyền thông minh hơn (gossip, gửi theo đường đi của gói).
-6. **Mạng điều khiển là một switch chung.** Ngoài đời, R1, R2, R3 có thể cách nhau hàng trăm km nên không cắm chung switch được. Switch trong demo tượng trưng cho một kênh liên lạc riêng, xem câu hỏi ở mục 11.
+6. **Mạng điều khiển là một switch chung (lượt on).** Ngoài đời, R1, R2, R3 có thể cách nhau hàng trăm km nên không cắm chung switch được. Lượt **inband** giải quyết điểm này bằng cách cho cảnh báo đi chung đường kèm QoS. Xem câu hỏi ở mục 11.
+7. **QoS tin vào dấu ưu tiên trên gói.** Kẻ tấn công tự đánh dấu gói rác là ưu tiên thì sẽ chen được vào làn ưu tiên. Ngoài đời xử lý bằng trust boundary (xem mục 6).
 
 **Các hướng phát triển có thật ngoài thực tế:** Remote Triggered Black Hole (RTBH), BGP FlowSpec (các router của nhà mạng báo nhau chặn lưu lượng tấn công), các dịch vụ chống DDoS như Cloudflare. Chúng dùng đúng ý tưởng của đề tài này ở quy mô Internet.
 
@@ -167,12 +172,14 @@ Giảng viên thường đánh giá cao khi bạn tự nêu ra hạn chế:
 - **"Sao client bị trễ mà không mất gói?"** Hàng đợi ở nút cổ chai giới hạn theo số byte. Gói rác 1000 byte tới khi hàng đợi gần đầy thì bị vứt, còn gói truy vấn của client rất nhỏ nên vẫn chen vào được, chỉ phải chờ khoảng 400 ms. Với ứng dụng thật như gọi điện hay game, trễ 400 ms đã là không dùng được.
 - **"Vì sao giới hạn link xuống 10 Mbit/s?"** Để mô phỏng một nút cổ chai thật. Link ảo trong máy tính quá nhanh nên sẽ không thấy nghẽn.
 - **"Cảnh báo bị flood làm mất thì sao?"** Cảnh báo đi trên mạng điều khiển riêng nên không bị ảnh hưởng.
-- **"Ngoài đời các router ở xa nhau, làm sao nối chung một switch?"** Đúng là không nối được, switch trong demo là để đơn giản hóa. Ngoài thực tế, kênh này có thể là:
+- **"Ngoài đời các router ở xa nhau, làm sao nối chung một switch?"** Đúng là không nối được, switch ở lượt on là để đơn giản hóa. Lượt **inband** cho thấy cách làm không cần switch chung: cảnh báo đi chung đường dữ liệu và được ưu tiên bằng QoS. Ngoài thực tế, kênh cảnh báo có thể là:
   - **Mạng quản lý riêng (out-of-band):** đường truyền riêng chỉ dùng để quản lý thiết bị, tách khỏi đường chở dữ liệu.
   - **VPN:** đi chung Internet nhưng được mã hóa và tách riêng.
   - **Đi chung đường nhưng được ưu tiên (QoS):** gói cảnh báo được chen lên đầu hàng đợi.
   - **BGP FlowSpec:** nhà mạng truyền lệnh chặn từng chặng, từ router này sang router kế bên.
 
   Ý tưởng của đề tài giữ nguyên: cảnh báo phải đi trên kênh không bị đường đang bị tấn công làm ảnh hưởng.
+- **"Làm sao chứng minh QoS có tác dụng?"** Chạy `scripts/qos-check.sh`: cho attacker làm nghẽn đường, rồi đo trên cùng con đường đó. Truy vấn thường mất khoảng 400 ms, truy vấn đánh dấu ưu tiên chỉ khoảng 2 ms. Cảnh báo ở lượt inband được đánh dấu giống hệt.
+- **"Sao không dùng luôn QoS để bảo vệ client, khỏi cần chặn?"** Vì dấu ưu tiên chỉ dành cho gói của chính hệ thống (cảnh báo, điều khiển). Nếu ai cũng tự đánh dấu được thì kẻ tấn công cũng làm vậy, và làn ưu tiên lại bị nghẽn. Chặn kẻ tấn công vẫn là cách giải quyết gốc.
 - **"R3 có phải là một phần của server không?"** Không. R3 là router riêng đứng ngay trước server, giống router hoặc firewall ở cửa vào mạng của công ty sở hữu server. R1 thường là router của nhà mạng, do bên khác quản lý. Vì vậy R3 không tự cấu hình R1 được mà phải gửi cảnh báo nhờ R1 chặn.
 - **"Kẻ xấu giả cảnh báo thì sao?"** Đó là hạn chế số 1. Hướng khắc phục là xác thực cảnh báo.

@@ -1,7 +1,9 @@
 #!/bin/bash
 # Chạy một lượt demo và thu số liệu về results/.
 #   demo.sh off : không hợp tác (chỉ R3 tự phát hiện và chặn)
-#   demo.sh on  : có hợp tác (R3 phát hiện, báo cho R1/R2 chặn theo)
+#   demo.sh on     : có hợp tác, cảnh báo đi mạng điều khiển riêng (10.0.99.0/24)
+#   demo.sh inband : có hợp tác, cảnh báo đi CHUNG đường dữ liệu R3 -> R2 -> R1,
+#                    được đánh dấu ưu tiên (QoS) để router cho đi trước
 # Backend chọn bằng biến LAB=netns|eve (xem node-run.sh).
 set -u
 
@@ -15,8 +17,8 @@ THRESHOLD=200        # ngưỡng phát hiện (gói/s)
 # -------------------------------------
 
 MODE="${1:-}"
-if [ "$MODE" != "off" ] && [ "$MODE" != "on" ]; then
-    echo "Cách dùng: $0 off|on" >&2
+if [ "$MODE" != "off" ] && [ "$MODE" != "on" ] && [ "$MODE" != "inband" ]; then
+    echo "Cách dùng: $0 off|on|inband" >&2
     exit 1
 fi
 
@@ -61,6 +63,11 @@ if [ "$MODE" = "on" ]; then
     "$RUN" r3 "$BIN/guard -n R3 -d -i eth1 -t $THRESHOLD $WHITE -P 10.0.99.1 -P 10.0.99.2" 2>&1 | restamp >> "$EVENTS" &
     "$RUN" r1 "$BIN/guard -n R1 -l -b 10.0.99.1 $WHITE" 2>&1 | restamp >> "$EVENTS" &
     "$RUN" r2 "$BIN/guard -n R2 -l -b 10.0.99.2 $WHITE" 2>&1 | restamp >> "$EVENTS" &
+elif [ "$MODE" = "inband" ]; then
+    # R1 nghe trên IP phía R2 (10.0.12.1), R2 nghe trên IP phía R3 (10.0.23.2).
+    "$RUN" r3 "$BIN/guard -n R3 -d -i eth1 -t $THRESHOLD $WHITE -P 10.0.12.1 -P 10.0.23.2 -Q" 2>&1 | restamp >> "$EVENTS" &
+    "$RUN" r1 "$BIN/guard -n R1 -l -b 10.0.12.1 $WHITE" 2>&1 | restamp >> "$EVENTS" &
+    "$RUN" r2 "$BIN/guard -n R2 -l -b 10.0.23.2 $WHITE" 2>&1 | restamp >> "$EVENTS" &
 else
     "$RUN" r3 "$BIN/guard -n R3 -d -i eth1 -t $THRESHOLD $WHITE" 2>&1 | restamp >> "$EVENTS" &
 fi

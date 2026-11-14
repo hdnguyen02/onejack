@@ -1,0 +1,10 @@
+08:00:00.172 [R2] khởi động: phát hiện=TẮT, nghe cảnh báo=BẬT, hợp tác=TẮT, ưu tiên QoS=TẮT, ngưỡng=200 gói/s
+08:00:00.174 [R1] khởi động: phát hiện=TẮT, nghe cảnh báo=BẬT, hợp tác=TẮT, ưu tiên QoS=TẮT, ngưỡng=200 gói/s
+08:00:00.197 [R3] khởi động: phát hiện=eth1, nghe cảnh báo=TẮT, hợp tác=BẬT, ưu tiên QoS=TẮT, ngưỡng=200 gói/s
+08:00:17.013 [demo] BẮT ĐẦU TẤN CÔNG
+08:00:17.576 [R3] PHÁT HIỆN 10.0.1.10 (485 gói/s) → CHẶN, gửi cảnh báo tới 10.0.99.1,10.0.99.2
+08:00:17.581 [R1] NHẬN cảnh báo từ R3 → CHẶN 10.0.1.10
+08:00:17.586 [R2] NHẬN cảnh báo từ R3 → CHẶN 10.0.1.10
+08:01:03.428 [R1] dừng, đã xóa các rule iptables
+08:01:03.586 [R2] dừng, đã xóa các rule iptables
+08:01:03.741 [R3] dừng, đã xóa các rule iptables

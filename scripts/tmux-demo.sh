@@ -5,11 +5,11 @@
 #   ├──────────────────────────────┼──────────────────────────────┤
 #   │ Link R1 -> R2 (Mbit/s)       │ demo.sh <off|on> đang chạy   │
 #   └──────────────────────────────┴──────────────────────────────┘
-# Cách dùng: tmux-demo.sh off|on   (thoát: Ctrl+B rồi D, hoặc gõ exit ở ô demo)
+# Cách dùng: tmux-demo.sh off|on|inband   (thoát: Ctrl+B rồi D, hoặc gõ exit ở ô demo)
 set -u
 MODE="${1:-}"
-if [ "$MODE" != "off" ] && [ "$MODE" != "on" ]; then
-    echo "Cách dùng: $0 off|on" >&2
+if [ "$MODE" != "off" ] && [ "$MODE" != "on" ] && [ "$MODE" != "inband" ]; then
+    echo "Cách dùng: $0 off|on|inband" >&2
     exit 1
 fi
 
@@ -22,7 +22,9 @@ rm -f "$OUT"/*_"$MODE".*
 touch "$OUT/client_$MODE.log" "$OUT/events_$MODE.log" "$OUT/link_$MODE.csv"
 
 if [ "$MODE" = "on" ]; then
-    TITLE="LƯỢT ON: CÓ HỢP TÁC (R3 báo R1, R2 cùng chặn)"
+    TITLE="LƯỢT ON: CÓ HỢP TÁC (R3 báo R1, R2 qua mạng điều khiển riêng)"
+elif [ "$MODE" = "inband" ]; then
+    TITLE="LƯỢT INBAND: CÓ HỢP TÁC (cảnh báo đi chung đường, ưu tiên QoS)"
 else
     TITLE="LƯỢT OFF: KHÔNG HỢP TÁC (chỉ R3 tự chặn)"
 fi

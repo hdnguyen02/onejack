@@ -1,7 +1,8 @@
 // guard: chạy trên router R1/R2/R3.
 //   -d : phát hiện. Bắt gói trên interface -i, đếm gói UDP tới cổng 9000 theo IP nguồn.
 //        IP nào vượt ngưỡng -t (gói/giây) thì chặn bằng iptables. Nếu có -P thì gửi cảnh báo cho peer.
-//   -l : nghe cảnh báo "BLOCK <ip> <node>" trên <-b ctrl_ip>:9999, nhận được thì chặn theo.
+//   -l : nghe cảnh báo "BLOCK <ip> <node>" trên <-b ip>:9999, nhận được thì chặn theo.
+//   -Q : đánh dấu gói cảnh báo là ưu tiên (QoS), để router cho đi trước khi đường bị nghẽn.
 #include <arpa/inet.h>
 #include <errno.h>
 #include <linux/if_ether.h>
@@ -197,12 +198,13 @@ static void handle_alert(void)
 static void usage(const char *prog)
 {
     fprintf(stderr,
-            "Cách dùng: %s -n <tên> [-d -i <iface>] [-t 200] [-l -b <ctrl_ip>] [-P <peer_ip>]... [-W <ip>]...\n"
+            "Cách dùng: %s -n <tên> [-d -i <iface>] [-t 200] [-l -b <ip>] [-P <peer_ip>]... [-W <ip>]... [-Q]\n"
             "  -d        bật phát hiện trên interface -i\n"
             "  -t        ngưỡng gói/giây (mặc định 200)\n"
-            "  -l        nghe cảnh báo trên <ctrl_ip>:%d\n"
+            "  -l        nghe cảnh báo trên <ip>:%d\n"
             "  -P        peer nhận cảnh báo (có -P = chế độ hợp tác)\n"
-            "  -W        IP không bao giờ chặn\n",
+            "  -W        IP không bao giờ chặn\n"
+            "  -Q        đánh dấu gói cảnh báo là ưu tiên (QoS)\n",
             prog, ALERT_PORT);
 }
 
@@ -212,13 +214,14 @@ int main(int argc, char **argv)
     const char *bind_ip = NULL;
     int detect = 0;
     int listen_alerts = 0;
+    int priority = 0;
     uint32_t threshold = 200;
 
     bl_init(&bl);
     rc_init(&rc);
 
     int opt;
-    while ((opt = getopt(argc, argv, "n:i:dt:lb:P:W:")) != -1) {
+    while ((opt = getopt(argc, argv, "n:i:dt:lb:P:W:Q")) != -1) {
         if (opt == 'n') {
             node_name = optarg;
         } else if (opt == 'i') {
@@ -237,6 +240,8 @@ int main(int argc, char **argv)
                 return 1;
             }
             peer_count++;
+        } else if (opt == 'Q') {
+            priority = 1;
         } else if (opt == 'W') {
             uint32_t ip;
             if (parse_ip(optarg, &ip) != 0) {
@@ -268,6 +273,13 @@ int main(int argc, char **argv)
     if (alert_fd < 0) {
         perror("socket");
         return 1;
+    }
+    if (priority) {
+        int tos = TOS_PRIORITY;
+        if (setsockopt(alert_fd, IPPROTO_IP, IP_TOS, &tos, sizeof(tos)) < 0) {
+            perror("setsockopt IP_TOS");
+            return 1;
+        }
     }
     if (listen_alerts) {
         struct sockaddr_in addr;
@@ -311,9 +323,10 @@ int main(int argc, char **argv)
     sigaction(SIGINT, &sa, NULL);
     sigaction(SIGTERM, &sa, NULL);
 
-    log_line("khởi động: phát hiện=%s, nghe cảnh báo=%s, hợp tác=%s, ngưỡng=%u gói/s",
+    log_line("khởi động: phát hiện=%s, nghe cảnh báo=%s, hợp tác=%s, ưu tiên QoS=%s, ngưỡng=%u gói/s",
              detect ? iface : "TẮT",
-             listen_alerts ? "BẬT" : "TẮT", peer_count > 0 ? "BẬT" : "TẮT", threshold);
+             listen_alerts ? "BẬT" : "TẮT", peer_count > 0 ? "BẬT" : "TẮT",
+             priority ? "BẬT" : "TẮT", threshold);
 
     uint64_t next_tick = now_us() + 1000000;
     unsigned char pkt[2048];

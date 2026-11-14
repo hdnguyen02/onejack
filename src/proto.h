@@ -8,6 +8,10 @@
 #define QUERY_PORT 9000
 #define ALERT_PORT 9999
 
+// Giá trị byte TOS của gói được đánh dấu ưu tiên (QoS): DSCP EF = 46, dịch trái 2 bit = 0xB8.
+// Router chia hàng đợi làm 2 làn, gói mang dấu này đi làn ưu tiên (xem lab/r1.sh).
+#define TOS_PRIORITY 0xB8
+
 // Thời gian hiện tại tính bằng micro giây (CLOCK_MONOTONIC).
 uint64_t now_us(void);
 

@@ -7,26 +7,41 @@ Một máy tấn công gửi dồn dập truy vấn rác (UDP flood) tới serve
 - **Không hợp tác:** R3 tự chặn. Server được bảo vệ, nhưng rác vẫn chạy đầy đường R1 → R2 → R3, người dùng thật vẫn bị chậm.
 - **Có hợp tác:** R3 gửi cảnh báo cho R1 và R2. R1 chặn ngay ở cửa vào, mạng thông thoáng lại trong khoảng 1 giây.
 
+Cảnh báo có thể đi theo hai cách, mỗi cách là một lượt demo:
+
+- **`on`:** cảnh báo đi trên một mạng điều khiển riêng.
+- **`inband`:** cảnh báo đi chung đường dữ liệu R3 → R2 → R1, được đánh dấu ưu tiên (QoS) để router cho đi trước đống rác. Cách này giống thực tế hơn, vì ngoài đời các router ở xa nhau, không phải lúc nào cũng có mạng riêng.
+
 Các khái niệm mạng cần biết để trình bày nằm trong [CONCEPTS.md](CONCEPTS.md).
 
 ---
 
 ## 1. Kết quả đo trên EVE-NG
 
-Trung bình sau khi bị tấn công (giây 16 tới 60), lấy từ `scripts/plot.sh results/eve`:
+Trung bình sau khi bị tấn công (giây 16 tới 60), lấy từ `scripts/plot.sh results/eve-v2`:
 
 | Lượt | RTT của client | Mất gói | Lưu lượng link R1 → R2 |
 |---|---|---|---|
-| **off**: không hợp tác | **410 ms** | 0% | **10 Mbit/s** (đầy, toàn rác) |
-| **on**: có hợp tác | **8 ms** (sau 1 giây về ~2 ms) | 0% | **0,2 Mbit/s** |
+| **off**: không hợp tác | **403 ms** | 0% | **10 Mbit/s** (đầy, toàn rác) |
+| **on**: hợp tác, mạng điều khiển riêng | **6,9 ms** (sau 1 giây về ~2 ms) | 0% | **0,18 Mbit/s** |
+| **inband**: hợp tác, chung đường + QoS | **7,2 ms** (sau 1 giây về ~2 ms) | 0% | **0,19 Mbit/s** |
 
-- R3 phát hiện kẻ tấn công **0,7 giây** sau khi bắt đầu tấn công.
-- R1 chặn **2 ms** sau khi R3 phát hiện, nhờ cảnh báo đi trên mạng điều khiển riêng.
+- R3 phát hiện kẻ tấn công khoảng **0,6 giây** sau khi bắt đầu tấn công.
+- R1 chặn **5 ms** sau khi R3 phát hiện, ở cả lượt on lẫn inband.
 - Lúc bình thường RTT khoảng 2 ms.
 - Client không mất gói vì hàng đợi ở nút cổ chai giới hạn theo byte: gói rác 1000 byte bị vứt, còn gói truy vấn nhỏ vẫn chen vào được nhưng phải chờ khoảng 400 ms.
 
-![RTT](results/eve/rtt.png)
-![Link](results/eve/link.png)
+**Kiểm chứng QoS** (`scripts/qos-check.sh`): cho attacker làm nghẽn đường và không bật guard, rồi đo trên cùng con đường đó:
+
+| Loại truy vấn | RTT |
+|---|---|
+| Truy vấn thường | **405 ms** (xếp hàng sau đống rác) |
+| Truy vấn đánh dấu ưu tiên | **1,9 ms** (đi làn ưu tiên) |
+
+Gói cảnh báo ở lượt inband được đánh dấu y như truy vấn ưu tiên, nên dù đường có nghẽn, cảnh báo vẫn tới nơi ngay.
+
+![RTT](results/eve-v2/rtt.png)
+![Link](results/eve-v2/link.png)
 
 ---
 
@@ -38,6 +53,18 @@ Trung bình sau khi bị tấn công (giây 16 tới 60), lấy từ `scripts/pl
  Client   10.0.1.20 ─┘   │             │              │
                          └──── mạng điều khiển 10.0.99.0/24 ────┘
 ```
+
+- Lượt `on` gửi cảnh báo qua mạng điều khiển (đường dưới).
+- Lượt `inband` gửi cảnh báo theo chính đường dữ liệu R3 → R2 → R1 (đường trên), tới IP 10.0.23.2 của R2 và 10.0.12.1 của R1.
+
+**Hàng đợi 2 làn (QoS) trên các link giữa router.** Mỗi chiều của link R1–R2 và R2–R3 bị giới hạn 10 Mbit/s và chia làm 2 làn:
+
+| Làn | Gói nào đi làn này | Ưu tiên |
+|---|---|---|
+| Làn 1 | Gói có byte TOS = `0xB8` (DSCP EF, "ưu tiên cao") | Luôn được gửi trước |
+| Làn 2 | Mọi gói khác | Chỉ được gửi khi làn 1 trống |
+
+Mỗi làn chứa tối đa 500KB, tức khoảng 400 ms ở 10 Mbit/s. Cấu hình bằng `tc` trong hàm `bottleneck` của `lab/r1.sh`, `lab/r2.sh`, `lab/r3.sh`.
 
 | Mạng | Địa chỉ | Dùng để |
 |---|---|---|
@@ -68,7 +95,9 @@ Trong mỗi node: `eth0` là MGMT, `eth1` trở đi là mạng dữ liệu. Chi 
 | `scripts/demo.sh off\|on` | chạy một lượt 60 giây, ghi kết quả vào `results/` |
 | `scripts/plot.sh` | vẽ biểu đồ và in bảng tóm tắt |
 | `scripts/reset.sh` | dừng mọi tiến trình demo, xóa rule chặn |
-| `results/eve/` | kết quả một lần chạy tốt trên EVE |
+| `scripts/qos-check.sh` | kiểm chứng làn ưu tiên: so RTT truy vấn thường và truy vấn ưu tiên khi đường nghẽn |
+| `results/eve-v2/` | kết quả một lần chạy tốt trên EVE (off, on, inband) |
+| `results/eve/`, `results/netns/` | kết quả bản trước, chưa có QoS |
 
 ---
 
@@ -162,10 +191,11 @@ Mỗi lần bật máy:
    cd /root/onejack
    scripts/lab-up.sh          # khoảng 40 giây, phải in SẴN SÀNG
    ```
-3. Chạy hai lượt trên màn hình demo. Mỗi lượt 60 giây, tấn công bắt đầu ở giây 15.
+3. Chạy các lượt trên màn hình demo. Mỗi lượt 60 giây, tấn công bắt đầu ở giây 15.
    ```
-   scripts/tmux-demo.sh off   # chạy xong gõ exit
-   scripts/tmux-demo.sh on    # chạy xong gõ exit
+   scripts/tmux-demo.sh off      # không hợp tác, chạy xong gõ exit
+   scripts/tmux-demo.sh on       # hợp tác qua mạng điều khiển riêng
+   scripts/tmux-demo.sh inband   # hợp tác, cảnh báo đi chung đường + QoS
    ```
 
    Màn hình chia 4 ô:
@@ -182,6 +212,11 @@ Mỗi lần bật máy:
    ```
    Biểu đồ nằm ở `results/rtt.png`, `results/loss.png`, `results/link.png`. Để lấy về máy thật: `scp root@<EVE_IP>:/root/onejack/results/*.png .`
 
+5. (Tùy chọn) Chứng minh làn ưu tiên hoạt động, mất khoảng 20 giây:
+   ```
+   scripts/qos-check.sh
+   ```
+
 Muốn đổi thông số (thời gian, tốc độ tấn công, ngưỡng phát hiện), sửa phần đầu `scripts/demo.sh`.
 
 ---
@@ -197,6 +232,8 @@ lab/netns-up.sh                     # trên Ubuntu thật thì thêm sudo trư�
 LAB=netns scripts/lab-up.sh
 LAB=netns scripts/tmux-demo.sh off
 LAB=netns scripts/tmux-demo.sh on
+LAB=netns scripts/tmux-demo.sh inband
+LAB=netns scripts/qos-check.sh
 lab/netns-down.sh
 ```
 
@@ -209,14 +246,14 @@ lab/netns-down.sh
 | Chương trình | Chạy ở | Làm gì |
 |---|---|---|
 | `server` | Server | Nghe UDP cổng 9000, trả lời mọi truy vấn `Q <số thứ tự> <thời điểm>`, mỗi giây in số gói nhận được. |
-| `client` | Client | Gửi 20 truy vấn/giây, khớp trả lời theo số thứ tự để tính RTT và tỉ lệ mất gói (quá 1 giây không trả lời thì tính là mất), ghi CSV. |
+| `client` | Client | Gửi 20 truy vấn/giây, khớp trả lời theo số thứ tự để tính RTT và tỉ lệ mất gói (quá 1 giây không trả lời thì tính là mất), ghi CSV. Cờ `-Q` đánh dấu truy vấn là ưu tiên, chỉ dùng trong `qos-check.sh`. |
 | `attacker` | Attacker | Gửi 5000 gói UDP/giây, mỗi gói 1000 byte, tức khoảng 40 Mbit/s, gấp 4 lần nút cổ chai. |
 | `guard` | R1, R2, R3 | Xem chi tiết bên dưới. |
 
 `guard` gồm hai phần, chạy trong một vòng lặp `poll()`:
 
-- **Phát hiện (R3, cờ `-d`).** Dùng raw socket `AF_PACKET` để đọc mọi gói đi vào cổng `eth1`. Đếm số gói của từng IP nguồn trong mỗi giây (`ratecount.c`). IP nào vượt ngưỡng 200 gói/giây và không nằm trong whitelist (`-W`) thì bị chặn bằng `iptables -A GUARD -s <ip> -j DROP` (`firewall.c`, gọi qua `fork` + `execvp`, không qua shell). Nếu có danh sách peer (`-P`), R3 gửi cảnh báo `BLOCK <ip> R3` tới từng peer (`alert.c`).
-- **Nghe cảnh báo (R1, R2, cờ `-l`).** Nghe UDP trên mạng điều khiển (`-b`). Nhận cảnh báo hợp lệ thì chặn IP đó. IP đã chặn rồi thì bỏ qua (`blocklist.c`).
+- **Phát hiện (R3, cờ `-d`).** Dùng raw socket `AF_PACKET` để đọc mọi gói đi vào cổng `eth1`. Đếm số gói của từng IP nguồn trong mỗi giây (`ratecount.c`). IP nào vượt ngưỡng 200 gói/giây và không nằm trong whitelist (`-W`) thì bị chặn bằng `iptables -A GUARD -s <ip> -j DROP` (`firewall.c`, gọi qua `fork` + `execvp`, không qua shell). Nếu có danh sách peer (`-P`), R3 gửi cảnh báo `BLOCK <ip> R3` tới từng peer (`alert.c`). Có cờ `-Q` thì gói cảnh báo được đánh dấu ưu tiên bằng `setsockopt(IP_TOS, 0xB8)`, để router cho đi làn 1.
+- **Nghe cảnh báo (R1, R2, cờ `-l`).** Nghe UDP trên IP chỉ định bằng `-b`: IP mạng điều khiển ở lượt on, IP mạng dữ liệu ở lượt inband. Nhận cảnh báo hợp lệ thì chặn IP đó. IP đã chặn rồi thì bỏ qua (`blocklist.c`).
 
 Khi nhận Ctrl+C hoặc SIGTERM, `guard` xóa chain `GUARD` để trả mạng về như cũ.
 
@@ -229,7 +266,8 @@ Khi nhận Ctrl+C hoặc SIGTERM, `guard` xóa chain `GUARD` để trả mạng 
 3. **Chỉ có một kẻ tấn công.** DDoS thật đến từ hàng nghìn máy.
 4. **Chặn vĩnh viễn.** Chưa tự gỡ chặn sau một thời gian (TTL).
 5. **Gửi cảnh báo tới mọi node.** Mạng lớn cần cách lan truyền thông minh hơn.
-6. **Mạng điều khiển là một switch chung.** Ngoài thực tế, các router cách nhau rất xa nên không cắm chung một switch được. Kênh này thường là đường truyền quản lý riêng (out-of-band), VPN, hoặc đi chung đường nhưng được ưu tiên (QoS). Nhà mạng còn truyền lệnh chặn từng chặng qua kết nối có sẵn giữa các router (BGP FlowSpec). Ý tưởng giữ nguyên: cảnh báo phải đi trên kênh không bị đường đang bị tấn công làm ảnh hưởng.
+6. **Mạng điều khiển là một switch chung (lượt on).** Ngoài thực tế, các router cách nhau rất xa nên không cắm chung một switch được. Lượt **inband** đã xử lý điểm này: cảnh báo đi chung đường dữ liệu và được ưu tiên bằng QoS. Ngoài đời còn có các cách khác: đường truyền quản lý riêng (out-of-band), VPN, hoặc nhà mạng truyền lệnh chặn từng chặng qua kết nối có sẵn giữa các router (BGP FlowSpec).
+7. **QoS tin vào dấu ưu tiên trên gói.** Nếu kẻ tấn công cũng đánh dấu gói rác là ưu tiên thì sẽ chen được vào làn 1. Ngoài thực tế, router ở cửa vào xóa dấu ưu tiên trên mọi gói đến từ bên ngoài, chỉ giữ dấu cho gói của chính hệ thống (gọi là "trust boundary"). Demo chưa làm bước này.
 
 Ngoài thực tế, ý tưởng này đã được dùng ở quy mô Internet: BGP FlowSpec, RTBH (Remote Triggered Black Hole).
 
@@ -243,4 +281,4 @@ Ngoài thực tế, ý tưởng này đã được dùng ở quy mô Internet: B
 - [ ] Tập chạy `scripts/tmux-demo.sh off` một lần.
 - [ ] Phóng to chữ terminal (Ctrl + Shift + +) để cả lớp đọc được.
 - [ ] Mở sẵn trang web EVE (`http://<EVE_IP>`, lab `collab-defense`) để chỉ sơ đồ mạng.
-- [ ] Để sẵn video dự phòng và các biểu đồ trong `results/eve/`.
+- [ ] Để sẵn video dự phòng và các biểu đồ trong `results/eve-v2/`.

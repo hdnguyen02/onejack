@@ -1,5 +1,6 @@
 // client: gửi truy vấn đều đặn tới server, mỗi giây in và ghi CSV:
 // t,sent,recv,loss_pct,rtt_avg_ms
+// -Q: đánh dấu truy vấn là ưu tiên (QoS), dùng để kiểm tra làn ưu tiên của router.
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <poll.h>
@@ -22,9 +23,10 @@ int main(int argc, char **argv)
     int rate = 20;
     int duration = 60;
     const char *csv_path = NULL;
+    int priority = 0;
 
     int opt;
-    while ((opt = getopt(argc, argv, "s:p:r:d:o:")) != -1) {
+    while ((opt = getopt(argc, argv, "s:p:r:d:o:Q")) != -1) {
         if (opt == 's') {
             server_ip = optarg;
         } else if (opt == 'p') {
@@ -35,13 +37,15 @@ int main(int argc, char **argv)
             duration = atoi(optarg);
         } else if (opt == 'o') {
             csv_path = optarg;
+        } else if (opt == 'Q') {
+            priority = 1;
         } else {
             server_ip = NULL;
             break;
         }
     }
     if (server_ip == NULL || rate <= 0 || duration <= 0) {
-        fprintf(stderr, "Cách dùng: %s -s <server_ip> [-p 9000] [-r 20] [-d 60] [-o file.csv]\n", argv[0]);
+        fprintf(stderr, "Cách dùng: %s -s <server_ip> [-p 9000] [-r 20] [-d 60] [-o file.csv] [-Q]\n", argv[0]);
         return 1;
     }
 
@@ -58,6 +62,13 @@ int main(int argc, char **argv)
     if (fd < 0 || connect(fd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
         perror("socket/connect");
         return 1;
+    }
+    if (priority) {
+        int tos = TOS_PRIORITY;
+        if (setsockopt(fd, IPPROTO_IP, IP_TOS, &tos, sizeof(tos)) < 0) {
+            perror("setsockopt IP_TOS");
+            return 1;
+        }
     }
 
     FILE *csv = NULL;
