@@ -1,0 +1,25 @@
+[client] t=37 gửi=20 nhận=20 mất=  0.0% rtt=   1.87 ms
+[client] t=38 gửi=20 nhận=20 mất=  0.0% rtt=   1.75 ms
+[client] t=39 gửi=20 nhận=20 mất=  0.0% rtt=   1.75 ms
+[client] t=40 gửi=20 nhận=20 mất=  0.0% rtt=   1.98 ms
+[client] t=41 gửi=20 nhận=20 mất=  0.0% rtt=   2.21 ms
+[client] t=42 gửi=20 nhận=20 mất=  0.0% rtt=   2.28 ms
+[client] t=43 gửi=20 nhận=20 mất=  0.0% rtt=   1.57 ms
+[client] t=44 gửi=20 nhận=20 mất=  0.0% rtt=   1.92 ms
+[client] t=45 gửi=20 nhận=20 mất=  0.0% rtt=   1.77 ms
+[client] t=46 gửi=20 nhận=20 mất=  0.0% rtt=   1.81 ms
+[client] t=47 gửi=20 nhận=20 mất=  0.0% rtt=   1.90 ms
+[client] t=48 gửi=20 nhận=20 mất=  0.0% rtt=   1.72 ms
+[client] t=49 gửi=20 nhận=20 mất=  0.0% rtt=   1.82 ms
+[client] t=50 gửi=20 nhận=20 mất=  0.0% rtt=   1.74 ms
+[client] t=51 gửi=20 nhận=20 mất=  0.0% rtt=   2.38 ms
+[client] t=52 gửi=20 nhận=20 mất=  0.0% rtt=   1.93 ms
+[client] t=53 gửi=20 nhận=20 mất=  0.0% rtt=   2.64 ms
+[client] t=54 gửi=20 nhận=20 mất=  0.0% rtt=   2.12 ms
+[client] t=55 gửi=20 nhận=20 mất=  0.0% rtt=   2.00 ms
+[client] t=56 gửi=20 nhận=20 mất=  0.0% rtt=   2.11 ms
+[client] t=57 gửi=20 nhận=20 mất=  0.0% rtt=   1.82 ms
+[client] t=58 gửi=20 nhận=20 mất=  0.0% rtt=   2.01 ms
+[client] t=59 gửi=20 nhận=20 mất=  0.0% rtt=   2.11 ms
+[client] t=60 gửi=20 nhận=20 mất=  0.0% rtt=   2.14 ms
+

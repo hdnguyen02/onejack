@@ -1,0 +1,25 @@
+== SỰ KIỆN: phát hiện, cảnh báo, chặn ==
+09:31:29.070 [R3] khởi động: phát hiện=eth1, nghe cảnh báo=TẮT, hợp tác=TẮT, ưu tiên QoS=TẮT, ngưỡn
+g=200 gói/s
+09:31:45.903 [demo] BẮT ĐẦU TẤN CÔNG
+09:31:46.469 [R3] PHÁT HIỆN 10.0.1.10 (450 gói/s) → CHẶN
+09:32:32.566 [R3] dừng, đã xóa các rule iptables
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,24 @@
+t=38   10.00 Mbit/s
+t=39   10.04 Mbit/s
+t=40   10.01 Mbit/s
+t=41   10.01 Mbit/s
+t=42   10.02 Mbit/s
+t=43   10.01 Mbit/s
+t=44   10.02 Mbit/s
+t=45   10.02 Mbit/s
+t=46   10.01 Mbit/s
+t=47   10.01 Mbit/s
+t=48   10.01 Mbit/s
+t=49   10.03 Mbit/s
+t=50   10.01 Mbit/s
+t=51   10.01 Mbit/s
+t=52   10.00 Mbit/s
+t=53   10.02 Mbit/s
+t=54   10.02 Mbit/s
+t=55   10.01 Mbit/s
+t=56   10.01 Mbit/s
+t=57   10.01 Mbit/s
+t=58   10.00 Mbit/s
+t=59   10.01 Mbit/s
+t=60   10.01 Mbit/s
+
