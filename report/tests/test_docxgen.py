@@ -32,6 +32,11 @@ class RenderTest(unittest.TestCase):
         self.assertIn('<w:pStyle w:val="Heading3"/>', xml)
         self.assertEqual(xml.count('<w:pStyle w:val="Heading1"/>'), 2)
 
+    def test_chapter_heading_has_colon_like_template(self):
+        xml = render("# GIỚI THIỆU\n\n#! LỜI MỞ ĐẦU", {}, self.media)
+        self.assertIn(">: GIỚI THIỆU<", xml)
+        self.assertIn(">LỜI MỞ ĐẦU<", xml)
+
     def test_escapes_xml_special_chars(self):
         xml = render('a & b < c "d"', {}, self.media)
         self.assertIn("a &amp; b &lt; c", xml)

@@ -120,6 +120,9 @@ def heading(level: int, text: str, facts: dict, numbered: bool = True) -> str:
     extra = ""
     if not numbered:
         extra = '<w:numPr><w:ilvl w:val="0"/><w:numId w:val="0"/></w:numPr>'
+    elif level == 1:
+        # Mẫu đánh số "CHƯƠNG %1" không có khoảng cách; chữ tiêu đề tự bắt đầu bằng ": ".
+        text = ": " + text
     return paragraph(inline_runs(text, facts), f"Heading{level}", extra)
 
 
