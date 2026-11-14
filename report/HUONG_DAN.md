@@ -14,8 +14,6 @@ Dùng Find & Replace (`Ctrl + H`) để thay một lần cho cả file:
 
 | Tìm | Thay bằng |
 |---|---|
-| `[Họ tên]` | Họ tên của bạn |
-| `[HỌ TÊN SINH VIÊN]` | Họ tên viết hoa (bìa) |
 | `[MSSV]` | Mã số sinh viên |
 | `[Lớp]` | Lớp, ví dụ DHKTPM18A |
 | `[Khóa]` | Khóa học |

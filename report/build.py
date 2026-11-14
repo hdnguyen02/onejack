@@ -82,7 +82,7 @@ def end_section_in_last_paragraph(xml: str, sect_pr: str) -> str:
 
 
 def footer_xml(with_page_number: bool) -> str:
-    """Footer: [Họ tên] – [MSSV] bên trái, lớp ở giữa, số trang bên phải (nếu có)."""
+    """Footer: họ tên – MSSV bên trái, lớp ở giữa, số trang bên phải (nếu có)."""
     rpr = '<w:rPr><w:i/><w:sz w:val="24"/></w:rPr>'
     ppr_base = '<w:pStyle w:val="Footer"/><w:spacing w:before="0" w:line="240" w:lineRule="auto"/><w:ind w:firstLine="0"/>'
 
@@ -92,7 +92,7 @@ def footer_xml(with_page_number: bool) -> str:
             f'<w:p><w:pPr>{ppr_base}<w:jc w:val="{align}"/></w:pPr>{runs}</w:p></w:tc>'
         )
 
-    name = f'<w:r>{rpr}<w:t xml:space="preserve">SVTH: [Họ tên] – [MSSV]</w:t></w:r>'
+    name = f'<w:r>{rpr}<w:t xml:space="preserve">SVTH: Trần Viết Đăng Khoa – [MSSV]</w:t></w:r>'
     klass = f'<w:r>{rpr}<w:t xml:space="preserve">Lớp [Lớp]</w:t></w:r>'
     page = ""
     if with_page_number:

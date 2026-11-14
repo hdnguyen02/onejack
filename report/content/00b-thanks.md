@@ -10,4 +10,4 @@ Do thời gian và kiến thức còn hạn chế, khóa luận chắc chắn c�
 
 >> **Sinh viên thực hiện**
 
->> [Họ tên]
+>> Trần Viết Đăng Khoa

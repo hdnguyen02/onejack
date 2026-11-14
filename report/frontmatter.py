@@ -47,7 +47,7 @@ def cover_details_vi() -> str:
     """Phần thông tin trên bìa tiếng Việt, đặt dưới tên đề tài."""
     return (
         line("", before=240)
-        + line("[HỌ TÊN SINH VIÊN] – [MSSV]", size=28, bold=True, before=240)
+        + line("TRẦN VIẾT ĐĂNG KHOA – [MSSV]", size=28, bold=True, before=240)
         + line("Ngành: [Ngành]", size=28, before=360)
         + line("Lớp: [Lớp] – Khóa: [Khóa]", size=26, before=120)
         + line("Giáo viên hướng dẫn: [Học vị] [Tên giáo viên hướng dẫn]", size=28, bold=True, align="left", before=960)
@@ -59,7 +59,7 @@ def cover_en() -> str:
     return (
         line("INDUSTRIAL UNIVERSITY OF HO CHI MINH CITY", size=24, bold=True, new_page=True)
         + line("FACULTY OF INFORMATION TECHNOLOGY", size=24, bold=True, before=60)
-        + line("[HỌ TÊN SINH VIÊN]", size=28, bold=True, before=2400)
+        + line("TRẦN VIẾT ĐĂNG KHOA", size=28, bold=True, before=2400)
         + line(TITLE_EN, size=36, bold=True, before=1800)
         + line("Major: [Ngành]", size=28, before=600)
         + line("Supervisor: [Học vị] [Tên giáo viên hướng dẫn]", size=28, bold=True, align="left", before=2400)
