@@ -51,7 +51,7 @@ def cover_details_vi() -> str:
         + line("Ngành: [Ngành]", size=28, before=360)
         + line("Lớp: [Lớp] – Khóa: [Khóa]", size=26, before=120)
         + line("Giáo viên hướng dẫn: [Học vị] [Tên giáo viên hướng dẫn]", size=28, bold=True, align="left", before=960)
-        + line("TP. HỒ CHÍ MINH, [Năm]", size=26, bold=True, before=1200)
+        + line("TP. HỒ CHÍ MINH, 2026", size=26, bold=True, before=1200)
     )
 
 
@@ -63,7 +63,7 @@ def cover_en() -> str:
         + line(TITLE_EN, size=36, bold=True, before=1800)
         + line("Major: [Ngành]", size=28, before=600)
         + line("Supervisor: [Học vị] [Tên giáo viên hướng dẫn]", size=28, bold=True, align="left", before=2400)
-        + line("HO CHI MINH CITY, [Năm]", size=24, before=2400)
+        + line("HO CHI MINH CITY, 2026", size=24, before=2400)
     )
 
 
@@ -80,7 +80,7 @@ def review_page(title: str, signer: str) -> str:
     xml = page_title(title)
     for _ in range(24):
         xml += dotted_line()
-    xml += line("TP. Hồ Chí Minh, ngày ..... tháng ..... năm [Năm]", align="right", before=240)
+    xml += line("TP. Hồ Chí Minh, ngày ..... tháng ..... năm 2026", align="right", before=240)
     xml += line(signer, bold=True, align="right", before=60)
     xml += line("(Ký và ghi rõ họ tên)", align="right")
     return xml

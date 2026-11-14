@@ -22,7 +22,6 @@ Dùng Find & Replace (`Ctrl + H`) để thay một lần cho cả file:
 | `[Ngành]` | Ngành học (dùng ở bìa, header, bìa tiếng Anh) |
 | `[Học vị]` | ThS. / TS. ... |
 | `[Tên giáo viên hướng dẫn]` | Tên giáo viên hướng dẫn |
-| `[Năm]` | 2026 |
 
 Header và footer cũng có các chỗ trống này. Find & Replace của Word thay được cả trong header và footer.
 

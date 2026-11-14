@@ -6,7 +6,7 @@ Cảm ơn gia đình và bạn bè đã luôn động viên em, nhất là nhữ
 
 Do thời gian và kiến thức còn hạn chế, khóa luận chắc chắn còn nhiều thiếu sót. Em rất mong nhận được ý kiến đóng góp của quý thầy cô để hoàn thiện hơn.
 
->> TP. Hồ Chí Minh, ngày ..... tháng ..... năm [Năm]
+>> TP. Hồ Chí Minh, ngày ..... tháng ..... năm 2026
 
 >> **Sinh viên thực hiện**
 
