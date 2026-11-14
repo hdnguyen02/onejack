@@ -47,10 +47,10 @@ def cover_details_vi() -> str:
     """Phần thông tin trên bìa tiếng Việt, đặt dưới tên đề tài."""
     return (
         line("", before=240)
-        + line("TRẦN VIẾT ĐĂNG KHOA – [MSSV]", size=28, bold=True, before=240)
-        + line("Ngành: [Ngành]", size=28, before=360)
-        + line("Lớp: [Lớp] – Khóa: [Khóa]", size=26, before=120)
-        + line("Giáo viên hướng dẫn: [Học vị] [Tên giáo viên hướng dẫn]", size=28, bold=True, align="left", before=960)
+        + line("TRẦN VIẾT ĐĂNG KHOA – 21143751", size=28, bold=True, before=240)
+        + line("Ngành: Công Nghệ Thông Tin", size=28, before=360)
+        + line("Lớp: DHCNTT17ATT", size=26, before=120)
+        + line("Giáo viên hướng dẫn: ThS. Nguyễn Xuân Lô", size=28, bold=True, align="left", before=960)
         + line("TP. HỒ CHÍ MINH, 2026", size=26, bold=True, before=1200)
     )
 
@@ -61,8 +61,8 @@ def cover_en() -> str:
         + line("FACULTY OF INFORMATION TECHNOLOGY", size=24, bold=True, before=60)
         + line("TRẦN VIẾT ĐĂNG KHOA", size=28, bold=True, before=2400)
         + line(TITLE_EN, size=36, bold=True, before=1800)
-        + line("Major: [Ngành]", size=28, before=600)
-        + line("Supervisor: [Học vị] [Tên giáo viên hướng dẫn]", size=28, bold=True, align="left", before=2400)
+        + line("Major: Information Technology", size=28, before=600)
+        + line("Supervisor: MSc. Nguyen Xuan Lo", size=28, bold=True, align="left", before=2400)
         + line("HO CHI MINH CITY, 2026", size=24, before=2400)
     )
 

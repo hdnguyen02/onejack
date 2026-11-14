@@ -92,8 +92,8 @@ def footer_xml(with_page_number: bool) -> str:
             f'<w:p><w:pPr>{ppr_base}<w:jc w:val="{align}"/></w:pPr>{runs}</w:p></w:tc>'
         )
 
-    name = f'<w:r>{rpr}<w:t xml:space="preserve">SVTH: Trần Viết Đăng Khoa – [MSSV]</w:t></w:r>'
-    klass = f'<w:r>{rpr}<w:t xml:space="preserve">Lớp [Lớp]</w:t></w:r>'
+    name = f'<w:r>{rpr}<w:t xml:space="preserve">SVTH: Trần Viết Đăng Khoa – 21143751</w:t></w:r>'
+    klass = f'<w:r>{rpr}<w:t xml:space="preserve">Lớp DHCNTT17ATT</w:t></w:r>'
     page = ""
     if with_page_number:
         page = (
@@ -118,10 +118,10 @@ def footer_xml(with_page_number: bool) -> str:
 
 
 def fix_header(header: str) -> str:
-    """Header của mẫu: 'Khóa tốt nghiệp chuyên ngành <tô vàng>' -> 'Khóa luận tốt nghiệp chuyên ngành [Ngành]'."""
+    """Header của mẫu: 'Khóa tốt nghiệp chuyên ngành <tô vàng>' -> 'Khóa luận tốt nghiệp chuyên ngành <ngành>'."""
     header = header.replace("<w:highlight w:val=\"yellow\"/>", "")
     header = header.replace(">Khóa </w:t>", ">Khóa luận</w:t>")
-    header = header.replace(">Kỹ Thuật</w:t>", ">[Ngành]</w:t>")
+    header = header.replace(">Kỹ Thuật</w:t>", ">Công Nghệ Thông Tin</w:t>")
     header = header.replace("> Phần Mềm</w:t>", "></w:t>")
     header = header.replace(">, CNTT, Khoa Học Máy Tính</w:t>", "></w:t>")
     return header

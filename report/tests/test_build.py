@@ -56,8 +56,9 @@ class BuildTest(unittest.TestCase):
         first_section = self.document[: self.document.index("</w:sectPr>")]
         self.assertIn('r:id="rIdFooterEmpty"', first_section)
 
-    def test_placeholders_and_template_text(self):
-        self.assertIn("[MSSV]", self.document)
+    def test_student_info_and_template_text(self):
+        self.assertIn("21143751", self.document)
+        self.assertNotIn("[MSSV]", self.document)
         self.assertNotIn("Mẫu Khóa Luận Tốt Nghiệp", self.document)
 
     def test_line_spacing_and_update_fields(self):

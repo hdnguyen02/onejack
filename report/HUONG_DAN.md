@@ -8,22 +8,9 @@ Khi mở file, Word hỏi "This document contains fields that may refer to other
 
 Nếu Word không hỏi, nhấn `Ctrl + A` rồi `F9` để cập nhật toàn bộ.
 
-## 2. Điền các chỗ trống `[...]`
+## 2. Thông tin cá nhân
 
-Dùng Find & Replace (`Ctrl + H`) để thay một lần cho cả file:
-
-| Tìm | Thay bằng |
-|---|---|
-| `[MSSV]` | Mã số sinh viên |
-| `[Lớp]` | Lớp, ví dụ DHKTPM18A |
-| `[Khóa]` | Khóa học |
-| `[Ngành]` | Ngành học (dùng ở bìa, header, bìa tiếng Anh) |
-| `[Học vị]` | ThS. / TS. ... |
-| `[Tên giáo viên hướng dẫn]` | Tên giáo viên hướng dẫn |
-
-Header và footer cũng có các chỗ trống này. Find & Replace của Word thay được cả trong header và footer.
-
-Ở bìa tiếng Anh, `Major: [Ngành]` cần ghi tên ngành bằng tiếng Anh, ví dụ "Software Engineering".
+Đã điền sẵn: họ tên, MSSV 21143751, lớp DHCNTT17ATT, ngành Công Nghệ Thông Tin (tiếng Anh: Information Technology), giáo viên hướng dẫn ThS. Nguyễn Xuân Lô, năm 2026. Bìa không ghi khóa học. Nếu cần ghi khóa, thêm vào dòng "Lớp: DHCNTT17ATT" trên bìa tiếng Việt.
 
 ## 3. Những chỗ phải tự bổ sung
 
@@ -31,7 +18,6 @@ Header và footer cũng có các chỗ trống này. Find & Replace của Word t
 - **Lời mở đầu, mục 1:** câu `[Bổ sung đề tài liên quan của các khóa trước tại Khoa, nếu có.]`. Xóa câu này nếu không có gì để bổ sung.
 - **Tài liệu tham khảo, nhóm Tiếng Việt:** nếu giáo viên yêu cầu tài liệu tiếng Việt thì thêm vào đầu danh mục. Khi đó **phải đánh số lại** toàn bộ danh mục và các trích dẫn `[1]`…`[12]` trong bài, vì số trích dẫn được ghi cố định.
 - **Phụ lục C, D:** điền tiếp kế hoạch và nhật ký cho các tuần sau.
-- **Lời cảm ơn:** chọn "thầy" hoặc "cô" thay cho "thầy/cô".
 
 ## 4. Đọc lại và viết lại
 
