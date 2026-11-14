@@ -10,7 +10,7 @@
 
 [2]. Ferguson P., Senie D. (2000), "Network Ingress Filtering: Defeating Denial of Service Attacks which employ IP Source Address Spoofing", *RFC 2827 (BCP 38)*, Internet Engineering Task Force.
 
-[3]. Handley M., Rescorla E. (2006), "Internet Denial-of-Service Considerations", *RFC 4732*, Internet Engineering Task Force.
+[3]. Handley M., Rescorla E. (2006), "Internet Denial-of-Service Considerations", *RFC 4732*, Internet Architecture Board.
 
 [4]. Kumari W., McPherson D. (2009), "Remote Triggered Black Hole Filtering with Unicast Reverse Path Forwarding (uRPF)", *RFC 5635*, Internet Engineering Task Force.
 
@@ -30,4 +30,4 @@
 
 [11]. EVE-NG, EVE-NG Community Edition (11-2026), https://www.eve-ng.net
 
-[12]. Linux man-pages project, packet(7), tc-tbf(8), tc-prio(8), iptables(8) (11-2026), https://man7.org/linux/man-pages/
+[12]. man7.org, Linux manual pages: packet(7), tc-tbf(8), tc-prio(8), iptables(8) (11-2026), https://man7.org/linux/man-pages/

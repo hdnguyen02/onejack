@@ -4,7 +4,7 @@
 
 Đề tài được giao có tên "Cải thiện hiệu năng mạng thông qua việc cộng tác giữa các node mạng nhằm ngăn cản các truy vấn xấu", yêu cầu lập trình một ứng dụng demo bằng C trên Linux và chạy trong môi trường EVE-NG. Đề bài không kèm tài liệu tham khảo, nên việc đầu tiên là cụ thể hóa ba khái niệm: "truy vấn xấu" là gì, "hiệu năng mạng" đo bằng gì, và "cộng tác" diễn ra giữa những node nào.
 
-Trong đề tài này, **truy vấn** là một gói UDP mà client gửi tới server để hỏi và chờ trả lời, giống như một lần gọi API. **Truy vấn xấu** là truy vấn được gửi ra không phải để dùng mà để làm nghẽn: một địa chỉ IP gửi tới {{attack_rate}} gói mỗi giây, mỗi gói {{attack_size}} byte, trong khi người dùng bình thường chỉ gửi {{client_rate}} gói mỗi giây. **Hiệu năng mạng** được đo bằng hai đại lượng mà người dùng cảm nhận rõ nhất: thời gian khứ hồi (Round-Trip Time – RTT) của từng truy vấn, và lượng dữ liệu đang chạy trên đường truyền giữa các router.
+Trong đề tài này, **truy vấn** là một gói UDP (User Datagram Protocol) mà client gửi tới server để hỏi và chờ trả lời, giống như một lần gọi API (Application Programming Interface) của một dịch vụ web. **Truy vấn xấu** là truy vấn được gửi ra không phải để dùng mà để làm nghẽn: một địa chỉ IP (Internet Protocol) gửi tới {{attack_rate}} gói mỗi giây, mỗi gói {{attack_size}} byte, trong khi người dùng bình thường chỉ gửi {{client_rate}} gói mỗi giây. **Hiệu năng mạng** được đo bằng hai đại lượng mà người dùng cảm nhận rõ nhất: thời gian khứ hồi (Round-Trip Time – RTT) của từng truy vấn, và lượng dữ liệu đang chạy trên đường truyền giữa các router.
 
 Mô hình gồm sáu node nối thành một đường thẳng: attacker và client ở một đầu, server ở đầu kia, ba router R1, R2, R3 ở giữa. Hai đoạn R1–R2 và R2–R3 bị giới hạn {{bottleneck}} Mbit/s để tạo nút cổ chai. Khi attacker bắt đầu gửi rác, R3, router đứng sát server, là nơi thấy rõ nhất ai đang dồn truy vấn vào. Nếu R3 chỉ tự chặn, server được an toàn nhưng rác vẫn chạy đầy hai đoạn phía trước, và client đi chung đường vẫn bị chậm. Nếu R3 báo cho R1 để R1 chặn ngay ở cửa vào, toàn bộ đường truyền phía sau sẽ thông thoáng trở lại. Đó là ý tưởng "cộng tác" mà đề tài muốn chứng minh bằng số liệu.
 
@@ -38,7 +38,7 @@ Bảng: Các mục tiêu cụ thể và cách đánh giá
 Hệ thống gồm bốn chương trình C, mỗi chương trình đóng một vai trong kịch bản:
 
 - **server** nhận truy vấn trên cổng UDP 9000 và trả lời ngay, đồng thời in số truy vấn nhận được mỗi giây theo từng IP nguồn.
-- **client** đóng vai người dùng thật: gửi {{client_rate}} truy vấn mỗi giây có đánh số thứ tự, khớp từng câu trả lời để tính RTT và tỉ lệ mất gói, ghi kết quả mỗi giây ra tệp CSV.
+- **client** đóng vai người dùng thật: gửi {{client_rate}} truy vấn mỗi giây có đánh số thứ tự, khớp từng câu trả lời để tính RTT và tỉ lệ mất gói, ghi kết quả mỗi giây ra tệp CSV (Comma-Separated Values).
 - **attacker** gửi gói UDP liên tục với tốc độ cố định để làm nghẽn đường truyền.
 - **guard** chạy trên router, có hai vai trò bật bằng tham số dòng lệnh: *phát hiện* (đếm gói, chặn kẻ vượt ngưỡng, gửi cảnh báo) và *nghe cảnh báo* (nhận cảnh báo và chặn theo).
 

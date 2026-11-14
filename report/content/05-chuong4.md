@@ -97,7 +97,7 @@ memcpy(&src, pkt + 12, sizeof(src));       // địa chỉ nguồn
 rc_add(&rc, src);
 ```
 
-Trước khi gọi hàm này, vòng lặp bỏ qua những gói có kiểu `PACKET_OUTGOING`, tức gói do chính router gửi ra trên cổng đó. Router chuyển tiếp gói nên một gói có thể đi qua cổng hai lần, và nếu không lọc thì mỗi truy vấn sẽ bị đếm hai lần.
+Trước khi gọi hàm này, vòng lặp bỏ qua những gói có kiểu `PACKET_OUTGOING`. Raw socket gắn vào một cổng nhận bản sao của gói theo cả hai chiều, vào và ra. Bộ lọc này chỉ giữ lại gói đi vào cổng, để lưu lượng do chính router gửi ra trên cổng đó không bao giờ bị tính vào số đếm.
 
 Cứ mỗi giây, hàm `check_rates` lấy danh sách địa chỉ vượt ngưỡng. Với mỗi địa chỉ, guard kiểm tra whitelist, kiểm tra xem đã chặn chưa, gọi iptables để chặn, rồi gửi cảnh báo nếu có peer. Cuối cùng bảng đếm được xóa để bắt đầu giây mới. Khi nhận tín hiệu `SIGINT` hoặc `SIGTERM`, vòng lặp kết thúc và guard gỡ toàn bộ chain `GUARD` trước khi thoát.
 
@@ -172,7 +172,7 @@ Cả 25 ca kiểm thử đều đạt, trên máy phát triển và trên máy E
 
 ### Kết quả ba lượt demo
 
-Ba lượt được chạy liên tiếp trên lab EVE-NG với cùng thông số: client {{client_rate}} gói/giây, attacker {{attack_rate}} gói/giây × {{attack_size}} byte bắt đầu từ giây {{attack_at}}, ngưỡng {{threshold}} gói/giây. Trước khi bị tấn công, RTT trung bình của client là {{rtt_base}} ms. Bảng dưới lấy trung bình từ giây {{attack_at}} trở đi.
+Ba lượt được chạy liên tiếp trên lab EVE-NG với cùng thông số: client {{client_rate}} gói/giây, attacker {{attack_rate}} gói/giây × {{attack_size}} byte bắt đầu từ giây {{attack_at}}, ngưỡng {{threshold}} gói/giây. Trước khi bị tấn công, RTT trung bình của client là {{rtt_base}} ms. Bảng dưới lấy trung bình các giây sau giây thứ {{attack_at}}, tức từ lúc bị tấn công tới hết lượt.
 
 Bảng: Kết quả đo ba lượt demo trên EVE-NG
 | Lượt | RTT trung bình | Mất gói | Lưu lượng R1 → R2 | R3 phát hiện sau | R1 chặn sau khi R3 phát hiện |
@@ -187,7 +187,7 @@ Bảng: Kết quả đo ba lượt demo trên EVE-NG
 
 Ở lượt **off**, R3 chặn attacker chưa tới một giây sau khi tấn công bắt đầu, server không còn nhận gói rác. Nhưng đường R1 → R2 vẫn chạy kín {{link_off}} Mbit/s cho tới hết lượt, và RTT của client nằm ở mức {{rtt_off}} ms, gấp hơn một trăm lần lúc bình thường. Server được bảo vệ, còn mạng thì không.
 
-Ở hai lượt có hợp tác, R1 nhận cảnh báo và chặn chỉ vài mili giây sau R3. Ngay giây kế tiếp, lưu lượng trên link về gần như chỉ còn của client, RTT trở lại khoảng {{rtt_base}} ms. Con số trung bình {{rtt_on}} ms và {{rtt_inband}} ms cao hơn mức bình thường chỉ vì có một giây đầu tiên của cuộc tấn công, trước khi kịp phát hiện. Client không mất gói ở cả ba lượt. Lý do là hàng đợi giới hạn theo byte, như đã phân tích ở mục 2.2.2: gói truy vấn nhỏ vẫn chen được vào hàng đợi, chỉ phải chờ lâu.
+Ở hai lượt có hợp tác, R1 nhận cảnh báo và chặn chỉ vài mili giây sau R3. Cần lưu ý các mốc thời gian này được đóng dấu khi dòng log về tới máy chạy `demo.sh` qua kết nối SSH, nên có sai số cỡ vài mili giây. Con số cho biết bậc độ lớn, không phải độ trễ chính xác của gói cảnh báo. Ngay giây kế tiếp, lưu lượng trên link về gần như chỉ còn của client, RTT trở lại khoảng {{rtt_base}} ms. Con số trung bình {{rtt_on}} ms và {{rtt_inband}} ms cao hơn mức bình thường chỉ vì có một giây đầu tiên của cuộc tấn công, trước khi kịp phát hiện. Client không mất gói ở cả ba lượt. Lý do là hàng đợi giới hạn theo byte, như đã phân tích ở mục 2.2.2: gói truy vấn nhỏ vẫn chen được vào hàng đợi, chỉ phải chờ lâu.
 
 Kết quả lượt **inband** gần như trùng với lượt **on**. Điều này đúng với dự đoán: cảnh báo đi theo chiều R3 → R2 → R1, ngược chiều với lưu lượng tấn công, nên chiều này không bị nghẽn. Để biết QoS có thực sự giữ cho cảnh báo đi được khi đường nghẽn hay không, cần một phép đo riêng.
 

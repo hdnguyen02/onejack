@@ -37,6 +37,7 @@ HEADER_RID = "rId9"        # header1.xml của mẫu: dòng thông tin khóa lu�
 FIRST_HEADER_RID = "rId25"  # header2.xml của mẫu: trống, dùng cho trang bìa
 FOOTER_PAGE_RID = "rIdFooterPage"
 FOOTER_INFO_RID = "rIdFooterInfo"
+FOOTER_EMPTY_RID = "rIdFooterEmpty"
 
 W_NS = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
 R_NS = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
@@ -45,8 +46,9 @@ A_NS = "http://schemas.openxmlformats.org/drawingml/2006/main"
 WP_NS = "http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"
 
 
-def section_properties(footer_rid: str, start_page: bool = False, title_page: bool = False) -> str:
-    xml = f'<w:sectPr><w:headerReference w:type="default" r:id="{HEADER_RID}"/>'
+def section_properties(footer_rid: str, start_page: bool = False, title_page: bool = False,
+                       header_rid: str = HEADER_RID) -> str:
+    xml = f'<w:sectPr><w:headerReference w:type="default" r:id="{header_rid}"/>'
     if title_page:
         xml += f'<w:headerReference w:type="first" r:id="{FIRST_HEADER_RID}"/>'
     xml += f'<w:footerReference w:type="default" r:id="{footer_rid}"/>'
@@ -64,6 +66,19 @@ def section_properties(footer_rid: str, start_page: bool = False, title_page: bo
 def section_break(footer_rid: str, start_page: bool = False, title_page: bool = False) -> str:
     """Đoạn rỗng mang sectPr: kết thúc một section, section sau bắt đầu ở trang mới."""
     return f"<w:p><w:pPr>{section_properties(footer_rid, start_page, title_page)}</w:pPr></w:p>"
+
+
+def empty_footer_xml() -> str:
+    return (
+        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+        f'<w:ftr xmlns:w="{W_NS}" xmlns:r="{R_NS}"><w:p/></w:ftr>'
+    )
+
+
+def end_section_in_last_paragraph(xml: str, sect_pr: str) -> str:
+    """Đặt sectPr vào đoạn cuối (thay vì thêm một đoạn rỗng có thể tràn sang trang trắng)."""
+    index = xml.rindex("</w:pPr>")
+    return xml[:index] + sect_pr + xml[index:]
 
 
 def footer_xml(with_page_number: bool) -> str:
@@ -156,9 +171,11 @@ def front_matter(facts: dict, media: MediaRegistry) -> str:
     abstract = render((CONTENT / "00a-abstract.md").read_text(encoding="utf-8"), facts, media, CONTENT)
     thanks = render((CONTENT / "00b-thanks.md").read_text(encoding="utf-8"), facts, media, CONTENT)
     abbrev = render((CONTENT / "00c-abbrev.md").read_text(encoding="utf-8"), facts, media, CONTENT)
+    # Hai trang bìa là một section riêng: header trống (header2 của mẫu), footer trống.
+    covers_end = section_properties(FOOTER_EMPTY_RID, title_page=True, header_rid=FIRST_HEADER_RID)
     return (
-        frontmatter.cover_en()
-        + frontmatter.page_title("ABSTRACT") + abstract
+        end_section_in_last_paragraph(frontmatter.cover_en(), covers_end)
+        + frontmatter.page_title("ABSTRACT", new_page=False) + abstract
         + frontmatter.page_title("LỜI CẢM ƠN") + thanks
         + frontmatter.review_page("NHẬN XÉT CỦA GIÁO VIÊN HƯỚNG DẪN", "Giáo viên hướng dẫn")
         + frontmatter.review_page("NHẬN XÉT CỦA GIÁO VIÊN PHẢN BIỆN", "Giáo viên phản biện")
@@ -203,7 +220,8 @@ def update_settings(work: Path) -> None:
     settings_path.write_text(settings, encoding="utf-8")
 
 
-def build(out: Path) -> Path:
+def build(out: Path, publish: bool = False) -> Path:
+    """Sinh file vào thư mục out. publish=True mới chép đè file nộp report/BaoCao_KLTN_onejack.docx."""
     out.mkdir(parents=True, exist_ok=True)
     facts = load_facts(ROOT / "results/eve-v2-report", ROOT / "scripts/demo.sh")
     media = MediaRegistry()
@@ -229,7 +247,7 @@ def build(out: Path) -> Path:
         body = (
             cover_vi(document)
             + front_matter(facts, media)
-            + section_break(FOOTER_INFO_RID, title_page=True)
+            + section_break(FOOTER_INFO_RID)
             + render_files(MAIN_FILES, facts, media, break_first=False, state=state)
             + section_break(FOOTER_PAGE_RID, start_page=True)
             + render_files(APPENDIX_FILES, facts, media, break_first=False, state=state)
@@ -240,6 +258,7 @@ def build(out: Path) -> Path:
 
         (work / "word/footerPage.xml").write_text(footer_xml(True), encoding="utf-8")
         (work / "word/footerInfo.xml").write_text(footer_xml(False), encoding="utf-8")
+        (work / "word/footerEmpty.xml").write_text(empty_footer_xml(), encoding="utf-8")
         header_path = work / "word/header1.xml"
         header_path.write_text(fix_header(header_path.read_text(encoding="utf-8")), encoding="utf-8")
 
@@ -249,6 +268,7 @@ def build(out: Path) -> Path:
         new_rels = (
             f'<Relationship Id="{FOOTER_PAGE_RID}" Type="{footer_type}" Target="footerPage.xml"/>'
             f'<Relationship Id="{FOOTER_INFO_RID}" Type="{footer_type}" Target="footerInfo.xml"/>'
+            f'<Relationship Id="{FOOTER_EMPTY_RID}" Type="{footer_type}" Target="footerEmpty.xml"/>'
             + write_media(work, media)
         )
         rels_path.write_text(rels.replace("</Relationships>", new_rels + "</Relationships>"), encoding="utf-8")
@@ -259,6 +279,7 @@ def build(out: Path) -> Path:
         overrides = (
             f'<Override PartName="/word/footerPage.xml" ContentType="{footer_ct}"/>'
             f'<Override PartName="/word/footerInfo.xml" ContentType="{footer_ct}"/>'
+            f'<Override PartName="/word/footerEmpty.xml" ContentType="{footer_ct}"/>'
         )
         types_path.write_text(types.replace("</Types>", overrides + "</Types>"), encoding="utf-8")
 
@@ -279,9 +300,10 @@ def build(out: Path) -> Path:
                 if path.is_file():
                     z.write(path, path.relative_to(work).as_posix())
 
-    shutil.copyfile(target, ROOT / "report" / OUTPUT_NAME)
+    if publish:
+        shutil.copyfile(target, ROOT / "report" / OUTPUT_NAME)
     return target
 
 
 if __name__ == "__main__":
-    print(build(ROOT / "report/out"))
+    print(build(ROOT / "report/out", publish=True))

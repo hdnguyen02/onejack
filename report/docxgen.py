@@ -225,7 +225,8 @@ def image(path: Path, media: MediaRegistry) -> str:
         cy = cy * MAX_IMAGE_EMU // cx
         cx = MAX_IMAGE_EMU
     rid = media.add(path)
-    pic_id = len(media.items())
+    # Bắt đầu từ 1000 để không trùng id hình vẽ có sẵn trên bìa của file mẫu.
+    pic_id = 1000 + len(media.items())
     name = escape(Path(path).name)
     drawing = (
         "<w:drawing>"

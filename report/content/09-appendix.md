@@ -21,7 +21,6 @@ scripts/plot.sh                     # bảng tóm tắt và biểu đồ
 Hàm được gọi mỗi giây ở router làm nhiệm vụ phát hiện (trích nguyên văn từ `src/guard.c`).
 
 ```
-
 // Mỗi giây: tìm IP vượt ngưỡng, chặn, gửi cảnh báo.
 static void check_rates(uint32_t threshold)
 {
@@ -53,6 +52,7 @@ static void check_rates(uint32_t threshold)
         }
     }
     rc_reset(&rc);
+}
 ```
 
 **C. Kế hoạch thực hiện**

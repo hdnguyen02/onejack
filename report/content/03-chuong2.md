@@ -16,7 +16,7 @@ Biết một thành phần nằm ở tầng nào cho biết nó "nhìn thấy" g
 
 UDP (User Datagram Protocol) là giao thức tầng giao vận đơn giản nhất: mỗi gói được gửi đi độc lập, không bắt tay trước, không xác nhận, không gửi lại khi mất [[REF:9]]. Tiêu đề UDP chỉ có bốn trường: cổng nguồn, cổng đích, độ dài và mã kiểm tra. Vì không phải chờ phản hồi, một máy có thể bắn ra hàng nghìn gói UDP mỗi giây với rất ít tài nguyên. Đây vừa là ưu điểm cho các dịch vụ cần nhanh như DNS hay game, vừa là lý do UDP hay bị dùng để tấn công làm nghẽn.
 
-Trên Linux, chương trình C làm việc với mạng thông qua socket. Với UDP, trình tự thường gặp là: `socket()` tạo socket kiểu `SOCK_DGRAM`, `bind()` gắn socket vào một cổng để nhận dữ liệu, `sendto()` và `recvfrom()` gửi, nhận từng gói kèm địa chỉ bên kia. Khi một chương trình phải theo dõi nhiều socket cùng lúc, hàm `poll()` cho phép chờ trên tất cả, socket nào có dữ liệu thì xử lý socket đó. Đề tài dùng đúng bộ hàm này cho cả bốn chương trình, không dùng thêm thư viện mạng nào khác.
+Trên Linux, chương trình C làm việc với mạng thông qua socket. Với UDP, trình tự thường gặp là: `socket()` tạo socket kiểu `SOCK_DGRAM`, `bind()` gắn socket vào một cổng để nhận dữ liệu, `sendto()` và `recvfrom()` gửi, nhận từng gói kèm địa chỉ bên kia. Phía chỉ nói chuyện với một địa chỉ cố định có thể gọi `connect()` một lần rồi dùng `send()` và `recv()` cho gọn. Khi một chương trình phải theo dõi nhiều socket cùng lúc, hàm `poll()` cho phép chờ trên tất cả, socket nào có dữ liệu thì xử lý socket đó. Các chương trình của đề tài chỉ dùng những hàm hệ thống này, không dùng thêm thư viện mạng nào khác.
 
 ## Hiệu năng mạng
 

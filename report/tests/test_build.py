@@ -1,4 +1,7 @@
+import hashlib
+import re
 import subprocess
+import tempfile
 import unittest
 import zipfile
 from pathlib import Path
@@ -16,7 +19,11 @@ VALIDATE = Path(
 class BuildTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.docx = build(ROOT / "report/out")
+        deliverable = ROOT / "report/BaoCao_KLTN_onejack.docx"
+        cls.before = hashlib.sha256(deliverable.read_bytes()).hexdigest() if deliverable.exists() else None
+        cls.tmp = tempfile.TemporaryDirectory()
+        cls.docx = build(Path(cls.tmp.name))
+        cls.after = hashlib.sha256(deliverable.read_bytes()).hexdigest() if deliverable.exists() else None
         with zipfile.ZipFile(cls.docx) as z:
             cls.document = z.read("word/document.xml").decode("utf-8")
             cls.styles = z.read("word/styles.xml").decode("utf-8")
@@ -31,9 +38,23 @@ class BuildTest(unittest.TestCase):
         )
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
-    def test_three_sections_and_page_numbers(self):
-        self.assertEqual(self.document.count("<w:sectPr"), 3)
+    @classmethod
+    def tearDownClass(cls):
+        cls.tmp.cleanup()
+
+    def test_build_does_not_touch_deliverable(self):
+        self.assertEqual(self.before, self.after)
+
+    def test_drawing_ids_unique(self):
+        ids = re.findall(r'<wp:docPr id="(\d+)"', self.document)
+        self.assertEqual(len(ids), len(set(ids)), ids)
+
+    def test_sections_and_page_numbers(self):
+        # bìa (không header/footer), trang đầu, nội dung (số trang từ 1), phụ lục
+        self.assertEqual(self.document.count("<w:sectPr"), 4)
         self.assertIn('<w:pgNumType w:start="1"/>', self.document)
+        first_section = self.document[: self.document.index("</w:sectPr>")]
+        self.assertIn('r:id="rIdFooterEmpty"', first_section)
 
     def test_placeholders_and_template_text(self):
         self.assertIn("[MSSV]", self.document)

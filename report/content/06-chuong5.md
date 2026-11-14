@@ -7,7 +7,7 @@
 Bảng: Đối chiếu kết quả với mục tiêu
 | STT | Mục tiêu | Kết quả đo được | Đánh giá |
 |---|---|---|---|
-| 1 | Phát hiện kẻ tấn công nhanh | R3 chặn sau {{detect_on}} đến {{detect_inband}} giây kể từ lúc tấn công | Đạt |
+| 1 | Phát hiện kẻ tấn công nhanh | R3 chặn chưa tới một giây sau khi tấn công: {{detect_off}} giây (off), {{detect_on}} giây (on), {{detect_inband}} giây (inband) | Đạt |
 | 2 | Chặn được ở cửa vào nhờ hợp tác | R1 chặn sau {{block_on_ms}} ms (on) và {{block_inband_ms}} ms (inband) kể từ lúc R3 phát hiện | Đạt |
 | 3 | Giải phóng đường truyền | Link R1 → R2 giảm từ {{link_off}} Mbit/s xuống {{link_on}} Mbit/s | Đạt |
 | 4 | Người dùng thật trở lại bình thường | RTT trung bình giảm từ {{rtt_off}} ms xuống {{rtt_on}} ms, sau một giây về khoảng {{rtt_base}} ms | Đạt |

@@ -14,3 +14,6 @@ build/
 
 # Report build output (PDF, preview images)
 report/out/
+
+# Python cache
+__pycache__/

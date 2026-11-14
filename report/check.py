@@ -158,7 +158,7 @@ def content_pages(pdf: Path) -> int:
 
 def main() -> int:
     out = ROOT / "report/out"
-    docx = build(out)
+    docx = build(out, publish=True)
     pdf = out / "BaoCao_KLTN_onejack.pdf"
     export_pdf_with_updated_indexes(docx, pdf)
 
