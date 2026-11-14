@@ -29,6 +29,22 @@ BULLET_NUM_ID = 8                # danh sách gạch đầu dòng có sẵn tron
 CODE_SIZE = 24                   # 12pt
 
 
+class RenderState:
+    """Trạng thái đánh số đi xuyên qua nhiều file nội dung: chương hiện tại và số hình/bảng trong chương."""
+
+    def __init__(self):
+        self.chapter = 0
+        self.counters = {}
+
+    def new_chapter(self):
+        self.chapter += 1
+        self.counters = {}
+
+    def next_number(self, label: str) -> int:
+        self.counters[label] = self.counters.get(label, 0) + 1
+        return self.counters[label]
+
+
 class MediaRegistry:
     """Ghi nhớ các ảnh đã chèn, mỗi ảnh một rId."""
 
@@ -107,12 +123,16 @@ def field(instr: str, shown: str) -> str:
     )
 
 
-def caption(label: str, title: str, facts: dict, keep_next: bool) -> str:
-    """Nhãn kiểu 'Hình 2.1 Tên', số chương lấy từ Heading 1 gần nhất."""
-    runs = run(f"{label} ")
-    runs += field("STYLEREF 1 \\s", "1")
-    runs += run(".")
-    runs += field(f"SEQ {label} \\* ARABIC \\s 1", "1")
+def caption(label: str, title: str, facts: dict, keep_next: bool, state: RenderState) -> str:
+    """Nhãn kiểu 'Hình 2.1 Tên'.
+    Số chương ghi thẳng bằng chữ (LibreOffice không tính được STYLEREF). Số thứ tự là trường SEQ
+    để danh mục hình/bảng tự cập nhật; nhãn đầu tiên của mỗi chương có \\r 1 để đánh lại từ 1."""
+    number = state.next_number(label)
+    instr = f"SEQ {label} \\* ARABIC"
+    if number == 1:
+        instr += " \\r 1"
+    runs = run(f"{label} {state.chapter}.")
+    runs += field(instr, str(number))
     runs += run(" ") + inline_runs(title, facts)
     extra = "<w:keepNext/>" if keep_next else ""
     return paragraph(runs, "Caption", extra)
@@ -218,7 +238,10 @@ def split_row(line: str) -> list:
     return [cell.strip() for cell in line.strip().strip("|").split("|")]
 
 
-def render(markup: str, facts: dict, media: MediaRegistry, base_dir: Path = Path(".")) -> str:
+def render(markup: str, facts: dict, media: MediaRegistry, base_dir: Path = Path("."),
+           state: RenderState = None) -> str:
+    if state is None:
+        state = RenderState()
     lines = markup.splitlines()
     xml = ""
     i = 0
@@ -254,7 +277,7 @@ def render(markup: str, facts: dict, media: MediaRegistry, base_dir: Path = Path
                     rows.append(cells)
                 i += 1
             if pending_caption is not None:
-                xml += caption("Bảng", pending_caption, facts, keep_next=True)
+                xml += caption("Bảng", pending_caption, facts, keep_next=True, state=state)
                 pending_caption = None
             xml += table(rows, facts)
             continue
@@ -265,7 +288,7 @@ def render(markup: str, facts: dict, media: MediaRegistry, base_dir: Path = Path
             if not path.is_absolute():
                 path = base_dir / path
             xml += image(path, media)
-            xml += caption("Hình", figure.group(1), facts, keep_next=False)
+            xml += caption("Hình", figure.group(1), facts, keep_next=False, state=state)
             i += 1
             continue
 
@@ -276,6 +299,7 @@ def render(markup: str, facts: dict, media: MediaRegistry, base_dir: Path = Path
         elif stripped.startswith("## "):
             xml += heading(2, stripped[3:], facts)
         elif stripped.startswith("# "):
+            state.new_chapter()
             xml += heading(1, stripped[2:], facts)
         elif stripped.startswith(">> "):
             extra = '<w:spacing w:before="0"/><w:ind w:firstLine="0"/><w:jc w:val="right"/>'

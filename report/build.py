@@ -19,7 +19,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from report import frontmatter  # noqa: E402
-from report.docxgen import MediaRegistry, render  # noqa: E402
+from report.docxgen import MediaRegistry, RenderState, render  # noqa: E402
 from report.facts import load_facts  # noqa: E402
 
 TEMPLATE = ROOT / "report/template/MauTrinhBayDoAn.docx"
@@ -141,10 +141,11 @@ def add_page_break_before(xml: str) -> str:
     return re.sub(r'(<w:pStyle w:val="[^"]+"/>)', r"\1<w:pageBreakBefore/>", xml, count=1)
 
 
-def render_files(names: list, facts: dict, media: MediaRegistry, break_first: bool) -> str:
+def render_files(names: list, facts: dict, media: MediaRegistry, break_first: bool,
+                 state: RenderState) -> str:
     xml = ""
     for index, name in enumerate(names):
-        part = render((CONTENT / name).read_text(encoding="utf-8"), facts, media, CONTENT)
+        part = render((CONTENT / name).read_text(encoding="utf-8"), facts, media, CONTENT, state)
         if index > 0 or break_first:
             part = add_page_break_before(part)
         xml += part
@@ -206,6 +207,7 @@ def build(out: Path) -> Path:
     out.mkdir(parents=True, exist_ok=True)
     facts = load_facts(ROOT / "results/eve-v2-report", ROOT / "scripts/demo.sh")
     media = MediaRegistry()
+    state = RenderState()
 
     with tempfile.TemporaryDirectory() as tmp:
         work = Path(tmp)
@@ -228,9 +230,9 @@ def build(out: Path) -> Path:
             cover_vi(document)
             + front_matter(facts, media)
             + section_break(FOOTER_INFO_RID, title_page=True)
-            + render_files(MAIN_FILES, facts, media, break_first=False)
+            + render_files(MAIN_FILES, facts, media, break_first=False, state=state)
             + section_break(FOOTER_PAGE_RID, start_page=True)
-            + render_files(APPENDIX_FILES, facts, media, break_first=False)
+            + render_files(APPENDIX_FILES, facts, media, break_first=False, state=state)
             + section_properties(FOOTER_INFO_RID)
         )
         head = document[: document.index("<w:body>") + len("<w:body>")]

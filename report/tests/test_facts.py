@@ -35,6 +35,11 @@ class FactsTest(unittest.TestCase):
         self.assertEqual(f["bottleneck"], "10")
         self.assertEqual(f["queue_kb"], "500")
 
+    def test_baseline_and_queue_delay(self):
+        f = load_facts(ROOT / "results/eve-v2-report", ROOT / "scripts/demo.sh")
+        self.assertEqual(f["rtt_base"], "2,24")
+        self.assertEqual(f["queue_delay_ms"], "400")
+
     def test_english_variants(self):
         f = load_facts(ROOT / "results/eve-v2-report", ROOT / "scripts/demo.sh")
         self.assertEqual(f["rtt_off_en"], "407.97")

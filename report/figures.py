@@ -271,6 +271,17 @@ def tmux_inband():
     img.save(OUT / "tmux_inband.png", dpi=(DPI, DPI))
 
 
+def eve_placeholder():
+    """Khung chờ: người dùng thay bằng ảnh chụp giao diện web EVE-NG mở lab collab-defense."""
+    c = Canvas(7)
+    c.draw.rectangle([10, 10, WIDTH - 10, c.img.height - 10], outline=GREY, width=4)
+    c.text((WIDTH / 2, c.img.height / 2),
+           "[Ảnh chụp giao diện EVE-NG: lab collab-defense với 6 node]\n"
+           "Mở http://<IP máy EVE>, vào lab collab-defense, chụp màn hình\n"
+           "rồi dán đè lên khung này (giữ nguyên nhãn hình bên dưới).", F_TEXT, GREY)
+    c.save("eve_placeholder.png")
+
+
 def charts():
     subprocess.run([str(ROOT / "scripts/plot.sh"), str(DATA)], check=True, stdout=subprocess.DEVNULL)
     for name in ["rtt.png", "link.png"]:
@@ -287,6 +298,7 @@ def main():
     topology()
     guard_flow()
     tmux_inband()
+    eve_placeholder()
     charts()
     for path in sorted(OUT.glob("*.png")):
         print(path.name)

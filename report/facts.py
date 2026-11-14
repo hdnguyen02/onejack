@@ -28,6 +28,19 @@ def average_after_attack(csv_path: Path, column: int) -> float:
     return total / count
 
 
+def average_before_attack(csv_path: Path, column: int) -> float:
+    """Trung bình một cột CSV trên các dòng có t < ATTACK_AT (lúc mạng còn bình thường)."""
+    total = 0.0
+    count = 0
+    lines = csv_path.read_text().splitlines()
+    for line in lines[1:]:
+        fields = line.split(",")
+        if int(fields[0]) < ATTACK_AT:
+            total += float(fields[column])
+            count += 1
+    return total / count
+
+
 def seconds_of_day(stamp: str) -> float:
     hours, minutes, seconds = stamp.split(":")
     return int(hours) * 3600 + int(minutes) * 60 + float(seconds)
@@ -82,6 +95,8 @@ def load_facts(results_dir: Path, demo_sh: Path) -> dict:
         if "block" in times:
             facts[f"block_{mode}_ms"] = str(round((times["block"] - times["detect"]) * 1000))
 
+    facts["rtt_base"] = vn_number(average_before_attack(results_dir / "client_off.csv", 4), 2)
+
     normal, priority = qos_rtts(results_dir / "qos-check-eve.txt")
     facts["qos_normal_eve"] = vn_number(normal, 2)
     facts["qos_prio_eve"] = vn_number(priority, 2)
@@ -105,6 +120,8 @@ def load_facts(results_dir: Path, demo_sh: Path) -> dict:
     facts["bottleneck"] = re.search(r'TC_RATE:-(\d+)mbit', router).group(1)
     queue_bytes = int(re.search(r"bfifo limit (\d+)", router).group(1))
     facts["queue_kb"] = str(queue_bytes // 1000)
+    # Thời gian để xả hết một hàng đợi đầy qua nút cổ chai: byte * 8 / (Mbit/s).
+    facts["queue_delay_ms"] = str(round(queue_bytes * 8 / (int(facts["bottleneck"]) * 1_000_000) * 1000))
 
     # Bản tiếng Anh (dùng cho Abstract): dấu chấm thập phân, dấu phẩy hàng nghìn.
     english = {}

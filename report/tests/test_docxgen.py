@@ -5,7 +5,7 @@ from xml.dom import minidom
 
 from PIL import Image
 
-from report.docxgen import MediaRegistry, render
+from report.docxgen import MediaRegistry, RenderState, render
 
 NS = (
     'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" '
@@ -92,6 +92,18 @@ class RenderTest(unittest.TestCase):
         xml = render("| STT | Mục tiêu dài dài dài dài dài dài dài | Cách đo dài dài dài dài dài dài dài dài dài dài dài dài |\n|---|---|---|\n| 1 | a | b |", {}, self.media)
         first_width = int(xml.split('<w:gridCol w:w="')[1].split('"')[0])
         self.assertGreaterEqual(first_width, 900)
+
+    def test_caption_numbers_follow_chapter(self):
+        state = RenderState()
+        table = "Bảng: T\n| A |\n|---|\n| 1 |"
+        render("# MỘT\n\n" + table + "\n\n" + table, {}, self.media, state=state)
+        xml = render("# HAI\n\n" + table + "\n\n" + table, {}, self.media, state=state)
+        captions = [p for p in xml.split("</w:p>") if 'w:val="Caption"' in p]
+        self.assertIn(">Bảng 2.<", captions[0])
+        self.assertIn("SEQ Bảng \\* ARABIC \\r 1", captions[0])
+        self.assertIn("<w:t>1</w:t>", captions[0])
+        self.assertNotIn("\\r 1", captions[1])
+        self.assertIn("<w:t>2</w:t>", captions[1])
 
     def test_bullets(self):
         xml = render("- một\n- hai", {}, self.media)
