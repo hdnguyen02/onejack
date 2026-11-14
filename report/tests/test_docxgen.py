@@ -83,6 +83,16 @@ class RenderTest(unittest.TestCase):
         self.assertIn('<w:jc w:val="right"/>', xml)
         self.assertIn(">Sinh viên thực hiện<", xml)
 
+    def test_bold_only_paragraph_keeps_with_next(self):
+        xml = render("**2. Ý nghĩa**\n\nĐoạn sau.", {}, self.media)
+        first = xml.split("</w:p>")[0]
+        self.assertIn("<w:keepNext/>", first)
+
+    def test_short_column_not_too_narrow(self):
+        xml = render("| STT | Mục tiêu dài dài dài dài dài dài dài | Cách đo dài dài dài dài dài dài dài dài dài dài dài dài |\n|---|---|---|\n| 1 | a | b |", {}, self.media)
+        first_width = int(xml.split('<w:gridCol w:w="')[1].split('"')[0])
+        self.assertGreaterEqual(first_width, 900)
+
     def test_bullets(self):
         xml = render("- một\n- hai", {}, self.media)
         self.assertEqual(xml.count('<w:pStyle w:val="ListParagraph"/>'), 2)

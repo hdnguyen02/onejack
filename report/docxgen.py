@@ -22,6 +22,7 @@ from xml.sax.saxutils import escape
 from PIL import Image
 
 TEXT_WIDTH_DXA = 8788            # A4 trừ lề trái 3,5cm và lề phải 2cm
+MIN_COLUMN_DXA = 900             # đủ chỗ cho chữ "STT" in đậm mà không gãy dòng
 MAX_IMAGE_EMU = 5400000          # 15cm
 EMU_PER_INCH = 914400
 BULLET_NUM_ID = 8                # danh sách gạch đầu dòng có sẵn trong numbering.xml của mẫu
@@ -154,8 +155,10 @@ def column_widths(rows: list) -> list:
         longest = max(len(row[col]) for row in rows if col < len(row))
         weights.append(min(max(longest, 6), 60))
     total = sum(weights)
-    widths = [TEXT_WIDTH_DXA * w // total for w in weights]
-    widths[-1] += TEXT_WIDTH_DXA - sum(widths)
+    widths = [max(TEXT_WIDTH_DXA * w // total, MIN_COLUMN_DXA) for w in weights]
+    # Bù phần dư hoặc thiếu vào cột rộng nhất để tổng luôn bằng TEXT_WIDTH_DXA.
+    widest = widths.index(max(widths))
+    widths[widest] += TEXT_WIDTH_DXA - sum(widths)
     return widths
 
 
@@ -282,6 +285,9 @@ def render(markup: str, facts: dict, media: MediaRegistry, base_dir: Path = Path
         elif re.match(r"\d+\. ", stripped):
             number, text = stripped.split(". ", 1)
             xml += numbered(number, text, facts)
+        elif stripped.startswith("**") and stripped.endswith("**") and stripped.count("**") == 2:
+            # Đoạn chỉ có chữ đậm là tiêu đề nhỏ: giữ cùng trang với đoạn sau.
+            xml += paragraph(inline_runs(stripped, facts), "", "<w:keepNext/>")
         else:
             xml += paragraph(inline_runs(stripped, facts))
         i += 1
