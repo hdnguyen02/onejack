@@ -109,6 +109,7 @@ class RenderTest(unittest.TestCase):
         xml = render("[3]. Postel J. (1980), *User Datagram Protocol*, RFC 768.", {}, self.media)
         self.assertIn('<w:ind w:left="567" w:hanging="567"/>', xml)
         self.assertIn(">[3]. <", xml)
+        self.assertIn('<w:jc w:val="left"/>', xml)
         self.assertIn("<w:i/>", xml)
 
     def test_appendix_captions_use_pl(self):

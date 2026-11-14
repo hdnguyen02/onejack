@@ -313,7 +313,7 @@ def render(markup: str, facts: dict, media: MediaRegistry, base_dir: Path = Path
             xml += heading(1, stripped[2:], facts)
         elif re.match(r"\[\d+\]\. ", stripped):
             number, text = stripped.split(". ", 1)
-            extra = '<w:spacing w:before="60"/><w:ind w:left="567" w:hanging="567"/>'
+            extra = '<w:spacing w:before="60"/><w:ind w:left="567" w:hanging="567"/><w:jc w:val="left"/>'
             xml += paragraph(run(f"{number}. ") + inline_runs(text, facts), "", extra)
         elif stripped.startswith(">> "):
             extra = '<w:spacing w:before="0"/><w:ind w:firstLine="0"/><w:jc w:val="right"/>'
