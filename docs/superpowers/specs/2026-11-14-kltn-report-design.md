@@ -23,7 +23,7 @@ Người dùng cần **một file Word báo cáo khóa luận tốt nghiệp (KL
 
 **Không làm**
 
-- **Không** viết theo cách cố qua mặt công cụ phát hiện văn bản do AI viết. Đây là quyết định của Claude và đã nói rõ với người dùng. Bản do Claude viết là **bản nháp đúng nội dung và đúng mẫu**. Người dùng sẽ tự viết lại bằng lời của mình, và tự kiểm tra quy định của trường về việc dùng AI.
+- Không cam kết về kết quả của bất kỳ công cụ phát hiện AI nào, và không dùng mẹo kỹ thuật để đánh lừa công cụ. Người dùng muốn **văn phong tự nhiên như người viết**, đây là yêu cầu về chất lượng viết (mục 5a). Bản do Claude viết là bản nháp, người dùng sẽ đọc và sửa lại theo giọng của mình. Việc khai báo dùng AI là do người dùng quyết định theo quy định của trường.
 - Không làm slide thuyết trình hay poster.
 
 **Tuyệt đối tránh** (dù file vẫn mở được bình thường, gặp một trong các lỗi này là coi như hỏng)
@@ -82,6 +82,22 @@ Lấy từ `2. Yeu cau trinh bay ...docx`, `3. MAU BAO CAO KLTN-BT HOC PHAN.doc`
 ## 5. Dàn ý và phân bổ trang (~37 trang nội dung)
 
 Lời văn: tiếng Việt học thuật, rõ ràng. **Khóa luận cá nhân (1 sinh viên)**, xưng "em" ở Lời mở đầu, Lời cảm ơn và Kết luận; các chương kỹ thuật viết khách quan ("đề tài", "hệ thống"). Bìa và footer chỉ có một bộ `[Họ tên]`, `[MSSV]`, `[Lớp]`. Mỗi khái niệm gắn với cách đề tài dùng nó.
+
+### 5a. Văn phong
+
+- **Cụ thể, bám dự án:** dùng số liệu, tên file, cấu hình thật, và các khó khăn thật đã gặp khi làm. Ví dụ:
+  - Trên Alpine, `pkill -x` không khớp tên tiến trình nên lượt demo bị treo; đã đổi sang `killall`.
+  - Đồng hồ các node lệch nhau nên phải đóng dấu giờ lại bằng đồng hồ máy EVE.
+  - Đoán sai định dạng MAC của EVE làm 6 node trùng một IP.
+  - Cảnh báo đi ngược chiều với lưu lượng tấn công nên lượt inband gần bằng lượt on.
+- **Tránh văn rập khuôn:**
+  - Không mở bằng câu sáo kiểu "Trong thời đại công nghệ số...".
+  - Không kết đoạn bằng câu tổng kết lặp lại ý.
+  - Không ép mọi danh sách thành 3 ý.
+  - Không lạm dụng từ nối như "Bên cạnh đó", "Ngoài ra", "Tóm lại".
+  - Câu dài ngắn xen kẽ, ưu tiên đoạn văn liền mạch hơn gạch đầu dòng ở các phần lập luận.
+- **Giọng sinh viên:** Lời mở đầu, Lời cảm ơn và Kết luận xưng "em", có tự nhận xét về quá trình làm và điều rút ra. Các chương kỹ thuật viết khách quan, đi thẳng vào vấn đề.
+- **Chỉ đưa thuật ngữ khi dùng tới,** giải thích bằng ví dụ trong chính demo.
 
 ### Lời mở đầu (~2 trang)
 
