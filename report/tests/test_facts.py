@@ -35,6 +35,13 @@ class FactsTest(unittest.TestCase):
         self.assertEqual(f["bottleneck"], "10")
         self.assertEqual(f["queue_kb"], "500")
 
+    def test_english_variants(self):
+        f = load_facts(ROOT / "results/eve-v2-report", ROOT / "scripts/demo.sh")
+        self.assertEqual(f["rtt_off_en"], "407.97")
+        self.assertEqual(f["qos_normal_dropped_en"], "55,965")
+        self.assertEqual(f["attack_rate_en"], "5,000")
+        self.assertEqual(f["threshold_en"], "200")
+
 
 if __name__ == "__main__":
     unittest.main()

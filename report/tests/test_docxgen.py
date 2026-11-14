@@ -78,6 +78,11 @@ class RenderTest(unittest.TestCase):
         self.assertIn("<w:b/>", xml)
         self.assertIn("[3]", xml)
 
+    def test_right_aligned_line(self):
+        xml = render(">> Sinh viên thực hiện", {}, self.media)
+        self.assertIn('<w:jc w:val="right"/>', xml)
+        self.assertIn(">Sinh viên thực hiện<", xml)
+
     def test_bullets(self):
         xml = render("- một\n- hai", {}, self.media)
         self.assertEqual(xml.count('<w:pStyle w:val="ListParagraph"/>'), 2)

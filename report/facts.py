@@ -106,4 +106,10 @@ def load_facts(results_dir: Path, demo_sh: Path) -> dict:
     queue_bytes = int(re.search(r"bfifo limit (\d+)", router).group(1))
     facts["queue_kb"] = str(queue_bytes // 1000)
 
+    # Bản tiếng Anh (dùng cho Abstract): dấu chấm thập phân, dấu phẩy hàng nghìn.
+    english = {}
+    for key, value in facts.items():
+        english[key + "_en"] = value.replace(".", "_").replace(",", ".").replace("_", ",")
+    facts.update(english)
+
     return facts

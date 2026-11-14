@@ -10,6 +10,7 @@ Cú pháp (xem plan, Task 2):
   ``` ... ```      khối code
   Bảng: tên        nhãn đặt trên bảng pipe ngay sau
   ![tên](file)     ảnh, nhãn đặt dưới
+  >> chữ           đoạn căn phải (chữ ký, ngày tháng)
   {{khóa}}         số liệu từ facts
   [[REF:n]]        trích dẫn [n]
 Chỉ dùng style có sẵn trong file mẫu của Khoa.
@@ -273,6 +274,9 @@ def render(markup: str, facts: dict, media: MediaRegistry, base_dir: Path = Path
             xml += heading(2, stripped[3:], facts)
         elif stripped.startswith("# "):
             xml += heading(1, stripped[2:], facts)
+        elif stripped.startswith(">> "):
+            extra = '<w:spacing w:before="0"/><w:ind w:firstLine="0"/><w:jc w:val="right"/>'
+            xml += paragraph(inline_runs(stripped[3:], facts), "", extra)
         elif stripped.startswith("- "):
             xml += bullet(stripped[2:], facts)
         elif re.match(r"\d+\. ", stripped):
