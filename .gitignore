@@ -11,3 +11,6 @@ build/
 *.mp4
 *.webm
 .superpowers/
+
+# Report build output (PDF, preview images)
+report/out/
