@@ -69,7 +69,7 @@ class Canvas:
 
 
 def tcpip():
-    c = Canvas(9)
+    c = Canvas(6.6)
     layers = [
         ("Tầng ứng dụng", "server, client, attacker, guard (mã C của đề tài)"),
         ("Tầng giao vận", "UDP: truy vấn ở cổng 9000, cảnh báo ở cổng 9999"),
@@ -77,11 +77,11 @@ def tcpip():
         ("Tầng liên kết", "Ethernet; raw socket AF_PACKET của guard đọc gói ở đây"),
     ]
     for i, (name, note) in enumerate(layers):
-        y = 40 + i * 165
-        c.box(40, y, 330, 130, name, fill=LIGHT, f=F_BOLD)
-        c.text((790, y + 65), note, F_TEXT)
+        y = 25 + i * 125
+        c.box(40, y, 330, 95, name, fill=LIGHT, f=F_BOLD)
+        c.text((790, y + 47), note, F_TEXT)
         if i < 3:
-            c.arrow((205, y + 130), (205, y + 165), GREY, 3, 12)
+            c.arrow((205, y + 95), (205, y + 125), GREY, 3, 12)
     c.save("tcpip.png")
 
 

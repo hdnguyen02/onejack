@@ -109,6 +109,8 @@ def export_pdf_with_updated_indexes(docx: Path, pdf: Path) -> None:
         hidden.Name = "Hidden"
         hidden.Value = True
         document = desktop.loadComponentFromURL(uno.systemPathToFileUrl(str(docx)), "_blank", 0, (hidden,))
+        if document is None:
+            raise RuntimeError(f"LibreOffice không mở được {docx}, chạy validate.py để xem lỗi XML")
         indexes = document.getDocumentIndexes()
         for i in range(indexes.getCount()):
             indexes.getByIndex(i).update()
@@ -128,6 +130,7 @@ def export_pdf_with_updated_indexes(docx: Path, pdf: Path) -> None:
             office.wait(timeout=20)
         except subprocess.TimeoutExpired:
             office.kill()
+            office.wait()
 
 
 def page_texts(pdf: Path) -> list:

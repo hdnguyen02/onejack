@@ -41,6 +41,8 @@ FOOTER_INFO_RID = "rIdFooterInfo"
 W_NS = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
 R_NS = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
 PIC_NS = "http://schemas.openxmlformats.org/drawingml/2006/picture"
+A_NS = "http://schemas.openxmlformats.org/drawingml/2006/main"
+WP_NS = "http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"
 
 
 def section_properties(footer_rid: str, start_page: bool = False, title_page: bool = False) -> str:
@@ -215,8 +217,12 @@ def build(out: Path) -> Path:
 
         document_path = work / "word/document.xml"
         document = document_path.read_text(encoding="utf-8")
-        if "xmlns:pic=" not in document[:5000]:
-            document = document.replace("<w:document ", f'<w:document xmlns:pic="{PIC_NS}" ', 1)
+        # Ảnh chèn vào dùng các tiền tố pic:, a:, wp:; file mẫu không khai báo sẵn hết ở thẻ gốc.
+        root_end = document.index(">", document.index("<w:document "))
+        root = document[:root_end]
+        for prefix, uri in [("pic", PIC_NS), ("a", A_NS), ("wp", WP_NS)]:
+            if f"xmlns:{prefix}=" not in root:
+                document = document.replace("<w:document ", f'<w:document xmlns:{prefix}="{uri}" ', 1)
 
         body = (
             cover_vi(document)
