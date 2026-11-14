@@ -11,6 +11,7 @@ Cú pháp (xem plan, Task 2):
   Bảng: tên        nhãn đặt trên bảng pipe ngay sau
   ![tên](file)     ảnh, nhãn đặt dưới
   >> chữ           đoạn căn phải (chữ ký, ngày tháng)
+  [n]. mục         một mục tài liệu tham khảo, các dòng sau thụt vào 1cm
   {{khóa}}         số liệu từ facts
   [[REF:n]]        trích dẫn [n]
 Chỉ dùng style có sẵn trong file mẫu của Khoa.
@@ -33,11 +34,18 @@ class RenderState:
     """Trạng thái đánh số đi xuyên qua nhiều file nội dung: chương hiện tại và số hình/bảng trong chương."""
 
     def __init__(self):
+        self.chapter_number = 0
         self.chapter = 0
         self.counters = {}
 
     def new_chapter(self):
-        self.chapter += 1
+        self.chapter_number += 1
+        self.chapter = self.chapter_number
+        self.counters = {}
+
+    def appendix(self):
+        """Hình, bảng trong phụ lục đánh số PL.1, PL.2..."""
+        self.chapter = "PL"
         self.counters = {}
 
     def next_number(self, label: str) -> int:
@@ -293,6 +301,8 @@ def render(markup: str, facts: dict, media: MediaRegistry, base_dir: Path = Path
             continue
 
         if stripped.startswith("#! "):
+            if stripped[3:].strip() == "PHỤ LỤC":
+                state.appendix()
             xml += heading(1, stripped[3:], facts, numbered=False)
         elif stripped.startswith("### "):
             xml += heading(3, stripped[4:], facts)
@@ -301,6 +311,10 @@ def render(markup: str, facts: dict, media: MediaRegistry, base_dir: Path = Path
         elif stripped.startswith("# "):
             state.new_chapter()
             xml += heading(1, stripped[2:], facts)
+        elif re.match(r"\[\d+\]\. ", stripped):
+            number, text = stripped.split(". ", 1)
+            extra = '<w:spacing w:before="60"/><w:ind w:left="567" w:hanging="567"/>'
+            xml += paragraph(run(f"{number}. ") + inline_runs(text, facts), "", extra)
         elif stripped.startswith(">> "):
             extra = '<w:spacing w:before="0"/><w:ind w:firstLine="0"/><w:jc w:val="right"/>'
             xml += paragraph(inline_runs(stripped[3:], facts), "", extra)

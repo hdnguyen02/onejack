@@ -105,6 +105,19 @@ class RenderTest(unittest.TestCase):
         self.assertNotIn("\\r 1", captions[1])
         self.assertIn("<w:t>2</w:t>", captions[1])
 
+    def test_reference_entry_hanging_indent(self):
+        xml = render("[3]. Postel J. (1980), *User Datagram Protocol*, RFC 768.", {}, self.media)
+        self.assertIn('<w:ind w:left="567" w:hanging="567"/>', xml)
+        self.assertIn(">[3]. <", xml)
+        self.assertIn("<w:i/>", xml)
+
+    def test_appendix_captions_use_pl(self):
+        state = RenderState()
+        table = "Bảng: T\n| A |\n|---|\n| 1 |"
+        render("# MỘT\n\n" + table, {}, self.media, state=state)
+        xml = render("#! PHỤ LỤC\n\n" + table, {}, self.media, state=state)
+        self.assertIn(">Bảng PL.<", xml)
+
     def test_bullets(self):
         xml = render("- một\n- hai", {}, self.media)
         self.assertEqual(xml.count('<w:pStyle w:val="ListParagraph"/>'), 2)
