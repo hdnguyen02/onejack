@@ -24,21 +24,21 @@ Trên mỗi node, card mạng `eth0` luôn là mạng quản lý 172.30.0.0/24, 
 
 Mã nguồn chia làm ba phần. Thư mục `src/` chứa bốn chương trình C (`server`, `client`, `attacker`, `guard`) và sáu module dùng chung (`proto`, `stats`, `ratecount`, `blocklist`, `alert`, `firewall`). Thư mục `lab/` chứa cấu hình mạng cho từng node và các script dựng lab. Thư mục `scripts/` chứa các script điều khiển thử nghiệm: chạy lệnh trên một node, chuẩn bị lab, chạy một lượt, khôi phục trạng thái ban đầu, vẽ biểu đồ.
 
-Toàn bộ chương trình C được biên dịch tĩnh bằng `gcc -static`. Tệp chạy được tạo trên một máy rồi chép thẳng sang các node Alpine mà không cần cài thêm thư viện hay trình biên dịch nào. Mọi script điều khiển đều đi qua một script trung gian là `node-run.sh`: với lab EVE-NG, script này SSH vào node; với mô hình rút gọn, nó chạy lệnh trong namespace tương ứng. Phần còn lại của hệ thống không cần biết đang chạy ở môi trường nào.
+Toàn bộ chương trình C được biên dịch tĩnh bằng `gcc -static`. Tệp thực thi được biên dịch trên một máy rồi sao chép trực tiếp sang các node Alpine mà không cần cài thêm thư viện hay trình biên dịch nào. Mọi script điều khiển đều đi qua một script trung gian là `node-run.sh`: với lab EVE-NG, script này SSH vào node; với mô hình rút gọn, nó chạy lệnh trong namespace tương ứng. Phần còn lại của hệ thống không cần biết đang chạy ở môi trường nào.
 
 ## Thiết kế giao thức
 
 ### Giao thức truy vấn
 
-Truy vấn là một gói UDP dạng văn bản `Q <số thứ tự> <thời điểm>`, trả lời có dạng `A <số thứ tự> <thời điểm>`. Server không cần hiểu gì thêm: nhận `Q` thì đổi thành `A` và gửi lại đúng địa chỉ đã gửi tới.
+Truy vấn là một gói UDP dạng văn bản `Q <số thứ tự> <thời điểm>`, trả lời có dạng `A <số thứ tự> <thời điểm>`. Server không cần xử lý gì thêm: nhận `Q` thì đổi thành `A` và gửi lại đúng địa chỉ đã gửi tới.
 
 Client tính RTT bằng đồng hồ của chính nó chứ không dựa vào đồng hồ server, vì đồng hồ của hai máy khác nhau có thể lệch nhau. Module `stats` giữ một bảng vòng 4.096 ô, vị trí của mỗi truy vấn là số thứ tự chia lấy dư cho kích thước bảng. Khi gửi, client ghi lại thời điểm gửi vào ô đó. Khi nhận trả lời, client tìm lại ô theo số thứ tự, lấy hiệu thời gian làm RTT. Truy vấn nào quá một giây chưa có trả lời thì bị tính là mất. Trả lời tới muộn hơn mức đó, trả lời trùng lặp, hoặc trả lời cho số thứ tự lạ đều bị bỏ qua.
 
-Gói của attacker cũng bắt đầu bằng `Q`, phía sau được độn thêm ký tự cho đủ {{attack_size}} byte. Bộ phân tích gói chấp nhận phần đệm phía sau, nên nếu chỉ xét nội dung thì gói tấn công không khác gì truy vấn hợp lệ. Đây là chủ ý thiết kế: hệ thống buộc phải phân biệt bằng hành vi, đúng như tình huống thực tế.
+Gói của attacker cũng bắt đầu bằng `Q`, phần sau được đệm thêm ký tự cho đủ {{attack_size}} byte. Bộ phân tích gói chấp nhận phần đệm phía sau, nên nếu chỉ xét nội dung thì gói tấn công không khác gì truy vấn hợp lệ. Đây là chủ ý thiết kế: hệ thống buộc phải phân biệt bằng hành vi, đúng như tình huống thực tế.
 
 ### Giao thức cảnh báo
 
-Cảnh báo là một gói UDP gửi tới cổng 9999 với nội dung `BLOCK <địa chỉ IP> <tên node>`, ví dụ `BLOCK 10.0.1.10 R3`. Vì đây là dữ liệu đến từ mạng, hàm `alert_parse` kiểm tra chặt chẽ: gói phải bắt đầu đúng bằng `BLOCK `, địa chỉ phải hợp lệ theo `inet_pton`, tên node chỉ gồm chữ, số, dấu gạch dưới và gạch ngang, dài tối đa 15 ký tự, và không được có gì khác phía sau. Gói không đạt bất kỳ điều kiện nào đều bị bỏ qua và ghi log.
+Cảnh báo là một gói UDP gửi tới cổng 9999 với nội dung `BLOCK <địa chỉ IP> <tên node>`, ví dụ `BLOCK 10.0.1.10 R3`. Vì đây là dữ liệu đến từ mạng, hàm `alert_parse` kiểm tra chặt chẽ: gói phải bắt đầu đúng bằng `BLOCK `, địa chỉ phải hợp lệ theo `inet_pton`, tên node chỉ gồm chữ, số, dấu gạch dưới và gạch ngang, dài tối đa 15 ký tự, và không được có gì khác phía sau. Gói vi phạm bất kỳ điều kiện nào đều bị bỏ qua và ghi log.
 
 Bảng: Các cổng và định dạng gói trong hệ thống
 | Loại gói | Cổng UDP | Định dạng | Chiều đi |
@@ -55,11 +55,11 @@ Bảng: Các cổng và định dạng gói trong hệ thống
 
 **Client** gửi truy vấn đều đặn theo tốc độ cấu hình, giữa các lần gửi thì chờ trả lời tối đa 1 mili giây bằng `poll()`. Mỗi giây client tổng kết một dòng gồm số gói gửi, số gói nhận, tỉ lệ mất và RTT trung bình, in ra màn hình và ghi vào tệp CSV.
 
-**Attacker** tính xem tới thời điểm hiện tại lẽ ra phải gửi bao nhiêu gói, gửi bù cho đủ, rồi nghỉ 1 mili giây. Cách gửi bù này giữ cho tốc độ trung bình đúng {{attack_rate}} gói/giây dù hệ điều hành không đảm bảo thời gian nghỉ chính xác.
+**Attacker** tính số gói lẽ ra đã phải gửi tính đến thời điểm hiện tại, gửi bổ sung phần còn thiếu, rồi tạm dừng 1 mili giây. Cách gửi bổ sung này giữ cho tốc độ trung bình đúng {{attack_rate}} gói/giây dù hệ điều hành không đảm bảo thời gian tạm dừng chính xác.
 
 ### Chương trình guard
 
-Guard là phần trung tâm của đề tài. Cùng một chương trình, chạy với các tham số khác nhau, sẽ đóng các vai khác nhau trên từng router.
+Guard là phần trung tâm của đề tài. Cùng một chương trình, chạy với các tham số khác nhau, sẽ đảm nhận các vai trò khác nhau trên từng router.
 
 Bảng: Các tham số dòng lệnh của guard
 | Tham số | Ý nghĩa |
@@ -99,11 +99,11 @@ rc_add(&rc, src);
 
 Trước khi gọi hàm này, vòng lặp bỏ qua những gói có kiểu `PACKET_OUTGOING`. Raw socket gắn vào một card mạng nhận bản sao của gói theo cả hai chiều, vào và ra. Bộ lọc này chỉ giữ lại gói đi vào card mạng, để lưu lượng do chính router gửi ra trên card mạng đó không bao giờ bị tính vào số đếm.
 
-Cứ mỗi giây, hàm `check_rates` lấy danh sách địa chỉ vượt ngưỡng. Với mỗi địa chỉ, guard kiểm tra whitelist, kiểm tra xem đã chặn chưa, gọi iptables để chặn, rồi gửi cảnh báo nếu có router nhận cảnh báo. Cuối cùng bảng đếm được xóa để bắt đầu giây mới. Khi nhận tín hiệu `SIGINT` hoặc `SIGTERM`, vòng lặp kết thúc và guard gỡ toàn bộ chain `GUARD` trước khi thoát.
+Mỗi giây, hàm `check_rates` lấy danh sách địa chỉ vượt ngưỡng. Với mỗi địa chỉ, guard kiểm tra whitelist, kiểm tra xem đã chặn chưa, gọi iptables để chặn, rồi gửi cảnh báo nếu có router nhận cảnh báo. Cuối cùng bảng đếm được xóa để bắt đầu giây mới. Khi nhận tín hiệu `SIGINT` hoặc `SIGTERM`, vòng lặp kết thúc và guard gỡ toàn bộ chain `GUARD` trước khi thoát.
 
 ### Các module dùng chung
 
-- **ratecount** đếm số gói theo địa chỉ nguồn trong một bảng tối đa 256 địa chỉ. Bảng đầy thì địa chỉ mới bị bỏ qua thay vì làm chương trình lỗi.
+- **ratecount** đếm số gói theo địa chỉ nguồn trong một bảng tối đa 256 địa chỉ. Bảng đầy thì địa chỉ mới bị bỏ qua thay vì gây lỗi chương trình.
 - **blocklist** nhớ các địa chỉ đã chặn và whitelist. Hàm `bl_allowed_to_block` từ chối mọi địa chỉ trong whitelist và mọi địa chỉ thuộc mạng điều khiển 10.0.99.0/24, để các router không bao giờ chặn nhầm lẫn nhau.
 - **alert** tạo và phân tích gói cảnh báo như đã mô tả ở mục 4.2.2.
 - **firewall** gọi iptables. Lúc khởi động, module tạo hoặc làm rỗng chain `GUARD` và gắn vào `FORWARD`. Khi chặn, nó thêm quy tắc `-A GUARD -s <ip> -j DROP`. Khi khôi phục trạng thái ban đầu, nó gỡ chain khỏi `FORWARD` rồi xóa. Mọi lệnh đều chạy bằng `fork` và `execvp` với mảng tham số riêng, không đi qua shell, nên không thể bị chèn thêm lệnh. Module có chế độ chạy thử chỉ ghi lại câu lệnh, dùng cho kiểm thử đơn vị mà không cần quyền root.
@@ -146,9 +146,9 @@ Lab gồm sáu node, sáu mạng và toàn bộ dây nối được tạo bằng
 
 ### Kịch bản chạy thử nghiệm
 
-Mỗi lần chuẩn bị trình diễn, script `scripts/lab-up.sh` khởi động sáu node, chờ tới khi SSH vào được, chép chương trình và cấu hình mạng sang từng node, rồi chạy một loạt kiểm tra: client ping được server, R1 ping được R3 qua mạng điều khiển, client gửi truy vấn trong 3 giây và nhận đủ trả lời, RAM còn trống đủ dùng. Đạt hết thì script in `SẴN SÀNG`.
+Mỗi lần chuẩn bị trình diễn, script `scripts/lab-up.sh` khởi động sáu node, chờ tới khi kết nối SSH được, chép chương trình và cấu hình mạng sang từng node, rồi chạy một loạt kiểm tra: client ping được server, R1 ping được R3 qua mạng điều khiển, client gửi truy vấn trong 3 giây và nhận đủ trả lời, RAM còn trống đủ dùng. Nếu tất cả đều đạt, script in ra `SẴN SÀNG`.
 
-Một lượt thử nghiệm do `scripts/demo.sh` điều khiển và kéo dài {{duration}} giây: khôi phục trạng thái ban đầu, khởi động server, khởi động guard theo vai trò của lượt, sau 2 giây khởi động bộ đo lưu lượng và client, tới giây thứ {{attack_at}} thì khởi động attacker, cuối lượt khôi phục trạng thái ban đầu lần nữa và lưu toàn bộ kết quả vào `results/`. Để khán giả theo dõi trực tiếp, `scripts/tmux-demo.sh` chia màn hình terminal làm bốn ô: RTT của client, lưu lượng đường truyền R1 → R2, các sự kiện phát hiện và chặn, và tiến trình của `demo.sh`. Hình dưới vẽ lại nguyên văn nội dung bốn ô ở cuối lượt inband.
+Một lượt thử nghiệm do `scripts/demo.sh` điều khiển và kéo dài {{duration}} giây: khôi phục trạng thái ban đầu, khởi động server, khởi động guard theo vai trò của lượt, sau 2 giây khởi động bộ đo lưu lượng và client, tới giây thứ {{attack_at}} thì khởi động attacker, cuối lượt khôi phục trạng thái ban đầu lần nữa và lưu toàn bộ kết quả vào `results/`. Để người xem theo dõi trực tiếp, `scripts/tmux-demo.sh` chia màn hình terminal làm bốn ô: RTT của client, lưu lượng đường truyền R1 → R2, các sự kiện phát hiện và chặn, và tiến trình của `demo.sh`. Hình dưới vẽ lại nguyên văn nội dung bốn ô ở cuối lượt inband.
 
 ![Nội dung bốn ô của màn hình theo dõi ở cuối lượt inband](../figures/tmux_inband.png)
 
@@ -187,7 +187,7 @@ Bảng: Kết quả đo ba lượt thử nghiệm trên EVE-NG
 
 Ở lượt **off**, R3 chặn attacker chưa tới một giây sau khi tấn công bắt đầu, server không còn nhận gói tấn công. Nhưng đường R1 → R2 vẫn bị chiếm toàn bộ băng thông, {{link_off}} Mbit/s cho tới hết lượt, và RTT của client nằm ở mức {{rtt_off}} ms, gấp hơn một trăm lần lúc bình thường. Server được bảo vệ, còn mạng thì không.
 
-Ở hai lượt có hợp tác, R1 nhận cảnh báo và chặn chỉ vài mili giây sau R3. Cần lưu ý các mốc thời gian này được gán khi dòng log về tới máy chạy `demo.sh` qua kết nối SSH, nên có sai số cỡ vài mili giây. Con số cho biết bậc độ lớn, không phải độ trễ chính xác của gói cảnh báo. Từ giây tiếp theo, lưu lượng trên đường truyền chỉ còn lại phần của client, RTT trở lại khoảng {{rtt_base}} ms. Con số trung bình {{rtt_on}} ms và {{rtt_inband}} ms cao hơn mức bình thường chỉ vì có một giây đầu tiên của cuộc tấn công, trước khi kịp phát hiện. Client không mất gói ở cả ba lượt. Lý do là hàng đợi giới hạn theo byte, như đã phân tích ở mục 2.2.2: gói truy vấn nhỏ vẫn được đưa vào hàng đợi, chỉ phải chờ lâu.
+Ở hai lượt có hợp tác, R1 nhận cảnh báo và chặn chỉ vài mili giây sau R3. Cần lưu ý các mốc thời gian này được gán khi dòng log về tới máy chạy `demo.sh` qua kết nối SSH, nên có sai số cỡ vài mili giây. Các con số này chỉ phản ánh bậc độ lớn, không phải độ trễ chính xác của gói cảnh báo. Từ giây tiếp theo, lưu lượng trên đường truyền chỉ còn lại phần của client, RTT trở lại khoảng {{rtt_base}} ms. Con số trung bình {{rtt_on}} ms và {{rtt_inband}} ms cao hơn mức bình thường do tính cả giây đầu tiên của cuộc tấn công, trước khi kịp phát hiện. Client không mất gói ở cả ba lượt. Lý do là hàng đợi giới hạn theo byte, như đã phân tích ở mục 2.2.2: gói truy vấn nhỏ vẫn được đưa vào hàng đợi, chỉ phải chờ lâu.
 
 Để kiểm chứng việc không chặn nhầm client, bảng quy tắc iptables trên các router được ghi lại ở khoảng giây thứ 33 của một lượt **on** chạy riêng. Trên R1, router mà cả client lẫn attacker cùng đi qua, chain `GUARD` chỉ có đúng một quy tắc cho địa chỉ của attacker:
 
@@ -203,7 +203,7 @@ Kết quả lượt **inband** gần như trùng với lượt **on**. Điều n
 
 ### Kiểm chứng QoS
 
-Script `scripts/qos-check.sh` cho attacker làm nghẽn đường R1 → R2 → R3 và **không** khởi động guard, nên không ai chặn. Trong lúc đó, client gửi hai loạt truy vấn trên cùng con đường, mỗi loạt 5 giây: loạt thường, và loạt đánh dấu ưu tiên giống hệt gói cảnh báo.
+Script `scripts/qos-check.sh` cho attacker làm nghẽn đường R1 → R2 → R3 và **không** khởi động guard, nên không có router nào chặn. Trong lúc đó, client gửi hai loạt truy vấn trên cùng con đường, mỗi loạt 5 giây: loạt thường, và loạt đánh dấu ưu tiên giống hệt gói cảnh báo.
 
 Bảng: Kết quả kiểm chứng làn ưu tiên khi đường đang nghẽn
 | Môi trường | RTT truy vấn thường | RTT truy vấn ưu tiên |
@@ -217,6 +217,6 @@ Bộ đếm của `tc` trên R1 sau lần đo cho thấy làn ưu tiên đã chu
 
 Quá trình hiện thực có một số lỗi cần ghi nhận, vì chúng cho thấy những khác biệt giữa môi trường thử nghiệm và môi trường phát triển.
 
-- **Lượt thử nghiệm bị treo trên EVE-NG.** Script khôi phục trạng thái ban đầu dùng `pkill -x guard` để dừng chương trình. Lệnh này chạy đúng trên Ubuntu nhưng không khớp gì trên Alpine, vì `pkill` của BusyBox so tên với cả đường dẫn `/root/guard`. Guard không dừng, nên `demo.sh` bị treo ở bước chờ các chương trình kết thúc. Lỗi được sửa bằng cách dùng `killall`.
+- **Lượt thử nghiệm bị treo trên EVE-NG.** Script khôi phục trạng thái ban đầu dùng `pkill -x guard` để dừng chương trình. Lệnh này chạy đúng trên Ubuntu nhưng không tìm thấy tiến trình nào trên Alpine, vì `pkill` của BusyBox so tên với cả đường dẫn `/root/guard`. Guard không dừng, nên `demo.sh` bị treo ở bước chờ các chương trình kết thúc. Lỗi được sửa bằng cách dùng `killall`.
 - **Sáu node nhận trùng một địa chỉ quản lý.** Bản đầu tiên của script khởi động đọc sai vị trí byte trong địa chỉ MAC, nên node nào cũng tính ra cùng một số thứ tự. Sau khi đọc lại mã nguồn EVE-NG để biết đúng định dạng MAC, script được sửa và cả sáu node nhận đúng địa chỉ.
 - **Log sự kiện sai thứ tự.** Đồng hồ của các node lệch nhau gần một giây, nên dòng "R2 nhận cảnh báo" có lúc hiện trước dòng "R3 phát hiện". Cách sửa là bỏ dấu thời gian do từng node tự in, và gán lại thời điểm bằng đồng hồ của máy chạy `demo.sh` ngay khi dòng log tới nơi.

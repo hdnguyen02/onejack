@@ -49,6 +49,10 @@ class FactsTest(unittest.TestCase):
         self.assertEqual(f["alpine_version"], "3.20.10")
         self.assertEqual(f["iptables_version"], "1.8.10")
 
+    def test_threshold_ratio(self):
+        f = load_facts(ROOT / "results/eve-v2-report", ROOT / "scripts/demo.sh")
+        self.assertEqual(f["threshold_ratio"], "10")
+
     def test_english_variants(self):
         f = load_facts(ROOT / "results/eve-v2-report", ROOT / "scripts/demo.sh")
         self.assertEqual(f["rtt_off_en"], "407.97")

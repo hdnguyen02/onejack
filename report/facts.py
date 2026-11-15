@@ -121,6 +121,8 @@ def load_facts(results_dir: Path, demo_sh: Path) -> dict:
     facts["attack_rate"] = vn_number(int(shell_value(demo_sh, "ATTACK_RATE")), 0)
     facts["attack_size"] = vn_number(int(shell_value(demo_sh, "ATTACK_SIZE")), 0)
     facts["threshold"] = shell_value(demo_sh, "THRESHOLD")
+    # Ngưỡng gấp bao nhiêu lần tần suất của client.
+    facts["threshold_ratio"] = str(int(facts["threshold"]) // int(facts["client_rate"]))
 
     router = (demo_sh.parent.parent / "lab/r1.sh").read_text()
     facts["bottleneck"] = re.search(r'TC_RATE:-(\d+)mbit', router).group(1)
