@@ -142,7 +142,7 @@ Thay vì cài Alpine thủ công cho từng node, script `lab/eve-make-image.sh`
 
 Lab gồm sáu node, sáu mạng và toàn bộ dây nối được tạo bằng script `lab/eve-create-lab.sh` thông qua REST API của EVE-NG [[REF:11]]: đăng nhập, tạo lab, tạo mạng, tạo node, gán card mạng của từng node vào mạng, rồi khởi động node. Nhờ vậy lab có thể được tạo lại giống hệt chỉ bằng một lệnh, thay vì kéo thả trên giao diện web.
 
-![Giao diện EVE-NG với lab collab-defense](../figures/eve_placeholder.png)
+![Lab collab-defense trên giao diện web của EVE-NG](../figures/eve_topology.png)
 
 ### Kịch bản chạy thử nghiệm
 
