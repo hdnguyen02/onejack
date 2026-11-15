@@ -33,7 +33,7 @@ Bảng: Các mục tiêu cụ thể và tiêu chí đánh giá
 | 3 | Không chặn nhầm người dùng hợp lệ | Danh sách địa chỉ bị chặn trên ba router | Chỉ địa chỉ của attacker bị chặn; client và server không bị chặn |
 | 4 | Giải phóng đường truyền | Thông lượng trung bình trên đường R1 → R2 | Giảm ít nhất 90% so với lượt chỉ chặn tại phía đích |
 | 5 | Khôi phục chất lượng dịch vụ | RTT trung bình của client | Giảm ít nhất 90% so với lượt chỉ chặn tại phía đích |
-| 6 | Cảnh báo đi chung đường vẫn hiệu quả | Kết quả lượt inband | Đạt cả mục tiêu 2, 4 và 5 |
+| 6 | Cảnh báo đi chung đường vẫn hiệu quả | Thời gian chặn, thông lượng và RTT khi cảnh báo được gửi chung đường dữ liệu (có ưu tiên QoS) thay vì qua mạng điều khiển riêng | Đạt cùng tiêu chí như mục tiêu 2, 4 và 5 |
 
 Cách đo được thống nhất như sau. Mỗi lượt thử nghiệm dài {{duration}} giây, tấn công bắt đầu ở giây thứ {{attack_at}}. Thông lượng và RTT trung bình được tính trên khoảng sau giây thứ {{attack_at}} tới hết lượt. Các mốc thời gian ở mục tiêu 1 và 2 lấy từ log:
 

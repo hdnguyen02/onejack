@@ -12,7 +12,7 @@ Bảng: Đối chiếu kết quả với mục tiêu
 | | 3 | Chỉ attacker bị chặn | Trên R1, R2, R3 chỉ có địa chỉ 10.0.1.10 của attacker bị chặn | Đạt |
 | Cải thiện hiệu năng | 4 | Thông lượng R1 → R2 giảm ít nhất 90% | Giảm {{link_drop_on}}% (on), {{link_drop_inband}}% (inband) | Đạt |
 | | 5 | RTT của client giảm ít nhất 90% | Giảm {{rtt_drop_on}}% (on), {{rtt_drop_inband}}% (inband) | Đạt |
-| | 6 | Lượt inband đạt tiêu chí 2, 4, 5 | Đạt cả ba tiêu chí; qua đường đang nghẽn, gói ưu tiên chỉ mất {{qos_prio_eve}} ms | Đạt |
+| | 6 | Cảnh báo đi chung đường đạt tiêu chí 2, 4, 5 | Đạt cả ba tiêu chí; qua đường đang nghẽn, gói ưu tiên chỉ mất {{qos_prio_eve}} ms | Đạt |
 
 Kết quả quan trọng nhất là sự chênh lệch giữa lượt off và hai lượt có hợp tác. Cả ba lượt đều bảo vệ được server, nhưng chỉ khi các router chia sẻ quyết định chặn thì đường truyền mới được giải phóng và người dùng thật mới không còn bị ảnh hưởng. Thông tin cần chia sẻ chỉ là một gói tin vài chục byte, và việc này diễn ra trong vài mili giây.
 
