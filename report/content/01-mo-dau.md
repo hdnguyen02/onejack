@@ -6,7 +6,7 @@ Tấn công từ chối dịch vụ (Denial of Service – DoS) là kiểu tấn
 
 Ở quy mô Internet, các nhà mạng đã có những cơ chế cho phép một bên "nhờ" bên khác chặn giúp lưu lượng xấu. Remotely Triggered Black Hole (RTBH) cho phép ra lệnh từ xa để các router biên bỏ toàn bộ lưu lượng tới một địa chỉ đang bị tấn công [[REF:4]]. BGP FlowSpec đi xa hơn: các router trao đổi với nhau những luật lọc chi tiết theo địa chỉ nguồn, đích, cổng, rồi tự áp dụng [[REF:6]]. Ngoài ra, khuyến nghị BCP 38 yêu cầu router ở cửa vào loại bỏ những gói mang địa chỉ nguồn giả mạo ngay từ đầu [[REF:2]]. Điểm chung của các giải pháp này là **các node mạng hợp tác với nhau**: thông tin về kẻ tấn công được đưa từ nơi phát hiện tới nơi chặn hiệu quả nhất.
 
-Trong nước, các nghiên cứu và đồ án về an ninh mạng thường tập trung vào phát hiện xâm nhập hoặc cấu hình tường lửa trên một thiết bị đơn lẻ. [Bổ sung đề tài liên quan của các khóa trước tại Khoa, nếu có.] Đề tài này chọn một góc nhỏ hơn và cụ thể hơn: dựng một mô hình mạng thu nhỏ, viết các chương trình C chạy trên router Linux, rồi đo xem việc hợp tác giữa các router thay đổi hiệu năng mạng như thế nào.
+Trong nước, các nghiên cứu và đồ án về an ninh mạng thường tập trung vào phát hiện xâm nhập hoặc cấu hình tường lửa trên một thiết bị đơn lẻ. Đề tài này chọn một góc nhỏ hơn và cụ thể hơn: dựng một mô hình mạng thu nhỏ, viết các chương trình C chạy trên router Linux, rồi đo xem việc hợp tác giữa các router thay đổi hiệu năng mạng như thế nào.
 
 **2. Ý nghĩa khoa học và thực tiễn của đề tài**
 
