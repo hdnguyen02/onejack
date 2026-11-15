@@ -92,7 +92,7 @@ def packets(c, x, y, colors, size=28, gap=8):
 
 def bottleneck_queue():
     c = Canvas(7)
-    c.text((150, 70), "Vào: khoảng 40 Mbit/s\n(rác + truy vấn thật)", F_TEXT)
+    c.text((175, 70), "Vào: khoảng 40 Mbit/s\n(tấn công + truy vấn hợp lệ)", F_TEXT)
     c.arrow((60, 230), (300, 230), BLACK, 6)
     c.box(320, 160, 520, 140, fill=LIGHT)
     c.text((580, 140), "Hàng đợi của router (tối đa 500KB, khoảng 400 ms)", F_SMALL, anchor="mm")
@@ -101,11 +101,11 @@ def bottleneck_queue():
     c.arrow((840, 230), (1100, 230), BLACK, 4)
     c.text((975, 180), "Ra: 10 Mbit/s", F_TEXT)
     c.arrow((580, 300), (580, 400), RED, 4)
-    c.text((580, 450), "Hàng đợi đầy: gói tới sau bị vứt (mất gói)", F_TEXT, RED)
+    c.text((580, 450), "Hàng đợi đầy: gói tới sau bị loại bỏ (mất gói)", F_TEXT, RED)
     packets(c, 60, 470, [RED])
-    c.text((110, 485), "gói rác", F_SMALL, anchor="lm")
+    c.text((110, 485), "gói tấn công", F_SMALL, anchor="lm")
     packets(c, 260, 470, [GREEN])
-    c.text((310, 485), "truy vấn của client: phải xếp hàng sau rác", F_SMALL, anchor="lm")
+    c.text((310, 485), "truy vấn của client: phải xếp hàng sau gói tấn công", F_SMALL, anchor="lm")
     c.save("bottleneck_queue.png")
 
 
@@ -123,10 +123,10 @@ def chain(c, y, block_at, link_colors, title):
 def victim_vs_edge():
     c = Canvas(8)
     chain(c, 150, 3, [RED, RED, RED, GREY],
-          "(a) Chỉ R3 chặn: server an toàn, nhưng rác vẫn chiếm link R1 → R2 → R3")
+          "(a) Chỉ R3 chặn: server an toàn, nhưng lưu lượng tấn công vẫn chiếm link R1 → R2 → R3")
     chain(c, 450, 1, [RED, GREY, GREY, GREY],
-          "(b) R3 báo cho R1 chặn: rác dừng ngay ở cửa vào, các link phía sau thông thoáng")
-    c.text((WIDTH / 2, 590), "Đường đỏ đậm: link bị lưu lượng rác chiếm. Dấu ×: nơi gói của attacker bị vứt.", F_SMALL, GREY)
+          "(b) R3 báo cho R1 chặn: lưu lượng tấn công dừng ngay ở router đầu vào")
+    c.text((WIDTH / 2, 590), "Đường đỏ đậm: link bị lưu lượng tấn công chiếm. Dấu ×: nơi gói của attacker bị loại bỏ.", F_SMALL, GREY)
     c.save("victim_vs_edge.png")
 
 
@@ -171,7 +171,7 @@ def sequence():
     c.box(480, 540, 160, 80, "iptables DROP", fill=(255, 240, 220), f=F_SMALL)
     c.arrow((xs[0], 690), (xs[1] - 10, 690), RED, 4)
     c.cross(xs[1] + 30, 690, size=18)
-    c.text((xs[1] + 260, 690), "rác bị vứt ngay tại R1", F_SMALL, RED)
+    c.text((xs[1] + 260, 690), "gói tấn công bị loại bỏ ngay tại R1", F_SMALL, RED)
     c.text((WIDTH / 2, 790), "Mũi tên xanh: cảnh báo (lượt on: mạng điều khiển; lượt inband: chung đường, ưu tiên QoS)", F_SMALL, GREY)
     c.save("sequence.png")
 
