@@ -23,18 +23,17 @@ Vì client và attacker cùng nằm sau R1, việc chặn phải dựa trên đ�
 
 ## Mục tiêu đề tài
 
-Mục tiêu chung là xây dựng hệ thống demo và đo được mức cải thiện hiệu năng mạng khi các router hợp tác chặn lưu lượng xấu, so với cách chỉ chặn tại phía đích. Các mục tiêu cụ thể gồm ba nhóm: mục tiêu 1–3 về phát hiện và ngăn chặn, mục tiêu 4–6 về cải thiện hiệu năng, mục tiêu 7 về triển khai và kiểm thử.
+Mục tiêu chung là xây dựng hệ thống demo và đo được mức cải thiện hiệu năng mạng khi các router hợp tác chặn lưu lượng xấu, so với cách chỉ chặn tại phía đích. Các mục tiêu cụ thể gồm hai nhóm: mục tiêu 1–3 về phát hiện và ngăn chặn, mục tiêu 4–6 về cải thiện hiệu năng.
 
 Bảng: Các mục tiêu cụ thể và tiêu chí đánh giá
 | STT | Mục tiêu | Chỉ số đo | Tiêu chí đạt |
 |---|---|---|---|
 | 1 | Phát hiện nhanh | Thời gian từ lúc bắt đầu tấn công tới lúc R3 chặn | Không quá 2 giây |
 | 2 | Báo cho router cửa vào chặn nhanh | Thời gian từ lúc R3 phát hiện tới lúc R1 chặn | Dưới 100 mili giây |
-| 3 | Không chặn nhầm | Các luật chặn trên ba router | Chỉ có luật cho địa chỉ của attacker |
+| 3 | Không chặn nhầm người dùng hợp lệ | Danh sách địa chỉ bị chặn trên ba router | Chỉ địa chỉ của attacker bị chặn; client và server không bị chặn |
 | 4 | Giải phóng đường truyền | Thông lượng trung bình trên đường R1 → R2 | Giảm ít nhất 90% so với lượt chỉ chặn tại phía đích |
 | 5 | Khôi phục chất lượng dịch vụ | RTT trung bình của client | Giảm ít nhất 90% so với lượt chỉ chặn tại phía đích |
 | 6 | Cảnh báo đi chung đường vẫn hiệu quả | Kết quả lượt inband | Đạt cả mục tiêu 2, 4 và 5 |
-| 7 | Tái lập được thử nghiệm | Quy trình dựng lab và chạy thử | Làm hoàn toàn bằng script, chạy lại được |
 
 Cách đo được thống nhất như sau. Mỗi lượt thử nghiệm dài {{duration}} giây, tấn công bắt đầu ở giây thứ {{attack_at}}. Thông lượng và RTT trung bình được tính trên khoảng sau giây thứ {{attack_at}} tới hết lượt. Các mốc thời gian ở mục tiêu 1 và 2 lấy từ log:
 
