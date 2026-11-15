@@ -14,12 +14,12 @@ Mô hình thử nghiệm gồm sáu node. Client và attacker cùng nối vào m
 
 Hai đoạn R1 – R2 và R2 – R3 được giới hạn băng thông {{bottleneck}} Mbit/s để tạo nút cổ chai có chủ đích. Đây là đoạn đường **chung** mà cả lưu lượng hợp lệ lẫn lưu lượng tấn công phải đi qua để tới server, tương tự đường trục giữa các mạng trong thực tế. Mức {{bottleneck}} Mbit/s lớn hơn rất nhiều so với lưu lượng của client nhưng chỉ bằng khoảng một phần tư lưu lượng tấn công, nên khi bị tấn công, đường truyền chắc chắn bị nghẽn.
 
-R3 đóng vai trò **điểm giám sát lưu lượng đi tới server**: mọi gói từ LAN1 tới server đều phải đi vào cổng `eth1` của R3, nên chương trình trên R3 thống kê được số truy vấn theo từng địa chỉ IP nguồn. Việc chặn được thực hiện bằng tường lửa iptables có sẵn trong Linux: router thêm một **luật chặn** (rule), tức một dòng cấu hình yêu cầu tường lửa loại bỏ mọi gói có địa chỉ nguồn là địa chỉ cần chặn (chi tiết ở mục 2.4.1). Có hai cách xử lý khi R3 phát hiện một nguồn vượt ngưỡng:
+R3 đóng vai trò **điểm giám sát lưu lượng đi tới server**: mọi gói từ LAN1 tới server đều phải đi vào cổng `eth1` của R3, nên chương trình trên R3 thống kê được số truy vấn theo từng địa chỉ IP nguồn. Việc chặn được thực hiện bằng tường lửa iptables có sẵn trong Linux: router thêm vào tường lửa một **quy tắc chặn** (rule) yêu cầu loại bỏ mọi gói có địa chỉ nguồn là địa chỉ cần chặn (chi tiết ở mục 2.4.1). Có hai cách xử lý khi R3 phát hiện một nguồn vượt ngưỡng:
 
 - **Chặn tại phía đích:** R3 tự chặn nguồn đó. Server được bảo vệ, nhưng lưu lượng tấn công vẫn đi qua và chiếm băng thông của hai đoạn R1 – R2, R2 – R3 trước khi bị loại bỏ, nên client đi chung đường vẫn bị ảnh hưởng.
-- **Chặn gần nguồn:** R3 gửi cảnh báo cho các router phía trước. R1 là router nơi lưu lượng tấn công đi vào mạng, nên khi R1 chặn, gói tấn công bị loại bỏ trước khi chiếm băng thông của các đoạn phía sau. R2 cũng nhận cảnh báo và chặn theo. Trong mô hình này, lưu lượng tấn công đã bị R1 loại bỏ trước nên luật của R2 chỉ mang tính dự phòng, mô phỏng việc cảnh báo được lan tới mọi router trên đường đi.
+- **Chặn gần nguồn:** R3 gửi cảnh báo cho các router phía trước. R1 là router nơi lưu lượng tấn công đi vào mạng, nên khi R1 chặn, gói tấn công bị loại bỏ trước khi chiếm băng thông của các đoạn phía sau. R2 cũng nhận cảnh báo và chặn theo. Trong mô hình này, lưu lượng tấn công đã bị R1 loại bỏ trước nên việc chặn ở R2 chỉ mang tính dự phòng, mô phỏng việc cảnh báo được lan tới mọi router trên đường đi.
 
-Vì client và attacker cùng nằm sau R1, việc chặn phải dựa trên địa chỉ IP nguồn để chỉ loại bỏ gói của attacker (10.0.1.10), còn gói của client (10.0.1.20) vẫn đi qua bình thường. Mục 4.6.2 kiểm chứng điều này bằng bảng luật iptables trên các router và số liệu của client.
+Vì client và attacker cùng nằm sau R1, việc chặn phải dựa trên địa chỉ IP nguồn để chỉ loại bỏ gói của attacker (10.0.1.10), còn gói của client (10.0.1.20) vẫn đi qua bình thường. Mục 4.6.2 kiểm chứng điều này bằng danh sách quy tắc chặn trên các router và số liệu của client.
 
 ## Mục tiêu đề tài
 
@@ -35,7 +35,7 @@ Bảng: Các mục tiêu cụ thể và tiêu chí đánh giá
 | 5 | Khôi phục chất lượng dịch vụ | RTT trung bình của client | Giảm ít nhất 90% so với lượt chỉ chặn tại phía đích |
 | 6 | Cảnh báo đi chung đường vẫn hiệu quả | Thời gian chặn, thông lượng và RTT khi cảnh báo được gửi chung đường dữ liệu (có ưu tiên QoS) thay vì qua mạng điều khiển riêng | Đạt cùng tiêu chí như mục tiêu 2, 4 và 5 |
 
-Mỗi lượt thử nghiệm kéo dài {{duration}} giây, kẻ tấn công bắt đầu gửi ở giây thứ {{attack_at}}. Thông lượng và RTT trung bình được tính từ lúc bị tấn công tới hết lượt. Các khoảng thời gian ở mục tiêu 1 và 2 được đo bằng dấu thời gian trong log mà các router và script điều khiển ghi lại khi sự kiện xảy ra: lúc tấn công bắt đầu, lúc R3 chặn, và lúc R1 chặn. Vì log của R1 chỉ ghi sau khi luật chặn đã có hiệu lực, thời gian ở mục tiêu 2 đã gồm cả thời gian truyền cảnh báo và thời gian R1 áp dụng luật.
+Mỗi lượt thử nghiệm kéo dài {{duration}} giây, kẻ tấn công bắt đầu gửi ở giây thứ {{attack_at}}. Thông lượng và RTT trung bình được tính từ lúc bị tấn công tới hết lượt. Các khoảng thời gian ở mục tiêu 1 và 2 được đo bằng dấu thời gian trong log mà các router và script điều khiển ghi lại khi sự kiện xảy ra: lúc tấn công bắt đầu, lúc R3 chặn, và lúc R1 chặn. Vì R1 chỉ ghi log sau khi đã chặn xong, thời gian ở mục tiêu 2 đã gồm cả thời gian truyền cảnh báo và thời gian R1 thực hiện việc chặn.
 
 ## Phạm vi đề tài
 
@@ -60,8 +60,8 @@ Hệ thống gồm bốn chương trình C. Chi tiết hiện thực được tr
   - Bắt gói bằng raw socket `AF_PACKET` gắn vào một cổng mạng, không dùng thư viện libpcap.
   - Đếm số truy vấn theo địa chỉ nguồn trong từng chu kỳ 1 giây. Việc kiểm tra ngưỡng và chặn thực hiện ở **cuối mỗi chu kỳ**, không chặn ngay giữa chu kỳ.
   - Khi chặn một địa chỉ mới, guard gửi cảnh báo qua **UDP** tới cổng 9999 của từng router được cấu hình, nội dung `BLOCK <địa chỉ IP> <tên router gửi>`. Cảnh báo không mang thời điểm phát hiện; thời điểm được lấy từ log.
-  - Router nhận cảnh báo kiểm tra định dạng, kiểm tra danh sách địa chỉ không được chặn, và kiểm tra địa chỉ đã bị chặn trước đó chưa để không thêm luật trùng.
-  - Luật chặn được gỡ toàn bộ khi guard dừng (tín hiệu `SIGINT` hoặc `SIGTERM`). Đề tài chưa có cơ chế tự hết hạn luật chặn, nên trong lúc guard còn chạy, địa chỉ đã bị chặn sẽ bị chặn cho tới cuối lượt. Đây là một hạn chế được nêu ở Chương 5.
+  - Router nhận cảnh báo kiểm tra định dạng, kiểm tra danh sách địa chỉ không được chặn, và kiểm tra địa chỉ đã bị chặn trước đó chưa để không thêm quy tắc trùng.
+  - Quy tắc chặn được gỡ toàn bộ khi guard dừng (tín hiệu `SIGINT` hoặc `SIGTERM`). Đề tài chưa có cơ chế tự gỡ chặn sau một thời gian, nên trong lúc guard còn chạy, địa chỉ đã bị chặn sẽ bị chặn cho tới cuối lượt. Đây là một hạn chế được nêu ở Chương 5.
 
 ### Các phương án thử nghiệm
 

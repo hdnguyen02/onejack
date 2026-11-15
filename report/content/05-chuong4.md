@@ -106,7 +106,7 @@ Cứ mỗi giây, hàm `check_rates` lấy danh sách địa chỉ vượt ngư�
 - **ratecount** đếm số gói theo địa chỉ nguồn trong một bảng tối đa 256 địa chỉ. Bảng đầy thì địa chỉ mới bị bỏ qua thay vì làm chương trình lỗi.
 - **blocklist** nhớ các địa chỉ đã chặn và whitelist. Hàm `bl_allowed_to_block` từ chối mọi địa chỉ trong whitelist và mọi địa chỉ thuộc mạng điều khiển 10.0.99.0/24, để các router không bao giờ chặn nhầm lẫn nhau.
 - **alert** tạo và phân tích gói cảnh báo như đã mô tả ở mục 4.2.2.
-- **firewall** gọi iptables. Lúc khởi động, module tạo hoặc làm rỗng chain `GUARD` và gắn vào `FORWARD`. Khi chặn, nó thêm luật `-A GUARD -s <ip> -j DROP`. Khi dọn dẹp, nó gỡ chain khỏi `FORWARD` rồi xóa. Mọi lệnh đều chạy bằng `fork` và `execvp` với mảng tham số riêng, không đi qua shell, nên không thể bị chèn thêm lệnh. Module có chế độ chạy thử chỉ ghi lại câu lệnh, dùng cho kiểm thử đơn vị mà không cần quyền root.
+- **firewall** gọi iptables. Lúc khởi động, module tạo hoặc làm rỗng chain `GUARD` và gắn vào `FORWARD`. Khi chặn, nó thêm quy tắc `-A GUARD -s <ip> -j DROP`. Khi dọn dẹp, nó gỡ chain khỏi `FORWARD` rồi xóa. Mọi lệnh đều chạy bằng `fork` và `execvp` với mảng tham số riêng, không đi qua shell, nên không thể bị chèn thêm lệnh. Module có chế độ chạy thử chỉ ghi lại câu lệnh, dùng cho kiểm thử đơn vị mà không cần quyền root.
 
 ## Cấu hình mạng và QoS
 
@@ -189,7 +189,7 @@ Bảng: Kết quả đo ba lượt demo trên EVE-NG
 
 Ở hai lượt có hợp tác, R1 nhận cảnh báo và chặn chỉ vài mili giây sau R3. Cần lưu ý các mốc thời gian này được đóng dấu khi dòng log về tới máy chạy `demo.sh` qua kết nối SSH, nên có sai số cỡ vài mili giây. Con số cho biết bậc độ lớn, không phải độ trễ chính xác của gói cảnh báo. Ngay giây kế tiếp, lưu lượng trên link về gần như chỉ còn của client, RTT trở lại khoảng {{rtt_base}} ms. Con số trung bình {{rtt_on}} ms và {{rtt_inband}} ms cao hơn mức bình thường chỉ vì có một giây đầu tiên của cuộc tấn công, trước khi kịp phát hiện. Client không mất gói ở cả ba lượt. Lý do là hàng đợi giới hạn theo byte, như đã phân tích ở mục 2.2.2: gói truy vấn nhỏ vẫn chen được vào hàng đợi, chỉ phải chờ lâu.
 
-Để kiểm chứng việc không chặn nhầm client, bảng luật iptables trên các router được chụp lại ở khoảng giây thứ 33 của một lượt **on** chạy riêng. Trên R1, router mà cả client lẫn attacker cùng đi qua, chain `GUARD` chỉ có đúng một luật cho địa chỉ của attacker:
+Để kiểm chứng việc không chặn nhầm client, bảng quy tắc iptables trên các router được chụp lại ở khoảng giây thứ 33 của một lượt **on** chạy riêng. Trên R1, router mà cả client lẫn attacker cùng đi qua, chain `GUARD` chỉ có đúng một quy tắc cho địa chỉ của attacker:
 
 ```
 -N GUARD
@@ -197,7 +197,7 @@ Bảng: Kết quả đo ba lượt demo trên EVE-NG
 -A FORWARD -j GUARD
 ```
 
-R2 và R3 có cùng một luật duy nhất như vậy (tệp `results/eve-v2-report/iptables-on.txt`). Gói của client (10.0.1.20) không khớp luật nào nên vẫn được chuyển tiếp, phù hợp với việc client không mất gói và RTT trở lại mức bình thường.
+R2 và R3 có cùng một quy tắc duy nhất như vậy (tệp `results/eve-v2-report/iptables-on.txt`). Gói của client (10.0.1.20) không khớp quy tắc nào nên vẫn được chuyển tiếp, phù hợp với việc client không mất gói và RTT trở lại mức bình thường.
 
 Kết quả lượt **inband** gần như trùng với lượt **on**. Điều này đúng với dự đoán: cảnh báo đi theo chiều R3 → R2 → R1, ngược chiều với lưu lượng tấn công, nên chiều này không bị nghẽn. Để biết QoS có thực sự giữ cho cảnh báo đi được khi đường nghẽn hay không, cần một phép đo riêng.
 

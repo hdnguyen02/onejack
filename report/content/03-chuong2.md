@@ -54,9 +54,9 @@ Chọn ngưỡng là bài toán cân bằng. Ngưỡng quá thấp sẽ **báo n
 
 ### Netfilter và iptables
 
-Netfilter là khung xử lý gói nằm trong nhân Linux. Nó cung cấp các điểm móc trên đường đi của gói, tại đó có thể kiểm tra, sửa hoặc bỏ gói. iptables là công cụ dòng lệnh để khai báo luật cho Netfilter [[REF:12]]. Luật được gom thành các chuỗi (chain). Chain `INPUT` áp dụng cho gói gửi tới chính máy đó, `OUTPUT` cho gói máy đó gửi ra, còn `FORWARD` cho gói **đi xuyên qua** máy. Router chuyển tiếp gói của người khác, nên chặn trên router phải đặt ở chain `FORWARD`.
+Netfilter là khung xử lý gói nằm trong nhân Linux. Nó cung cấp các điểm móc trên đường đi của gói, tại đó có thể kiểm tra, sửa hoặc bỏ gói. iptables là công cụ dòng lệnh để khai báo quy tắc cho Netfilter [[REF:12]]. Quy tắc được gom thành các chuỗi (chain). Chain `INPUT` áp dụng cho gói gửi tới chính máy đó, `OUTPUT` cho gói máy đó gửi ra, còn `FORWARD` cho gói **đi xuyên qua** máy. Router chuyển tiếp gói của người khác, nên chặn trên router phải đặt ở chain `FORWARD`.
 
-Ngoài các chain có sẵn, người dùng có thể tạo chain riêng rồi cho chain có sẵn nhảy sang. Đề tài tạo một chain tên `GUARD`, gắn vào `FORWARD`, và chỉ thêm luật vào chain này. Một luật chặn có dạng `iptables -A GUARD -s 10.0.1.10 -j DROP`, nghĩa là bỏ mọi gói có địa chỉ nguồn 10.0.1.10. Cách tách chain riêng giúp dọn dẹp dễ dàng: khi chương trình dừng, chỉ cần gỡ và xóa chain `GUARD` là mạng trở về như cũ mà không đụng tới luật khác trên máy.
+Ngoài các chain có sẵn, người dùng có thể tạo chain riêng rồi cho chain có sẵn nhảy sang. Đề tài tạo một chain tên `GUARD`, gắn vào `FORWARD`, và chỉ thêm quy tắc vào chain này. Một quy tắc chặn có dạng `iptables -A GUARD -s 10.0.1.10 -j DROP`, nghĩa là bỏ mọi gói có địa chỉ nguồn 10.0.1.10. Cách tách chain riêng giúp dọn dẹp dễ dàng: khi chương trình dừng, chỉ cần gỡ và xóa chain `GUARD` là mạng trở về như cũ mà không đụng tới quy tắc khác trên máy.
 
 ### Raw socket AF_PACKET
 
@@ -76,7 +76,7 @@ Phòng thủ cộng tác kết hợp ưu điểm của cả hai: node gần nạ
 
 ### RTBH và BGP FlowSpec
 
-Ý tưởng trên đã được dùng thật ở quy mô Internet. Với RTBH, nhà mạng gắn một nhãn đặc biệt vào thông tin định tuyến của địa chỉ đang bị tấn công. Các router biên nhận được thông tin đó sẽ bỏ toàn bộ lưu lượng tới địa chỉ này ngay tại biên [[REF:4]]. Cách này cứu được phần còn lại của mạng nhưng hy sinh luôn nạn nhân. BGP FlowSpec tinh tế hơn: các router trao đổi những luật lọc mô tả chính xác luồng xấu, ví dụ theo địa chỉ nguồn, giao thức và cổng, rồi mỗi router tự cài luật đó [[REF:6]]. Thông điệp `BLOCK <địa chỉ>` trong đề tài có thể xem là một phiên bản rất thu nhỏ của luật FlowSpec.
+Ý tưởng trên đã được dùng thật ở quy mô Internet. Với RTBH, nhà mạng gắn một nhãn đặc biệt vào thông tin định tuyến của địa chỉ đang bị tấn công. Các router biên nhận được thông tin đó sẽ bỏ toàn bộ lưu lượng tới địa chỉ này ngay tại biên [[REF:4]]. Cách này cứu được phần còn lại của mạng nhưng hy sinh luôn nạn nhân. BGP FlowSpec tinh tế hơn: các router trao đổi những quy tắc lọc mô tả chính xác luồng xấu, ví dụ theo địa chỉ nguồn, giao thức và cổng, rồi mỗi router tự cài quy tắc đó [[REF:6]]. Thông điệp `BLOCK <địa chỉ>` trong đề tài có thể xem là một phiên bản rất thu nhỏ của quy tắc FlowSpec.
 
 ### Kênh truyền cảnh báo
 
@@ -110,4 +110,4 @@ EVE-NG là nền tảng giả lập mạng: người dùng tạo lab trên giao 
 
 ### Network namespace
 
-Network namespace cho phép một nhóm tiến trình có bộ cổng mạng, bảng định tuyến và luật iptables riêng như một máy độc lập. Nối các namespace bằng cặp cổng ảo `veth` là dựng được cả mạng nhiều node trên một máy. Đề tài dùng cách này làm bản thu nhỏ của lab EVE-NG để kiểm thử nhanh và làm phương án dự phòng khi trình diễn.
+Network namespace cho phép một nhóm tiến trình có bộ cổng mạng, bảng định tuyến và quy tắc iptables riêng như một máy độc lập. Nối các namespace bằng cặp cổng ảo `veth` là dựng được cả mạng nhiều node trên một máy. Đề tài dùng cách này làm bản thu nhỏ của lab EVE-NG để kiểm thử nhanh và làm phương án dự phòng khi trình diễn.

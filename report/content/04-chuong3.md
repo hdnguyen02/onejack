@@ -42,12 +42,12 @@ Yêu cầu chức năng của từng chương trình đã được nêu ở mụ
 - **Phản ứng nhanh:** thời gian phát hiện và thời gian lan truyền quyết định chặn phải đạt tiêu chí 1 và 2 ở Bảng 1.1.
 - **Không chặn nhầm:** địa chỉ của client, server và các địa chỉ trong mạng điều khiển nằm trong danh sách không được chặn. Guard từ chối mọi yêu cầu chặn các địa chỉ này, kể cả khi yêu cầu đến từ cảnh báo của router khác.
 - **An toàn khi gọi lệnh hệ thống:** guard gọi iptables bằng `fork` và `execvp` với từng tham số riêng, không ghép chuỗi lệnh để chạy qua shell. Nội dung cảnh báo nhận từ mạng được kiểm tra chặt trước khi dùng.
-- **Dọn dẹp sạch:** khi guard dừng, toàn bộ luật đã thêm bị gỡ, mạng trở về trạng thái ban đầu để lượt thử nghiệm sau không bị ảnh hưởng.
+- **Dọn dẹp sạch:** khi guard dừng, toàn bộ quy tắc đã thêm bị gỡ, mạng trở về trạng thái ban đầu để lượt thử nghiệm sau không bị ảnh hưởng.
 - **Tái hiện được:** dựng lab, chạy thử nghiệm, thu số liệu và vẽ biểu đồ đều bằng script.
 
 ## Luồng xử lý khi bị tấn công
 
-Hình dưới mô tả trình tự các sự kiện ở lượt có hợp tác. Attacker gửi rác qua R1, R2 tới R3. Sau một giây đếm, R3 thấy địa chỉ 10.0.1.10 vượt ngưỡng. R3 thêm luật chặn cho chính mình, rồi gửi cảnh báo cho R2 và R1. Hai router này kiểm tra cảnh báo và thêm luật chặn. Từ đó, gói của attacker bị vứt ngay khi tới R1, phần còn lại của mạng không còn thấy gói rác nào.
+Hình dưới mô tả trình tự các sự kiện ở lượt có hợp tác. Attacker gửi rác qua R1, R2 tới R3. Sau một giây đếm, R3 thấy địa chỉ 10.0.1.10 vượt ngưỡng. R3 tự chặn địa chỉ này, rồi gửi cảnh báo cho R2 và R1. Hai router này kiểm tra cảnh báo và thêm quy tắc chặn. Từ đó, gói của attacker bị vứt ngay khi tới R1, phần còn lại của mạng không còn thấy gói rác nào.
 
 ![Trình tự phát hiện, cảnh báo và chặn ở lượt có hợp tác](../figures/sequence.png)
 

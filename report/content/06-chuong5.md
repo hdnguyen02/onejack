@@ -36,4 +36,4 @@ Ngoài ra, mọi số liệu đều đo trong một phòng thí nghiệm ảo tr
 - **Thêm ranh giới tin cậy** cho QoS: router cửa vào xóa dấu DSCP trên mọi gói đến từ mạng ngoài, chỉ gói do chính các router sinh ra mới được mang dấu EF.
 - **Tự gỡ chặn** sau một khoảng thời gian (TTL), rồi chặn lại nếu tấn công vẫn tiếp diễn, để không chặn nhầm vĩnh viễn một địa chỉ đã được trả lại cho người dùng khác.
 - **Mở rộng mô hình** lên nhiều attacker và nhiều nhánh mạng, kết hợp lọc theo cổng vào kiểu BCP 38 [[REF:2]] để hạn chế giả mạo địa chỉ.
-- **Thử nghiệm với giao thức thật**: thay thông điệp `BLOCK` tự định nghĩa bằng luật BGP FlowSpec [[REF:6]] trên phần mềm định tuyến, để so sánh độ trễ lan truyền và mức độ phức tạp khi triển khai.
+- **Thử nghiệm với giao thức thật**: thay thông điệp `BLOCK` tự định nghĩa bằng quy tắc lọc BGP FlowSpec [[REF:6]] trên phần mềm định tuyến, để so sánh độ trễ lan truyền và mức độ phức tạp khi triển khai.
