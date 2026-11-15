@@ -40,6 +40,15 @@ class FactsTest(unittest.TestCase):
         self.assertEqual(f["rtt_base"], "2,24")
         self.assertEqual(f["queue_delay_ms"], "400")
 
+    def test_reduction_percentages(self):
+        f = load_facts(ROOT / "results/eve-v2-report", ROOT / "scripts/demo.sh")
+        self.assertEqual(f["rtt_drop_on"], "98,5")
+        self.assertEqual(f["rtt_drop_inband"], "98,3")
+        self.assertEqual(f["link_drop_on"], "98,3")
+        self.assertEqual(f["link_drop_inband"], "98,1")
+        self.assertEqual(f["alpine_version"], "3.20.10")
+        self.assertEqual(f["iptables_version"], "1.8.10")
+
     def test_english_variants(self):
         f = load_facts(ROOT / "results/eve-v2-report", ROOT / "scripts/demo.sh")
         self.assertEqual(f["rtt_off_en"], "407.97")

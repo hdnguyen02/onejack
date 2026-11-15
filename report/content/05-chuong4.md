@@ -189,6 +189,16 @@ Bảng: Kết quả đo ba lượt demo trên EVE-NG
 
 Ở hai lượt có hợp tác, R1 nhận cảnh báo và chặn chỉ vài mili giây sau R3. Cần lưu ý các mốc thời gian này được đóng dấu khi dòng log về tới máy chạy `demo.sh` qua kết nối SSH, nên có sai số cỡ vài mili giây. Con số cho biết bậc độ lớn, không phải độ trễ chính xác của gói cảnh báo. Ngay giây kế tiếp, lưu lượng trên link về gần như chỉ còn của client, RTT trở lại khoảng {{rtt_base}} ms. Con số trung bình {{rtt_on}} ms và {{rtt_inband}} ms cao hơn mức bình thường chỉ vì có một giây đầu tiên của cuộc tấn công, trước khi kịp phát hiện. Client không mất gói ở cả ba lượt. Lý do là hàng đợi giới hạn theo byte, như đã phân tích ở mục 2.2.2: gói truy vấn nhỏ vẫn chen được vào hàng đợi, chỉ phải chờ lâu.
 
+Để kiểm chứng việc không chặn nhầm client, bảng luật iptables trên các router được chụp lại ở khoảng giây thứ 33 của một lượt **on** chạy riêng. Trên R1, router mà cả client lẫn attacker cùng đi qua, chain `GUARD` chỉ có đúng một luật cho địa chỉ của attacker:
+
+```
+-N GUARD
+-A GUARD -s 10.0.1.10/32 -j DROP
+-A FORWARD -j GUARD
+```
+
+R2 và R3 có cùng một luật duy nhất như vậy (tệp `results/eve-v2-report/iptables-on.txt`). Gói của client (10.0.1.20) không khớp luật nào nên vẫn được chuyển tiếp, phù hợp với việc client không mất gói và RTT trở lại mức bình thường.
+
 Kết quả lượt **inband** gần như trùng với lượt **on**. Điều này đúng với dự đoán: cảnh báo đi theo chiều R3 → R2 → R1, ngược chiều với lưu lượng tấn công, nên chiều này không bị nghẽn. Để biết QoS có thực sự giữ cho cảnh báo đi được khi đường nghẽn hay không, cần một phép đo riêng.
 
 ### Kiểm chứng QoS

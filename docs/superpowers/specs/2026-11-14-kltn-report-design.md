@@ -15,7 +15,7 @@ Người dùng cần **một file Word báo cáo khóa luận tốt nghiệp (KL
 
 **Mục tiêu**
 
-1. Phần nội dung, tính từ *Lời mở đầu* tới hết *Tài liệu tham khảo*, **không quá 40 trang**, đặt mục tiêu khoảng 37 trang. Bìa, các trang đầu và phụ lục không tính.
+1. Phần nội dung, tính từ *Lời mở đầu* tới hết *Tài liệu tham khảo*, khoảng 40 trang. **Cập nhật 2026-11-15:** người dùng làm rõ 40 trang là mức tối thiểu tham khảo, không phải giới hạn trên; độ dài hợp lý là được. Bìa, các trang đầu và phụ lục không tính.
 2. **Tuân thủ hoàn toàn** mẫu và quy định trong thư mục `~/Downloads/drive-download-20261114T075932Z-1-001/` (mục 4).
 3. Nội dung **viết mới hoàn toàn**, dựa trên chính dự án onejack. Mọi kiến thức lấy từ nguồn ngoài đều có trích dẫn. Mục tiêu là không trùng văn bản với tài liệu khác (phần đạo văn của Turnitin).
 4. Mọi con số trong báo cáo đều lấy từ **lần chạy thật** đã lưu trong repo (mục 6).

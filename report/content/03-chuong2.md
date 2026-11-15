@@ -48,7 +48,7 @@ UDP flood là kiểu làm cạn băng thông: kẻ tấn công gửi liên tục
 
 Khi không phân biệt được bằng nội dung, có thể phân biệt bằng **hành vi**. Phương pháp đơn giản nhất là đếm số gói mỗi địa chỉ nguồn gửi trong một khoảng thời gian cố định, rồi so với một ngưỡng. Địa chỉ nào vượt ngưỡng thì bị xem là đang tấn công. Đây cũng chính là nguyên lý của cơ chế giới hạn tần suất (rate limiting) thường gặp ở các API.
 
-Chọn ngưỡng là bài toán cân bằng. Ngưỡng quá thấp sẽ **báo nhầm** (false positive): chặn cả người dùng thật đang dùng nhiều. Ngưỡng quá cao sẽ **bỏ sót** (false negative): kẻ tấn công chỉ cần gửi chậm hơn ngưỡng một chút. Đề tài chọn ngưỡng {{threshold}} gói/giây, cách xa cả mức của client ({{client_rate}} gói/giây) lẫn mức của attacker. Ngoài ra còn dùng danh sách trắng (whitelist) gồm địa chỉ của client và server để chắc chắn không chặn nhầm hai máy này.
+Chọn ngưỡng là bài toán cân bằng. Ngưỡng quá thấp sẽ **báo nhầm** (false positive): chặn cả người dùng hợp lệ đang dùng nhiều. Ngưỡng quá cao sẽ **bỏ sót** (false negative): kẻ tấn công chỉ cần gửi chậm hơn ngưỡng một chút. Cách đề tài chọn ngưỡng và dùng danh sách địa chỉ không được chặn đã nêu ở mục 1.3.
 
 ## Lọc gói trên Linux
 

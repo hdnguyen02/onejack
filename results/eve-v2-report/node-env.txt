@@ -1,0 +1,6 @@
+# Môi trường node (R1), 2026-11-15
+Alpine 3.20.10
+kernel 6.6.142-0-virt
+iptables v1.8.10 (nf_tables)
+iptables -> xtables-nft-multi
+tc utility, iproute2-6.9.0

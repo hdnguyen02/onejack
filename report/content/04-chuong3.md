@@ -10,9 +10,7 @@ Chuyện gì xảy ra lúc đó? Hàng đợi ở cổng ra của R1 đầy lên
 
 ### Vị trí phát hiện và vị trí chặn
 
-Bài toán có một mâu thuẫn. Router nào cũng có thể chạy iptables để chặn, nhưng không phải router nào cũng biết **chặn ai**.
-
-R3 đứng sát server nên mọi truy vấn tới server đều phải đi qua nó. Chỉ cần đếm theo địa chỉ nguồn là R3 thấy ngay một địa chỉ đang gửi gấp hàng trăm lần người khác. Trong khi đó, R1 ở cửa vào nhìn thấy lưu lượng đi tới nhiều đích khác nhau. Trong mạng thật, R1 còn có thể thuộc về một tổ chức khác, chẳng hạn nhà mạng, và không biết máy chủ phía sau chịu được bao nhiêu tải. Với một cuộc tấn công phân tán, mỗi nguồn đi qua R1 có khi chỉ gửi rất ít, chỉ khi dồn lại ở gần nạn nhân mới thấy bất thường [[REF:7]].
+Bài toán có một mâu thuẫn. Router nào cũng có thể chạy iptables để chặn, nhưng không phải router nào cũng biết **chặn ai**. Như đã nêu ở mục 1.1, R3 là điểm giám sát lưu lượng đi tới server. Trong khi đó, R1 ở cửa vào nhìn thấy lưu lượng đi tới nhiều đích khác nhau. Trong mạng thật, R1 còn có thể thuộc về một tổ chức khác, chẳng hạn nhà mạng, và không biết máy chủ phía sau chịu được bao nhiêu tải. Với một cuộc tấn công phân tán, mỗi nguồn đi qua R1 có khi chỉ gửi rất ít, chỉ khi dồn lại ở gần nạn nhân mới thấy bất thường [[REF:7]].
 
 Ngược lại, vị trí chặn hiệu quả nhất lại là R1, vì chặn ở đó thì gói rác không bao giờ chạm tới hai đoạn nút cổ chai. Kết luận rút ra là: **nơi phát hiện tốt nhất và nơi chặn tốt nhất không trùng nhau**, nên cần một cơ chế đưa thông tin từ R3 về R1. Đây chính là phần "cộng tác" của đề tài.
 
@@ -37,23 +35,15 @@ Phương án **on** giải quyết bài toán theo cách chắc chắn nhất: c
 
 Phương án **inband** bỏ mạng riêng: R3 gửi cảnh báo thẳng tới địa chỉ dữ liệu của R2 và R1. Để cảnh báo không bị kẹt sau rác khi đường nghẽn, gói cảnh báo được đánh dấu ưu tiên EF, và mọi đoạn giữa các router đều có hàng đợi hai làn.
 
-## Yêu cầu hệ thống
+## Yêu cầu phi chức năng
 
-### Yêu cầu chức năng
+Yêu cầu chức năng của từng chương trình đã được nêu ở mục 1.4. Bên cạnh đó, hệ thống cần thỏa các yêu cầu sau:
 
-- **Phát hiện:** guard trên R3 đếm số gói UDP tới cổng 9000 theo từng địa chỉ nguồn trong mỗi giây. Địa chỉ vượt {{threshold}} gói/giây và không nằm trong whitelist thì bị chặn.
-- **Chặn:** thêm luật DROP theo địa chỉ nguồn vào chain `GUARD` của iptables. Mỗi địa chỉ chỉ thêm luật một lần.
-- **Gửi cảnh báo:** khi chặn một địa chỉ mới và có danh sách peer, R3 gửi cho từng peer một gói UDP tới cổng 9999 với nội dung `BLOCK <địa chỉ> <tên node>`. Ở chế độ inband, gói này được đánh dấu ưu tiên.
-- **Nhận cảnh báo:** guard trên R1, R2 nghe cổng 9999, kiểm tra định dạng, kiểm tra whitelist, rồi chặn theo.
-- **Đo đạc:** client ghi mỗi giây số gói gửi, số gói nhận, tỉ lệ mất và RTT trung bình. Một script khác đo lưu lượng trên cổng R1 → R2.
-
-### Yêu cầu phi chức năng
-
-- **Phản ứng nhanh:** từ lúc bắt đầu tấn công tới lúc chặn ở R3 dưới một giây. Cảnh báo tới R1 trong vài mili giây.
-- **Không chặn nhầm:** client, server và các địa chỉ mạng điều khiển không bao giờ bị chặn, kể cả khi nhận được cảnh báo yêu cầu chặn chúng.
+- **Phản ứng nhanh:** thời gian phát hiện và thời gian lan truyền quyết định chặn phải đạt tiêu chí 1 và 2 ở Bảng 1.1.
+- **Không chặn nhầm:** địa chỉ của client, server và các địa chỉ trong mạng điều khiển nằm trong danh sách không được chặn. Guard từ chối mọi yêu cầu chặn các địa chỉ này, kể cả khi yêu cầu đến từ cảnh báo của router khác.
 - **An toàn khi gọi lệnh hệ thống:** guard gọi iptables bằng `fork` và `execvp` với từng tham số riêng, không ghép chuỗi lệnh để chạy qua shell. Nội dung cảnh báo nhận từ mạng được kiểm tra chặt trước khi dùng.
-- **Dọn dẹp sạch:** khi guard dừng (Ctrl+C hoặc tín hiệu dừng), toàn bộ luật đã thêm bị gỡ, mạng trở về trạng thái ban đầu để lượt demo sau không bị ảnh hưởng.
-- **Lặp lại được:** dựng lab, chạy demo, thu số liệu và vẽ biểu đồ đều bằng script, chạy lại cho kết quả tương tự.
+- **Dọn dẹp sạch:** khi guard dừng, toàn bộ luật đã thêm bị gỡ, mạng trở về trạng thái ban đầu để lượt thử nghiệm sau không bị ảnh hưởng.
+- **Tái lập được:** dựng lab, chạy thử nghiệm, thu số liệu và vẽ biểu đồ đều bằng script.
 
 ## Luồng xử lý khi bị tấn công
 

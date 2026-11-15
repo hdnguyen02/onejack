@@ -84,11 +84,17 @@ def shell_value(script: Path, name: str) -> str:
 def load_facts(results_dir: Path, demo_sh: Path) -> dict:
     facts = {}
 
+    rtt_off = average_after_attack(results_dir / "client_off.csv", 4)
+    link_off = average_after_attack(results_dir / "link_off.csv", 1)
     for mode in ["off", "on", "inband"]:
         rtt = average_after_attack(results_dir / f"client_{mode}.csv", 4)
         link_bytes = average_after_attack(results_dir / f"link_{mode}.csv", 1)
         facts[f"rtt_{mode}"] = vn_number(rtt, 2)
         facts[f"link_{mode}"] = vn_number(link_bytes * 8 / 1_000_000, 2)
+        if mode != "off":
+            # Mức giảm so với lượt off, tính theo phần trăm.
+            facts[f"rtt_drop_{mode}"] = vn_number((rtt_off - rtt) / rtt_off * 100, 1)
+            facts[f"link_drop_{mode}"] = vn_number((link_off - link_bytes) / link_off * 100, 1)
 
         times = event_times(results_dir / f"events_{mode}.log")
         facts[f"detect_{mode}"] = vn_number(times["detect"] - times["start"], 3)
@@ -122,6 +128,11 @@ def load_facts(results_dir: Path, demo_sh: Path) -> dict:
     facts["queue_kb"] = str(queue_bytes // 1000)
     # Thời gian để xả hết một hàng đợi đầy qua nút cổ chai: byte * 8 / (Mbit/s).
     facts["queue_delay_ms"] = str(round(queue_bytes * 8 / (int(facts["bottleneck"]) * 1_000_000) * 1000))
+
+    # Phiên bản môi trường node, chụp bằng lệnh trên R1 (results/.../node-env.txt).
+    env = (results_dir / "node-env.txt").read_text(encoding="utf-8")
+    facts["alpine_version"] = re.search(r"^Alpine (\S+)", env, re.M).group(1)
+    facts["iptables_version"] = re.search(r"iptables v(\S+)", env).group(1)
 
     # Bản tiếng Anh (dùng cho Abstract): dấu chấm thập phân, dấu phẩy hàng nghìn.
     english = {}

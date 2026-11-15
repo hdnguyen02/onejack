@@ -1,6 +1,6 @@
 """Kiểm tra báo cáo trước khi bàn giao. Chạy: python3 report/check.py
 
-1. Số trang nội dung (LỜI MỞ ĐẦU tới hết TÀI LIỆU THAM KHẢO) <= 38 khi dàn trang bằng LibreOffice.
+1. In số trang nội dung (LỜI MỞ ĐẦU tới hết TÀI LIỆU THAM KHẢO) khi dàn trang bằng LibreOffice, để theo dõi.
 2. Font chữ Việt (ascii/hAnsi/eastAsia) trong document.xml chỉ là Times New Roman.
 3. Không còn {{, [[REF, "Error!".
 4. Heading 2 có Heading 3 thì có ít nhất 2 Heading 3.
@@ -22,7 +22,7 @@ if str(ROOT) not in sys.path:
 
 from report.build import APPENDIX_FILES, CONTENT, FRONT_FILES, MAIN_FILES, build  # noqa: E402
 
-MAX_CONTENT_PAGES = 38
+REFERENCE_PAGES = 40   # mức tham khảo của Khoa, không phải giới hạn trên
 MEASUREMENT = re.compile(r"\d+,\d+\s*(ms|Mbit/s|giây|s)\b|\d+\s*(ms|Mbit/s)\b")
 FONT_ATTR = re.compile(r'w:(ascii|hAnsi|eastAsia)="([^"]+)"')
 
@@ -167,11 +167,9 @@ def main() -> int:
 
     errors = []
     pages = content_pages(pdf)
-    print(f"Số trang nội dung (LibreOffice): {pages} / tối đa {MAX_CONTENT_PAGES}")
+    print(f"Số trang nội dung (LibreOffice): {pages} (mức tham khảo {REFERENCE_PAGES})")
     if pages < 0:
         errors.append("không tìm thấy LỜI MỞ ĐẦU hoặc PHỤ LỤC trong PDF")
-    elif pages > MAX_CONTENT_PAGES:
-        errors.append(f"nội dung {pages} trang, vượt {MAX_CONTENT_PAGES}")
 
     for problem in font_violations(document_xml):
         errors.append(f"font không phải Times New Roman: {problem}")

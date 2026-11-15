@@ -24,7 +24,7 @@ Nên viết lại kỹ nhất ở những phần mang tính cá nhân: Lời m�
 
 ## 5. Kiểm tra số trang trong Word
 
-Quy định: phần nội dung, từ LỜI MỞ ĐẦU tới hết TÀI LIỆU THAM KHẢO, không quá 40 trang. Đo bằng LibreOffice hiện là **37 trang**. Word có thể dàn trang lệch 1–2 trang, nên kiểm tra lại số trang ở dòng TÀI LIỆU THAM KHẢO trong mục lục sau khi cập nhật.
+Phần nội dung, từ LỜI MỞ ĐẦU tới hết TÀI LIỆU THAM KHẢO, khoảng 40 trang là mức tham khảo, không phải giới hạn trên. Đo bằng LibreOffice hiện là **40 trang**; Word có thể dàn trang lệch 1–2 trang.
 
 ## 6. Nếu muốn sinh lại file
 
