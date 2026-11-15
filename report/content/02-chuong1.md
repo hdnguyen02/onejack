@@ -35,7 +35,7 @@ Bảng: Các mục tiêu cụ thể và tiêu chí đánh giá
 | 5 | Khôi phục chất lượng dịch vụ | RTT trung bình của client | Giảm ít nhất 90% so với lượt chỉ chặn tại phía đích |
 | 6 | Cảnh báo đi chung đường vẫn hiệu quả | Thời gian chặn, thông lượng và RTT khi cảnh báo được gửi chung đường dữ liệu (có ưu tiên QoS) thay vì qua mạng điều khiển riêng | Đạt cùng tiêu chí như mục tiêu 2, 4 và 5 |
 
-Mỗi lượt thử nghiệm kéo dài {{duration}} giây, kẻ tấn công bắt đầu gửi ở giây thứ {{attack_at}}. Thông lượng và RTT trung bình được tính từ lúc bị tấn công tới hết lượt. Các khoảng thời gian ở mục tiêu 1 và 2 được đo bằng dấu thời gian trong log mà các router và script điều khiển ghi lại khi sự kiện xảy ra: lúc tấn công bắt đầu, lúc R3 chặn, và lúc R1 chặn. Vì R1 chỉ ghi log sau khi đã chặn xong, thời gian ở mục tiêu 2 đã gồm cả thời gian truyền cảnh báo và thời gian R1 thực hiện việc chặn.
+Mỗi lượt thử nghiệm kéo dài {{duration}} giây, kẻ tấn công bắt đầu gửi ở giây thứ {{attack_at}}. Thông lượng và RTT trung bình được tính từ lúc bị tấn công tới hết lượt. Thời gian ở mục tiêu 1 và 2 được tính từ log: mỗi khi tấn công bắt đầu, R3 chặn hay R1 chặn, hệ thống đều ghi lại thời điểm xảy ra. Vì R1 chỉ ghi log sau khi đã chặn xong, thời gian ở mục tiêu 2 đã gồm cả thời gian truyền cảnh báo và thời gian R1 thực hiện việc chặn.
 
 ## Phạm vi đề tài
 
