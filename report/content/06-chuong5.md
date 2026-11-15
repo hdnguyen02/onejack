@@ -17,7 +17,7 @@ Bảng: Đối chiếu kết quả với mục tiêu
 
 Kết quả quan trọng nhất là sự chênh lệch giữa lượt off và hai lượt có hợp tác. Cả ba lượt đều bảo vệ được server, nhưng chỉ khi các router chia sẻ quyết định chặn thì đường truyền mới được giải phóng và người dùng thật mới không còn bị ảnh hưởng. Thông tin cần chia sẻ chỉ là một gói tin vài chục byte, và việc này diễn ra trong vài mili giây.
 
-Về bản thân, đây là lần đầu em làm việc ở tầng thấp của mạng: đọc từng byte của tiêu đề IP, cấu hình hàng đợi bằng `tc`, dựng máy ảo lồng trong máy ảo. Phần tốn thời gian nhất không phải là viết chương trình C, mà là làm cho môi trường thử nghiệm chạy ổn định và đo cho đúng. Những lỗi nêu ở mục 4.6.4 đều chỉ lộ ra khi chạy trên môi trường thật, và em rút ra rằng một kết quả đo chỉ đáng tin khi chạy lại được nhiều lần.
+Về bản thân, đề tài giúp em vận dụng và đào sâu kiến thức mạng máy tính đã học vào một hệ thống cụ thể: đọc trực tiếp tiêu đề IP trong chương trình C, cấu hình hàng đợi bằng `tc`, dựng mô hình nhiều node trên máy ảo lồng nhau. Phần đòi hỏi nhiều công sức nhất không phải là viết chương trình, mà là làm cho môi trường thử nghiệm chạy ổn định và đo cho đúng. Những lỗi nêu ở mục 4.6.4 đều chỉ lộ ra khi chạy trên môi trường thật, và em rút ra rằng một kết quả đo chỉ đáng tin khi chạy lại được nhiều lần.
 
 ## Hạn chế của đề tài
 
