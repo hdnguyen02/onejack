@@ -23,18 +23,24 @@ Vì client và attacker cùng nằm sau R1, việc chặn phải dựa trên đ�
 
 ## Mục tiêu đề tài
 
-Mục tiêu chung là xây dựng hệ thống demo và đo được mức cải thiện hiệu năng mạng khi các router hợp tác chặn lưu lượng xấu, so với cách chỉ chặn tại phía đích. Các mục tiêu cụ thể được chia thành ba nhóm theo trình tự: phát hiện và ngăn chặn, cải thiện hiệu năng, triển khai và kiểm thử. Mọi chỉ số được lấy từ log và tệp số liệu của từng lượt thử nghiệm dài {{duration}} giây, trong đó tấn công bắt đầu ở giây thứ {{attack_at}}. Các giá trị trung bình được tính trên khoảng **sau giây thứ {{attack_at}} tới hết lượt**.
+Mục tiêu chung là xây dựng hệ thống demo và đo được mức cải thiện hiệu năng mạng khi các router hợp tác chặn lưu lượng xấu, so với cách chỉ chặn tại phía đích. Các mục tiêu cụ thể gồm ba nhóm: mục tiêu 1–3 về phát hiện và ngăn chặn, mục tiêu 4–6 về cải thiện hiệu năng, mục tiêu 7 về triển khai và kiểm thử.
 
 Bảng: Các mục tiêu cụ thể và tiêu chí đánh giá
-| Nhóm | STT | Mục tiêu | Cách đo và tiêu chí đạt |
+| STT | Mục tiêu | Chỉ số đo | Tiêu chí đạt |
 |---|---|---|---|
-| Phát hiện và ngăn chặn | 1 | Phát hiện nhanh | Từ mốc "BẮT ĐẦU TẤN CÔNG" do script điều khiển ghi, tới dòng log "PHÁT HIỆN … → CHẶN" của R3. Dòng này chỉ được ghi sau khi lệnh iptables đã thêm luật thành công. Đạt nếu không quá 2 chu kỳ thống kê (2 giây) |
-| | 2 | Lan truyền quyết định chặn tới cửa vào | Từ dòng log phát hiện của R3 (ghi sau khi đã gửi cảnh báo) tới dòng log "NHẬN cảnh báo … → CHẶN" của R1 (ghi sau khi đã áp dụng luật). Khoảng này gồm cả thời gian truyền, nhận và áp dụng luật. Đạt nếu dưới 100 mili giây |
-| | 3 | Không chặn nhầm | Bảng luật iptables trên cả ba router chỉ chứa địa chỉ của attacker; không có luật nào cho địa chỉ của client hoặc server |
-| Cải thiện hiệu năng | 4 | Giải phóng đường truyền | Thông lượng trung bình trên R1 → R2 ở lượt có hợp tác giảm ít nhất 90% so với lượt chỉ chặn tại phía đích |
-| | 5 | Khôi phục chất lượng dịch vụ | RTT trung bình của client ở lượt có hợp tác giảm ít nhất 90% so với lượt chỉ chặn tại phía đích |
-| | 6 | Cảnh báo chung đường vẫn hiệu quả | Lượt gửi cảnh báo chung đường dữ liệu có ưu tiên QoS đạt cả tiêu chí 2, 4 và 5 như lượt dùng mạng điều khiển riêng |
-| Triển khai và kiểm thử | 7 | Tái lập được thử nghiệm | Dựng lab, chạy từng lượt, thu số liệu và vẽ biểu đồ hoàn toàn bằng script; lab dựng lại được sau khi khởi động lại máy ảo |
+| 1 | Phát hiện nhanh | Thời gian từ lúc bắt đầu tấn công tới lúc R3 chặn | Không quá 2 giây |
+| 2 | Báo cho router cửa vào chặn nhanh | Thời gian từ lúc R3 phát hiện tới lúc R1 chặn | Dưới 100 mili giây |
+| 3 | Không chặn nhầm | Các luật chặn trên ba router | Chỉ có luật cho địa chỉ của attacker |
+| 4 | Giải phóng đường truyền | Thông lượng trung bình trên đường R1 → R2 | Giảm ít nhất 90% so với lượt chỉ chặn tại phía đích |
+| 5 | Khôi phục chất lượng dịch vụ | RTT trung bình của client | Giảm ít nhất 90% so với lượt chỉ chặn tại phía đích |
+| 6 | Cảnh báo đi chung đường vẫn hiệu quả | Kết quả lượt inband | Đạt cả mục tiêu 2, 4 và 5 |
+| 7 | Tái lập được thử nghiệm | Quy trình dựng lab và chạy thử | Làm hoàn toàn bằng script, chạy lại được |
+
+Cách đo được thống nhất như sau. Mỗi lượt thử nghiệm dài {{duration}} giây, tấn công bắt đầu ở giây thứ {{attack_at}}. Thông lượng và RTT trung bình được tính trên khoảng sau giây thứ {{attack_at}} tới hết lượt. Các mốc thời gian ở mục tiêu 1 và 2 lấy từ log:
+
+- **Bắt đầu tấn công:** dòng "BẮT ĐẦU TẤN CÔNG" do script điều khiển ghi.
+- **R3 chặn:** dòng "PHÁT HIỆN … → CHẶN" của R3, ghi sau khi luật iptables đã được thêm và cảnh báo đã được gửi.
+- **R1 chặn:** dòng "NHẬN cảnh báo … → CHẶN" của R1, ghi sau khi luật đã được áp dụng. Khoảng thời gian ở mục tiêu 2 vì vậy gồm cả thời gian truyền cảnh báo, nhận và áp dụng luật.
 
 ## Phạm vi đề tài
 
