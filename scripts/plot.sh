@@ -71,7 +71,7 @@ EOF
 
 plot rtt.png  "Độ trễ RTT của client"        "RTT (ms)"    client '$5'
 plot loss.png "Tỉ lệ mất gói của client"     "Mất gói (%)" client '$4' '[0:100]'
-plot link.png "Lưu lượng trên link R1 -> R2" "Mbit/s"      link   '$2*8/1000000'
+plot link.png "Lưu lượng trên đường truyền R1 -> R2" "Mbit/s"      link   '$2*8/1000000'
 
 summary() {
     # summary <lượt>: trung bình RTT, % mất gói, Mbit/s trên link sau khi bị tấn công

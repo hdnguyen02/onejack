@@ -6,13 +6,13 @@
 
 Xét tình huống: client đang dùng dịch vụ bình thường, mỗi giây gửi {{client_rate}} truy vấn tới server và nhận trả lời gần như tức thì. Tới một thời điểm, attacker bắt đầu gửi {{attack_rate}} gói mỗi giây, mỗi gói {{attack_size}} byte, cùng tới server. Lưu lượng này gấp khoảng bốn lần băng thông {{bottleneck}} Mbit/s của hai đoạn R1–R2 và R2–R3.
 
-Chuyện gì xảy ra lúc đó? Hàng đợi ở card mạng đi ra của R1 đầy lên nhanh chóng. Phần lớn gói tấn công bị loại bỏ ngay tại đây, nhưng phần lọt qua vẫn đủ lấp đầy đường truyền. Truy vấn của client đi chung đường nên phải xếp hàng sau lưu lượng tấn công. Từ góc nhìn của người dùng, dịch vụ không "sập" mà trở nên cực kỳ chậm. Đây là điều cần cải thiện, và cũng là lý do đề tài lấy RTT của client làm thước đo chính, thay vì chỉ đo xem server còn sống hay không.
+Khi đó, hàng đợi ở card mạng đi ra của R1 nhanh chóng bị lấp đầy. Phần lớn gói tấn công bị loại bỏ ngay tại đây, nhưng phần còn lại được chuyển tiếp vẫn đủ chiếm hết đường truyền. Truy vấn của client đi chung đường nên phải xếp hàng sau lưu lượng tấn công. Từ góc nhìn của người dùng, dịch vụ vẫn hoạt động nhưng phản hồi rất chậm. Đây là điều cần cải thiện, và cũng là lý do đề tài lấy RTT của client làm thước đo chính, thay vì chỉ đo xem server còn sống hay không.
 
 ### Vị trí phát hiện và vị trí chặn
 
-Bài toán có một mâu thuẫn. Router nào cũng có thể chạy iptables để chặn, nhưng không phải router nào cũng biết **chặn ai**. Như đã nêu ở mục 1.1, R3 là điểm giám sát lưu lượng đi tới server. Trong khi đó, R1 ở đầu vào nhìn thấy lưu lượng đi tới nhiều đích khác nhau. Trong mạng thật, R1 còn có thể thuộc về một tổ chức khác, chẳng hạn nhà mạng, và không biết máy chủ phía sau chịu được bao nhiêu tải. Với một cuộc tấn công phân tán, mỗi nguồn đi qua R1 có khi chỉ gửi rất ít, chỉ khi tập trung lại ở gần nạn nhân mới thấy bất thường [[REF:7]].
+Bài toán có một mâu thuẫn. Router nào cũng có thể chạy iptables để chặn, nhưng không phải router nào cũng biết **chặn ai**. Như đã nêu ở mục 1.1, R3 là điểm giám sát lưu lượng đi tới server. Trong khi đó, R1 ở đầu vào quan sát được lưu lượng đi tới nhiều đích khác nhau. Trong mạng thật, R1 còn có thể thuộc về một tổ chức khác, chẳng hạn nhà mạng, và không biết khả năng chịu tải của máy chủ phía sau. Với một cuộc tấn công phân tán, mỗi nguồn đi qua R1 có thể chỉ gửi rất ít, chỉ khi tập trung lại ở gần nạn nhân mới thấy bất thường [[REF:7]].
 
-Ngược lại, vị trí chặn hiệu quả nhất lại là R1, vì chặn ở đó thì gói tấn công không bao giờ chạm tới hai đoạn nút cổ chai. Kết luận rút ra là: **nơi phát hiện tốt nhất và nơi chặn tốt nhất không trùng nhau**, nên cần một cơ chế đưa thông tin từ R3 về R1. Đây chính là phần "cộng tác" của đề tài.
+Ngược lại, vị trí chặn hiệu quả nhất lại là R1, vì chặn ở đó thì gói tấn công không đi tới hai đoạn nút cổ chai. Kết luận rút ra là: **nơi phát hiện tốt nhất và nơi chặn tốt nhất không trùng nhau**, nên cần một cơ chế đưa thông tin từ R3 về R1. Đây chính là phần "cộng tác" của đề tài.
 
 ## Các phương án xử lý
 
@@ -24,7 +24,7 @@ Bảng: So sánh ba phương án xử lý
 | Nơi phát hiện | R3 | R3 | R3 |
 | Nơi chặn | R3 | R3, R1, R2 | R3, R1, R2 |
 | Server được bảo vệ | Có | Có | Có |
-| Link R1 → R3 được giải phóng | Không | Có | Có |
+| Đường truyền R1 → R3 được giải phóng | Không | Có | Có |
 | Hạ tầng cần thêm | Không | Một mạng điều khiển nối các router | Hàng đợi ưu tiên trên các router |
 | Rủi ro cảnh báo không tới | Không có cảnh báo | Thấp, kênh tách khỏi đường bị nghẽn | Phụ thuộc QoS hoạt động đúng |
 | Mức độ giống thực tế | Cao, nhưng là cách làm bị động | Giống mạng quản lý của nhà mạng | Giống cách gửi lệnh chặn qua kết nối có sẵn |

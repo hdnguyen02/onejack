@@ -17,7 +17,7 @@ Hai đoạn R1 – R2 và R2 – R3 được giới hạn băng thông {{bottlen
 R3 đóng vai trò **điểm giám sát lưu lượng đi tới server**: mọi gói từ LAN1 tới server đều phải đi vào card mạng `eth1` của R3, nên chương trình trên R3 thống kê được số truy vấn theo từng địa chỉ IP nguồn. Việc chặn được thực hiện bằng tường lửa iptables có sẵn trong Linux: router thêm vào tường lửa một **quy tắc chặn** (rule) yêu cầu loại bỏ mọi gói có địa chỉ nguồn là địa chỉ cần chặn (chi tiết ở mục 2.4.1). Có hai cách xử lý khi R3 phát hiện một nguồn vượt ngưỡng:
 
 - **Chặn tại phía đích:** R3 tự chặn nguồn đó. Server được bảo vệ, nhưng lưu lượng tấn công vẫn đi qua và chiếm băng thông của hai đoạn R1 – R2, R2 – R3 trước khi bị loại bỏ, nên client đi chung đường vẫn bị ảnh hưởng.
-- **Chặn gần nguồn:** R3 gửi cảnh báo cho các router phía trước. R1 là router nơi lưu lượng tấn công đi vào mạng, nên khi R1 chặn, gói tấn công bị loại bỏ trước khi chiếm băng thông của các đoạn phía sau. R2 cũng nhận cảnh báo và chặn theo. Trong mô hình này, lưu lượng tấn công đã bị R1 loại bỏ trước nên việc chặn ở R2 chỉ mang tính dự phòng, mô phỏng việc cảnh báo được lan tới mọi router trên đường đi.
+- **Chặn gần nguồn:** R3 gửi cảnh báo cho các router phía trước. R1 là router nơi lưu lượng tấn công đi vào mạng, nên khi R1 chặn, gói tấn công bị loại bỏ trước khi chiếm băng thông của các đoạn phía sau. R2 cũng nhận cảnh báo và chặn theo. Trong mô hình này, lưu lượng tấn công đã bị R1 loại bỏ trước nên việc chặn ở R2 chỉ mang tính dự phòng, mô phỏng việc cảnh báo được truyền tới mọi router trên đường đi.
 
 Vì client và attacker cùng nằm sau R1, việc chặn phải dựa trên địa chỉ IP nguồn để chỉ loại bỏ gói của attacker (10.0.1.10), còn gói của client (10.0.1.20) vẫn đi qua bình thường. Mục 4.6.2 kiểm chứng điều này bằng danh sách quy tắc chặn trên các router và số liệu của client.
 
@@ -35,7 +35,7 @@ Bảng: Các mục tiêu cụ thể và tiêu chí đánh giá
 | 5 | Khôi phục chất lượng dịch vụ | RTT trung bình của client | Giảm ít nhất 90% so với lượt chỉ chặn tại phía đích |
 | 6 | Cảnh báo đi chung đường vẫn hiệu quả | Thời gian chặn, thông lượng và RTT khi cảnh báo được gửi chung đường dữ liệu (có ưu tiên QoS) thay vì qua mạng điều khiển riêng | Đạt cùng tiêu chí như mục tiêu 2, 4 và 5 |
 
-Mỗi lượt thử nghiệm kéo dài {{duration}} giây, kẻ tấn công bắt đầu gửi ở giây thứ {{attack_at}}. Thông lượng và RTT trung bình được tính từ lúc bị tấn công tới hết lượt. Thời gian ở mục tiêu 1 và 2 được tính từ log: mỗi khi tấn công bắt đầu, R3 chặn hay R1 chặn, hệ thống đều ghi lại thời điểm xảy ra. Vì R1 chỉ ghi log sau khi đã chặn xong, thời gian ở mục tiêu 2 đã gồm cả thời gian truyền cảnh báo và thời gian R1 thực hiện việc chặn.
+Mỗi lượt thử nghiệm kéo dài {{duration}} giây, kẻ tấn công bắt đầu gửi ở giây thứ {{attack_at}}. Thông lượng và RTT trung bình được tính từ lúc bị tấn công tới hết lượt. Thời gian ở mục tiêu 1 và 2 được tính từ log: mỗi khi tấn công bắt đầu, R3 chặn hay R1 chặn, hệ thống đều ghi lại thời điểm xảy ra. Vì R1 chỉ ghi log sau khi đã hoàn tất việc chặn, thời gian ở mục tiêu 2 đã gồm cả thời gian truyền cảnh báo và thời gian R1 thực hiện việc chặn.
 
 ## Phạm vi đề tài
 

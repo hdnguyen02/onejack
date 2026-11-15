@@ -51,7 +51,7 @@ Bảng: Các cổng và định dạng gói trong hệ thống
 
 ### Server, client và attacker
 
-**Server** mở một socket UDP ở cổng 9000, tăng bộ đệm nhận lên 4 MB để chịu được lúc nhận gói dồn dập, rồi chạy một vòng lặp: chờ bằng `poll()`, mỗi lần có dữ liệu thì đọc liên tiếp tối đa 1.000 gói, trả lời từng gói hợp lệ. Mỗi giây server in số gói nhận được, tách theo địa chỉ nguồn.
+**Server** mở một socket UDP ở cổng 9000, tăng bộ đệm nhận lên 4 MB để xử lý được lượng gói lớn, rồi chạy một vòng lặp: chờ bằng `poll()`, mỗi lần có dữ liệu thì đọc liên tiếp tối đa 1.000 gói, trả lời từng gói hợp lệ. Mỗi giây server in số gói nhận được, tách theo địa chỉ nguồn.
 
 **Client** gửi truy vấn đều đặn theo tốc độ cấu hình, giữa các lần gửi thì chờ trả lời tối đa 1 mili giây bằng `poll()`. Mỗi giây client tổng kết một dòng gồm số gói gửi, số gói nhận, tỉ lệ mất và RTT trung bình, in ra màn hình và ghi vào tệp CSV.
 
@@ -140,15 +140,15 @@ EVE-NG Community Edition bản 6.2.0-4 được cài vào một máy ảo KVM tr
 
 Thay vì cài Alpine thủ công cho từng node, script `lab/eve-make-image.sh` dùng công cụ `alpine-make-vm-image` [[REF:10]] để tạo một ổ đĩa mẫu có sẵn SSH, iproute2 và iptables, kèm khóa SSH của máy EVE. Vấn đề còn lại là mỗi node cần một địa chỉ quản lý khác nhau, trong khi cả sáu node chạy chung một ổ đĩa mẫu. Lời giải dựa vào cách EVE-NG đặt địa chỉ MAC cho card mạng: định dạng là `00:50:<tenant>:<id/512>:<id%512>:<card mạng>`, trong đó `id` là số thứ tự node. Một script khởi động trong image đọc MAC của `eth0`, tính ra số thứ tự node rồi tự đặt địa chỉ 172.30.0.(10 + id).
 
-Lab gồm sáu node, sáu mạng và toàn bộ dây nối được tạo bằng script `lab/eve-create-lab.sh` thông qua REST API của EVE-NG [[REF:11]]: đăng nhập, tạo lab, tạo mạng, tạo node, gán card mạng của từng node vào mạng, rồi bật node. Nhờ vậy lab có thể được tạo lại giống hệt chỉ bằng một lệnh, thay vì kéo thả trên giao diện web.
+Lab gồm sáu node, sáu mạng và toàn bộ dây nối được tạo bằng script `lab/eve-create-lab.sh` thông qua REST API của EVE-NG [[REF:11]]: đăng nhập, tạo lab, tạo mạng, tạo node, gán card mạng của từng node vào mạng, rồi khởi động node. Nhờ vậy lab có thể được tạo lại giống hệt chỉ bằng một lệnh, thay vì kéo thả trên giao diện web.
 
 ![Giao diện EVE-NG với lab collab-defense](../figures/eve_placeholder.png)
 
 ### Kịch bản chạy thử nghiệm
 
-Mỗi lần chuẩn bị trình diễn, script `scripts/lab-up.sh` bật sáu node, chờ tới khi SSH vào được, chép chương trình và cấu hình mạng sang từng node, rồi chạy một loạt kiểm tra: client ping được server, R1 ping được R3 qua mạng điều khiển, client gửi truy vấn trong 3 giây và nhận đủ trả lời, RAM còn trống đủ dùng. Đạt hết thì script in `SẴN SÀNG`.
+Mỗi lần chuẩn bị trình diễn, script `scripts/lab-up.sh` khởi động sáu node, chờ tới khi SSH vào được, chép chương trình và cấu hình mạng sang từng node, rồi chạy một loạt kiểm tra: client ping được server, R1 ping được R3 qua mạng điều khiển, client gửi truy vấn trong 3 giây và nhận đủ trả lời, RAM còn trống đủ dùng. Đạt hết thì script in `SẴN SÀNG`.
 
-Một lượt thử nghiệm do `scripts/demo.sh` điều khiển và kéo dài {{duration}} giây: khôi phục trạng thái ban đầu, bật server, bật guard theo vai trò của lượt, sau 2 giây bật bộ đo lưu lượng và client, tới giây thứ {{attack_at}} thì bật attacker, cuối lượt khôi phục trạng thái ban đầu lần nữa và lưu toàn bộ kết quả vào `results/`. Để khán giả theo dõi trực tiếp, `scripts/tmux-demo.sh` chia màn hình terminal làm bốn ô: RTT của client, lưu lượng link R1 → R2, các sự kiện phát hiện và chặn, và tiến trình của `demo.sh`. Hình dưới vẽ lại nguyên văn nội dung bốn ô ở cuối lượt inband.
+Một lượt thử nghiệm do `scripts/demo.sh` điều khiển và kéo dài {{duration}} giây: khôi phục trạng thái ban đầu, khởi động server, khởi động guard theo vai trò của lượt, sau 2 giây khởi động bộ đo lưu lượng và client, tới giây thứ {{attack_at}} thì khởi động attacker, cuối lượt khôi phục trạng thái ban đầu lần nữa và lưu toàn bộ kết quả vào `results/`. Để khán giả theo dõi trực tiếp, `scripts/tmux-demo.sh` chia màn hình terminal làm bốn ô: RTT của client, lưu lượng đường truyền R1 → R2, các sự kiện phát hiện và chặn, và tiến trình của `demo.sh`. Hình dưới vẽ lại nguyên văn nội dung bốn ô ở cuối lượt inband.
 
 ![Nội dung bốn ô của màn hình theo dõi ở cuối lượt inband](../figures/tmux_inband.png)
 
@@ -183,11 +183,11 @@ Bảng: Kết quả đo ba lượt thử nghiệm trên EVE-NG
 
 ![RTT của client trong ba lượt thử nghiệm](../figures/rtt.png)
 
-![Lưu lượng trên link R1 → R2 trong ba lượt thử nghiệm](../figures/link.png)
+![Lưu lượng trên đường truyền R1 → R2 trong ba lượt thử nghiệm](../figures/link.png)
 
 Ở lượt **off**, R3 chặn attacker chưa tới một giây sau khi tấn công bắt đầu, server không còn nhận gói tấn công. Nhưng đường R1 → R2 vẫn bị chiếm toàn bộ băng thông, {{link_off}} Mbit/s cho tới hết lượt, và RTT của client nằm ở mức {{rtt_off}} ms, gấp hơn một trăm lần lúc bình thường. Server được bảo vệ, còn mạng thì không.
 
-Ở hai lượt có hợp tác, R1 nhận cảnh báo và chặn chỉ vài mili giây sau R3. Cần lưu ý các mốc thời gian này được gán khi dòng log về tới máy chạy `demo.sh` qua kết nối SSH, nên có sai số cỡ vài mili giây. Con số cho biết bậc độ lớn, không phải độ trễ chính xác của gói cảnh báo. Ngay giây kế tiếp, lưu lượng trên link chỉ còn lại phần của client, RTT trở lại khoảng {{rtt_base}} ms. Con số trung bình {{rtt_on}} ms và {{rtt_inband}} ms cao hơn mức bình thường chỉ vì có một giây đầu tiên của cuộc tấn công, trước khi kịp phát hiện. Client không mất gói ở cả ba lượt. Lý do là hàng đợi giới hạn theo byte, như đã phân tích ở mục 2.2.2: gói truy vấn nhỏ vẫn được đưa vào hàng đợi, chỉ phải chờ lâu.
+Ở hai lượt có hợp tác, R1 nhận cảnh báo và chặn chỉ vài mili giây sau R3. Cần lưu ý các mốc thời gian này được gán khi dòng log về tới máy chạy `demo.sh` qua kết nối SSH, nên có sai số cỡ vài mili giây. Con số cho biết bậc độ lớn, không phải độ trễ chính xác của gói cảnh báo. Từ giây tiếp theo, lưu lượng trên đường truyền chỉ còn lại phần của client, RTT trở lại khoảng {{rtt_base}} ms. Con số trung bình {{rtt_on}} ms và {{rtt_inband}} ms cao hơn mức bình thường chỉ vì có một giây đầu tiên của cuộc tấn công, trước khi kịp phát hiện. Client không mất gói ở cả ba lượt. Lý do là hàng đợi giới hạn theo byte, như đã phân tích ở mục 2.2.2: gói truy vấn nhỏ vẫn được đưa vào hàng đợi, chỉ phải chờ lâu.
 
 Để kiểm chứng việc không chặn nhầm client, bảng quy tắc iptables trên các router được ghi lại ở khoảng giây thứ 33 của một lượt **on** chạy riêng. Trên R1, router mà cả client lẫn attacker cùng đi qua, chain `GUARD` chỉ có đúng một quy tắc cho địa chỉ của attacker:
 
@@ -203,7 +203,7 @@ Kết quả lượt **inband** gần như trùng với lượt **on**. Điều n
 
 ### Kiểm chứng QoS
 
-Script `scripts/qos-check.sh` cho attacker làm nghẽn đường R1 → R2 → R3 và **không** bật guard, nên không ai chặn. Trong lúc đó, client gửi hai loạt truy vấn trên cùng con đường, mỗi loạt 5 giây: loạt thường, và loạt đánh dấu ưu tiên giống hệt gói cảnh báo.
+Script `scripts/qos-check.sh` cho attacker làm nghẽn đường R1 → R2 → R3 và **không** khởi động guard, nên không ai chặn. Trong lúc đó, client gửi hai loạt truy vấn trên cùng con đường, mỗi loạt 5 giây: loạt thường, và loạt đánh dấu ưu tiên giống hệt gói cảnh báo.
 
 Bảng: Kết quả kiểm chứng làn ưu tiên khi đường đang nghẽn
 | Môi trường | RTT truy vấn thường | RTT truy vấn ưu tiên |
@@ -215,8 +215,8 @@ Bộ đếm của `tc` trên R1 sau lần đo cho thấy làn ưu tiên đã chu
 
 ### Một số vấn đề gặp phải
 
-Quá trình hiện thực có vài lỗi đáng ghi lại, vì chúng cho thấy những khác biệt giữa môi trường thử nghiệm và môi trường phát triển.
+Quá trình hiện thực có một số lỗi cần ghi nhận, vì chúng cho thấy những khác biệt giữa môi trường thử nghiệm và môi trường phát triển.
 
-- **Lượt thử nghiệm bị treo trên EVE-NG.** Script khôi phục trạng thái ban đầu dùng `pkill -x guard` để dừng chương trình. Lệnh này chạy đúng trên Ubuntu nhưng không khớp gì trên Alpine, vì `pkill` của BusyBox so tên với cả đường dẫn `/root/guard`. Guard không dừng, `demo.sh` chờ mãi. Lỗi được sửa bằng cách dùng `killall`.
+- **Lượt thử nghiệm bị treo trên EVE-NG.** Script khôi phục trạng thái ban đầu dùng `pkill -x guard` để dừng chương trình. Lệnh này chạy đúng trên Ubuntu nhưng không khớp gì trên Alpine, vì `pkill` của BusyBox so tên với cả đường dẫn `/root/guard`. Guard không dừng, nên `demo.sh` bị treo ở bước chờ các chương trình kết thúc. Lỗi được sửa bằng cách dùng `killall`.
 - **Sáu node nhận trùng một địa chỉ quản lý.** Bản đầu tiên của script khởi động đọc sai vị trí byte trong địa chỉ MAC, nên node nào cũng tính ra cùng một số thứ tự. Sau khi đọc lại mã nguồn EVE-NG để biết đúng định dạng MAC, script được sửa và cả sáu node nhận đúng địa chỉ.
 - **Log sự kiện sai thứ tự.** Đồng hồ của các node lệch nhau gần một giây, nên dòng "R2 nhận cảnh báo" có lúc hiện trước dòng "R3 phát hiện". Cách sửa là bỏ dấu thời gian do từng node tự in, và gán lại thời điểm bằng đồng hồ của máy chạy `demo.sh` ngay khi dòng log tới nơi.

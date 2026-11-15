@@ -123,10 +123,10 @@ def chain(c, y, block_at, link_colors, title):
 def victim_vs_edge():
     c = Canvas(8)
     chain(c, 150, 3, [RED, RED, RED, GREY],
-          "(a) Chỉ R3 chặn: server an toàn, nhưng lưu lượng tấn công vẫn chiếm link R1 → R2 → R3")
+          "(a) Chỉ R3 chặn: server an toàn, nhưng lưu lượng tấn công vẫn chiếm đường truyền R1 → R2 → R3")
     chain(c, 450, 1, [RED, GREY, GREY, GREY],
           "(b) R3 báo cho R1 chặn: lưu lượng tấn công dừng ngay ở router đầu vào")
-    c.text((WIDTH / 2, 590), "Đường đỏ đậm: link bị lưu lượng tấn công chiếm. Dấu ×: nơi gói của attacker bị loại bỏ.", F_SMALL, GREY)
+    c.text((WIDTH / 2, 590), "Đường đỏ đậm: đường truyền bị lưu lượng tấn công chiếm. Dấu ×: nơi gói của attacker bị loại bỏ.", F_SMALL, GREY)
     c.save("victim_vs_edge.png")
 
 
@@ -239,7 +239,7 @@ def tmux_inband():
     Chữ trong khung là nguyên văn file chụp; nhãn xám phía trên khung là chú thích của báo cáo."""
     panes = [
         ("inband_pane0.txt", 9, "Ô trên trái: client (RTT, mất gói mỗi giây), 9 dòng cuối"),
-        ("inband_pane1.txt", 6, "Ô dưới trái: lưu lượng link R1 → R2, 6 dòng cuối"),
+        ("inband_pane1.txt", 6, "Ô dưới trái: lưu lượng đường truyền R1 → R2, 6 dòng cuối"),
         ("inband_pane2.txt", 0, "Ô trên phải: sự kiện phát hiện, cảnh báo, chặn"),
         ("inband_pane3.txt", 0, "Ô dưới phải: tiến trình demo.sh"),
     ]

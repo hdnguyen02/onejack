@@ -8,7 +8,7 @@ Chương này chỉ trình bày những kiến thức mà hệ thống dùng t�
 
 Mô hình TCP/IP chia việc truyền dữ liệu thành bốn tầng, mỗi tầng chỉ làm việc với tầng ngay trên và ngay dưới nó [[REF:5]]. Tầng ứng dụng là nơi các chương trình trao đổi dữ liệu có ý nghĩa với nhau. Tầng giao vận phân biệt các chương trình trên cùng một máy bằng số cổng. Tầng mạng đưa gói từ máy nguồn tới máy đích qua nhiều router dựa trên địa chỉ IP. Tầng liên kết lo việc chuyển khung dữ liệu trên từng đoạn dây cụ thể.
 
-Biết một thành phần nằm ở tầng nào cho biết nó "nhìn thấy" gì. Server và client chỉ thấy nội dung truy vấn. iptables làm việc ở tầng mạng nên chặn được theo địa chỉ IP. Còn guard cần đếm cả những gói không gửi cho chính nó, nên phải đọc gói từ tầng liên kết.
+Biết một thành phần nằm ở tầng nào cho biết nó quan sát được gì. Server và client chỉ thấy nội dung truy vấn. iptables làm việc ở tầng mạng nên chặn được theo địa chỉ IP. Còn guard cần đếm cả những gói không gửi cho chính nó, nên phải đọc gói từ tầng liên kết.
 
 ![Vị trí các thành phần của đề tài trong mô hình TCP/IP](../figures/tcpip.png)
 
@@ -42,7 +42,7 @@ Trên Linux, công cụ `tc` cho phép gắn bộ lập lịch hàng đợi vào
 
 Tấn công từ chối dịch vụ nhắm vào tính sẵn sàng của hệ thống: dữ liệu không bị đánh cắp, nhưng người dùng hợp lệ không truy cập được [[REF:3]]. Cách đơn giản nhất là làm cạn kiệt một loại tài nguyên nào đó, có thể là CPU của máy chủ, bộ nhớ, hoặc băng thông đường truyền. Khi lưu lượng tấn công xuất phát từ nhiều máy, thường là các máy bị chiếm quyền trong một botnet, ta có tấn công DDoS. Lúc đó không còn một địa chỉ nguồn rõ ràng nào để chặn [[REF:7]].
 
-UDP flood là kiểu làm cạn kiệt băng thông: kẻ tấn công gửi liên tục các gói UDP cỡ lớn tới một cổng của nạn nhân. Vì UDP không cần bắt tay, mỗi gói đều đi thẳng tới đích và chiếm chỗ trên mọi đường truyền nó đi qua. Trong đề tài, attacker gửi {{attack_rate}} gói/giây, mỗi gói {{attack_size}} byte, tức khoảng bốn lần băng thông của nút cổ chai. Mỗi gói vẫn mang phần đầu đúng định dạng truy vấn, nên nếu chỉ nhìn một gói riêng lẻ thì không phân biệt được với truy vấn hợp lệ.
+UDP flood là kiểu làm cạn kiệt băng thông: kẻ tấn công gửi liên tục các gói UDP cỡ lớn tới một cổng của nạn nhân. Vì UDP không cần bắt tay, mỗi gói đều được chuyển thẳng tới đích và chiếm chỗ trên mọi đường truyền nó đi qua. Trong đề tài, attacker gửi {{attack_rate}} gói/giây, mỗi gói {{attack_size}} byte, tức khoảng bốn lần băng thông của nút cổ chai. Mỗi gói vẫn mang phần đầu đúng định dạng truy vấn, nên nếu chỉ nhìn một gói riêng lẻ thì không phân biệt được với truy vấn hợp lệ.
 
 ### Phát hiện dựa trên ngưỡng tần suất
 
@@ -68,7 +68,7 @@ Hai đặc điểm của `AF_PACKET` ảnh hưởng trực tiếp tới thiết 
 
 ### Chặn gần nạn nhân và chặn ở đầu nguồn
 
-Có hai vị trí để chặn lưu lượng tấn công. Chặn **gần nạn nhân** có lợi thế là thấy rõ: mọi lưu lượng tới máy chủ đều đi qua đây, nên dễ nhận ra địa chỉ nào đang gửi tập trung truy vấn. Nhưng tới lúc bị chặn, gói tấn công đã đi hết quãng đường và đã chiếm băng thông của mọi đoạn phía trước. Chặn **ở đầu nguồn**, tức ở router đầu vào gần kẻ tấn công, thì ngược lại: tiết kiệm tài nguyên cho toàn bộ mạng phía sau, nhưng router đầu vào thấy lưu lượng đi tới nhiều đích khác nhau và không biết đích nào đang bị quá tải.
+Có hai vị trí để chặn lưu lượng tấn công. Chặn **gần nạn nhân** có lợi thế là quan sát rõ: mọi lưu lượng tới máy chủ đều đi qua đây, nên dễ nhận ra địa chỉ nào đang gửi tập trung truy vấn. Nhưng tới lúc bị chặn, gói tấn công đã đi qua toàn bộ đường truyền và đã chiếm băng thông của mọi đoạn phía trước. Chặn **ở đầu nguồn**, tức ở router đầu vào gần kẻ tấn công, thì ngược lại: tiết kiệm tài nguyên cho toàn bộ mạng phía sau, nhưng router đầu vào thấy lưu lượng đi tới nhiều đích khác nhau và không biết đích nào đang bị quá tải.
 
 ![Chặn gần nạn nhân so với chặn ở đầu nguồn](../figures/victim_vs_edge.png)
 
@@ -76,7 +76,7 @@ Phòng thủ cộng tác kết hợp ưu điểm của cả hai: node gần nạ
 
 ### RTBH và BGP FlowSpec
 
-Ý tưởng trên đã được dùng thật ở quy mô Internet. Với RTBH, nhà mạng gắn một nhãn đặc biệt vào thông tin định tuyến của địa chỉ đang bị tấn công. Các router biên nhận được thông tin đó sẽ bỏ toàn bộ lưu lượng tới địa chỉ này ngay tại biên [[REF:4]]. Cách này cứu được phần còn lại của mạng nhưng đồng thời chặn luôn cả lưu lượng hợp lệ tới nạn nhân. BGP FlowSpec tinh tế hơn: các router trao đổi những quy tắc lọc mô tả chính xác luồng xấu, ví dụ theo địa chỉ nguồn, giao thức và cổng, rồi mỗi router tự cài quy tắc đó [[REF:6]]. Thông điệp `BLOCK <địa chỉ>` trong đề tài có thể xem là một phiên bản rút gọn của quy tắc FlowSpec.
+Ý tưởng trên đã được dùng thật ở quy mô Internet. Với RTBH, nhà mạng gắn một nhãn đặc biệt vào thông tin định tuyến của địa chỉ đang bị tấn công. Các router biên nhận được thông tin đó sẽ bỏ toàn bộ lưu lượng tới địa chỉ này ngay tại biên [[REF:4]]. Cách này bảo vệ được phần còn lại của mạng nhưng đồng thời chặn luôn cả lưu lượng hợp lệ tới nạn nhân. BGP FlowSpec chi tiết hơn: các router trao đổi những quy tắc lọc mô tả chính xác luồng xấu, ví dụ theo địa chỉ nguồn, giao thức và cổng, rồi mỗi router tự cài quy tắc đó [[REF:6]]. Thông điệp `BLOCK <địa chỉ>` trong đề tài có thể xem là một phiên bản rút gọn của quy tắc FlowSpec.
 
 ### Kênh truyền cảnh báo
 
@@ -106,7 +106,7 @@ KVM (Kernel-based Virtual Machine) là thành phần của nhân Linux dùng tí
 
 ### EVE-NG
 
-EVE-NG là nền tảng giả lập mạng: người dùng tạo lab trên giao diện web, kéo thả các node, nối dây giữa chúng, rồi bật lab để các node chạy thật [[REF:11]]. Mỗi node là một máy ảo chạy từ một ổ đĩa mẫu (image). Các đường nối là các cầu mạng ảo bên trong máy EVE-NG. Bản Community miễn phí đủ cho nhu cầu của đề tài. Ngoài giao diện web, EVE-NG có REST API, đề tài dùng API này để tạo lab bằng script thay vì thao tác tay. Node dùng Alpine Linux, một bản Linux gọn nhẹ, được đóng gói thành image bằng công cụ `alpine-make-vm-image` [[REF:10]].
+EVE-NG là nền tảng giả lập mạng: người dùng tạo lab trên giao diện web, kéo thả các node, nối dây giữa chúng, rồi khởi động lab để các node hoạt động [[REF:11]]. Mỗi node là một máy ảo chạy từ một ổ đĩa mẫu (image). Các đường nối là các cầu mạng ảo bên trong máy EVE-NG. Bản Community miễn phí đủ cho nhu cầu của đề tài. Ngoài giao diện web, EVE-NG có REST API, đề tài dùng API này để tạo lab bằng script thay vì thao tác tay. Node dùng Alpine Linux, một bản Linux gọn nhẹ, được đóng gói thành image bằng công cụ `alpine-make-vm-image` [[REF:10]].
 
 ### Network namespace
 
