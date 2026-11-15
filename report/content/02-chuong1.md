@@ -35,11 +35,7 @@ Bảng: Các mục tiêu cụ thể và tiêu chí đánh giá
 | 5 | Khôi phục chất lượng dịch vụ | RTT trung bình của client | Giảm ít nhất 90% so với lượt chỉ chặn tại phía đích |
 | 6 | Cảnh báo đi chung đường vẫn hiệu quả | Thời gian chặn, thông lượng và RTT khi cảnh báo được gửi chung đường dữ liệu (có ưu tiên QoS) thay vì qua mạng điều khiển riêng | Đạt cùng tiêu chí như mục tiêu 2, 4 và 5 |
 
-Cách đo được thống nhất như sau. Mỗi lượt thử nghiệm dài {{duration}} giây, tấn công bắt đầu ở giây thứ {{attack_at}}. Thông lượng và RTT trung bình được tính trên khoảng sau giây thứ {{attack_at}} tới hết lượt. Các mốc thời gian ở mục tiêu 1 và 2 lấy từ log:
-
-- **Bắt đầu tấn công:** dòng "BẮT ĐẦU TẤN CÔNG" do script điều khiển ghi.
-- **R3 chặn:** dòng "PHÁT HIỆN … → CHẶN" của R3, ghi sau khi luật iptables đã được thêm và cảnh báo đã được gửi.
-- **R1 chặn:** dòng "NHẬN cảnh báo … → CHẶN" của R1, ghi sau khi luật đã được áp dụng. Khoảng thời gian ở mục tiêu 2 vì vậy gồm cả thời gian truyền cảnh báo, nhận và áp dụng luật.
+Mỗi lượt thử nghiệm kéo dài {{duration}} giây, kẻ tấn công bắt đầu gửi ở giây thứ {{attack_at}}. Thông lượng và RTT trung bình được tính từ lúc bị tấn công tới hết lượt. Các khoảng thời gian ở mục tiêu 1 và 2 được đo bằng dấu thời gian trong log mà các router và script điều khiển ghi lại khi sự kiện xảy ra: lúc tấn công bắt đầu, lúc R3 chặn, và lúc R1 chặn. Vì log của R1 chỉ ghi sau khi luật chặn đã có hiệu lực, thời gian ở mục tiêu 2 đã gồm cả thời gian truyền cảnh báo và thời gian R1 áp dụng luật.
 
 ## Phạm vi đề tài
 
