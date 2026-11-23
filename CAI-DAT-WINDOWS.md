@@ -1,0 +1,414 @@
+# Cài đặt và chạy demo trên Windows 11
+
+Hướng dẫn từng bước để chạy demo **onejack** (các node cộng tác chặn truy vấn xấu) trên một máy Windows 11, từ lúc chưa có gì tới lúc chạy xong 3 lượt demo.
+
+Tổng quan dự án, mô hình mạng và kết quả đo xem trong [README.md](README.md). Các khái niệm mạng xem trong [CONCEPTS.md](CONCEPTS.md).
+
+---
+
+## 0. Hiểu cách hoạt động trước khi cài
+
+Các script và chương trình C của dự án đều chạy trên **Linux**, không chạy trực tiếp trên Windows. Vì vậy cách làm như sau:
+
+```
+Windows 11 (máy thật)
+ └─ VMware Workstation Pro
+     └─ Máy ảo EVE-NG (Ubuntu 22.04)        ← code dự án nằm ở /root/onejack
+         └─ 6 máy ảo Alpine nhỏ: attacker, client, r1, r2, r3, server
+```
+
+- Máy ảo EVE-NG lại chạy 6 máy ảo con bên trong, gọi là **ảo hóa lồng nhau** (nested virtualization). Đây là lý do phải tắt Hyper-V ở bước 2.
+- Windows chỉ dùng để mở VMware, mở trình duyệt xem sơ đồ mạng, và dùng `ssh` để gõ lệnh vào máy EVE.
+- Từ bước 5 trở đi, mọi lệnh đều gõ **bên trong máy EVE** qua `ssh`.
+
+Thời gian làm lần đầu: khoảng 1 tới 1,5 giờ, phần lớn là thời gian tải và cài.
+
+---
+
+## 1. Kiểm tra máy
+
+| Yêu cầu | Tối thiểu | Cách kiểm tra |
+|---|---|---|
+| RAM | 16 GB | Task Manager → Performance → Memory |
+| Ổ cứng trống | 70 GB | File Explorer → This PC |
+| CPU hỗ trợ ảo hóa | Intel VT-x hoặc AMD-V, **đang bật** | Task Manager → Performance → CPU, dòng **Virtualization: Enabled** |
+| Internet | Có | Máy EVE cần tải gói khi cài |
+
+Nếu dòng Virtualization hiện **Disabled**, vào BIOS/UEFI để bật. Tùy hãng máy, mục này tên là Intel Virtualization Technology, Intel VT-x, SVM Mode hoặc AMD-V. Cách vào BIOS thường là bấm F2, F10, Del hoặc Esc ngay khi bật máy.
+
+---
+
+## 2. Tắt Hyper-V
+
+Windows 11 thường bật sẵn Hyper-V và các tính năng bảo mật dựa trên ảo hóa. Khi các tính năng này bật, VMware không thể cho máy ảo EVE chạy máy ảo con, và các node trong lab sẽ không khởi động được.
+
+### 2.1. Tắt các tính năng Windows
+
+1. Bấm **Win + R**, gõ `optionalfeatures`, Enter.
+2. **Bỏ tick** các mục sau (mục nào không có thì bỏ qua):
+   - Hyper-V
+   - Virtual Machine Platform
+   - Windows Hypervisor Platform
+   - Windows Sandbox
+   - Windows Subsystem for Linux
+3. Bấm OK. **Chưa cần** khởi động lại ngay.
+
+> Tắt WSL nghĩa là tạm thời không dùng được WSL và Docker Desktop. Muốn dùng lại thì bật lại các mục này và chạy `bcdedit /set hypervisorlaunchtype auto`.
+
+### 2.2. Tắt Memory integrity
+
+1. Mở **Windows Security** → **Device security** → **Core isolation details**.
+2. Gạt **Memory integrity** sang **Off**.
+
+### 2.3. Tắt hypervisor lúc khởi động
+
+1. Bấm Start, gõ `cmd`, chuột phải **Command Prompt** → **Run as administrator**.
+2. Chạy:
+   ```
+   bcdedit /set hypervisorlaunchtype off
+   ```
+   Kết quả đúng: `The operation completed successfully.`
+
+### 2.4. Khởi động lại máy
+
+Khởi động lại để các thay đổi ở trên có hiệu lực.
+
+**Kiểm tra:** mở cmd thường, chạy `systeminfo`, kéo xuống cuối. Nếu thấy dòng *"A hypervisor has been detected"* thì Hyper-V vẫn đang chạy, cần xem lại các bước trên.
+
+---
+
+## 3. Cài VMware Workstation Pro
+
+VMware Workstation Pro hiện **miễn phí** cho cá nhân.
+
+1. Vào `support.broadcom.com` và tạo tài khoản Broadcom nếu chưa có.
+2. Vào mục **My Downloads** → **VMware Workstation Pro** → chọn bản mới nhất cho Windows → tải file `.exe`.
+3. Chạy file cài đặt, để mặc định hết, khởi động lại máy nếu được hỏi.
+
+> Không dùng VirtualBox. VirtualBox chạy ảo hóa lồng nhau kém, các node trong EVE sẽ rất chậm hoặc không chạy.
+
+---
+
+## 4. Cài máy ảo EVE-NG
+
+### 4.1. Tải file ISO
+
+Vào `eve-ng.net` → **Download** → **Community** → tải file `eve-ce-prod-6.2.0-4-full.iso` (khoảng 3,2 GB).
+
+### 4.2. Tạo máy ảo trong VMware
+
+1. Mở VMware → **File** → **New Virtual Machine** → chọn **Typical** → Next.
+2. **Installer disc image file (iso)**: chọn file ISO vừa tải → Next.
+3. Guest operating system: **Linux**, Version: **Ubuntu 64-bit** → Next.
+4. Tên máy ảo: `eve-ng` → Next.
+5. Disk size: **60 GB**, chọn **Store virtual disk as a single file** → Next.
+6. Bấm **Customize Hardware** rồi chỉnh:
+
+   | Mục | Giá trị |
+   |---|---|
+   | Memory | 6144 MB (6 GB). Máy thật có 32 GB thì cho 8 GB |
+   | Processors | 4 core |
+   | Processors → **Virtualize Intel VT-x/EPT or AMD-V/RVI** | **Tick** (bắt buộc) |
+   | Network Adapter | **NAT** |
+
+7. Close → Finish. **Bỏ tick** "Power on this virtual machine after creation" nếu có.
+
+### 4.3. Cài EVE
+
+1. Bấm **Power on this virtual machine**.
+2. Ở menu khởi động, chọn **Install EVE VM**, Enter.
+3. Trình cài đặt chạy tự động. Câu hỏi nào hiện ra cũng để mặc định rồi Enter. Máy sẽ tự khởi động lại.
+4. Đăng nhập: user `root`, mật khẩu `eve`.
+5. Trình thiết lập lần đầu sẽ hỏi lần lượt:
+
+   | Câu hỏi | Trả lời |
+   |---|---|
+   | Root password | Đặt mật khẩu mới, **ghi lại mật khẩu này** |
+   | Hostname | Để mặc định |
+   | DNS domain name | Để mặc định |
+   | IP address | Chọn **dhcp** |
+   | NTP server | Để trống |
+   | Proxy | Chọn **direct connection** |
+
+6. Máy khởi động lại lần nữa. Màn hình đăng nhập sẽ hiện địa chỉ IP, ví dụ `http://192.168.xx.yy/`.
+
+**Từ đây trở đi, địa chỉ IP này được viết là `<EVE_IP>`.** Khi gõ lệnh, nhớ thay bằng IP thật.
+
+### 4.4. Kiểm tra
+
+- Mở trình duyệt trên Windows, vào `http://<EVE_IP>`, đăng nhập `admin` / `eve`. Thấy giao diện EVE là được.
+- Kiểm tra máy ảo có hỗ trợ ảo hóa lồng nhau không: đăng nhập vào màn hình máy EVE trong VMware rồi chạy:
+  ```
+  egrep -c '(vmx|svm)' /proc/cpuinfo
+  ```
+  Kết quả phải **lớn hơn 0**. Nếu ra `0`, xem lại bước 2 và ô tick VT-x ở bước 4.2.
+
+---
+
+## 5. Kết nối SSH từ Windows vào EVE
+
+Gõ lệnh trong cửa sổ VMware rất bất tiện vì không copy/paste được, nên ta dùng `ssh`. Lệnh này có sẵn trong Windows 11.
+
+1. Mở **PowerShell** (không cần quyền Admin).
+2. Tạo khóa SSH, chỉ cần làm một lần. Bấm Enter cho mọi câu hỏi:
+   ```
+   ssh-keygen -t ed25519
+   ```
+3. Gửi khóa công khai vào EVE để lần sau không phải gõ mật khẩu. Lần này cần nhập mật khẩu root đã đặt ở bước 4.3:
+   ```
+   type $env:USERPROFILE\.ssh\id_ed25519.pub | ssh root@<EVE_IP> "mkdir -p ~/.ssh && cat >> ~/.ssh/authorized_keys"
+   ```
+   Lần đầu kết nối, ssh sẽ hỏi `Are you sure you want to continue connecting`, gõ `yes`.
+4. Thử đăng nhập:
+   ```
+   ssh root@<EVE_IP>
+   ```
+   Vào được mà không bị hỏi mật khẩu là xong.
+
+> **Cần làm bước 3 trước bước 7.** Khi tạo image, script `lab/eve-make-image.sh` chép các khóa đang được phép vào EVE vào image của các node. Nhờ vậy, từ Windows cũng SSH thẳng được vào từng node.
+
+---
+
+## 6. Đưa mã nguồn vào EVE
+
+Có 2 cách. **Nên dùng cách A.**
+
+### Cách A: clone bằng git ngay trong EVE
+
+Cách này giữ đúng định dạng file Linux, gồm xuống dòng kiểu LF và quyền chạy của các file `.sh`.
+
+Trong phiên `ssh root@<EVE_IP>`:
+
+```
+apt-get update
+apt-get install -y git
+git clone -b v2 https://github.com/hdnguyen02/onejack.git /root/onejack
+```
+
+Lưu ý:
+- Nhánh dùng cho demo là **`v2`**. Trước khi clone, đảm bảo máy đang code đã `git push` nhánh này lên GitHub.
+- Nếu repo để **private**, git sẽ hỏi username và password. Ô password **không** nhập mật khẩu GitHub mà nhập **Personal Access Token**: vào GitHub → Settings → Developer settings → Personal access tokens để tạo.
+
+### Cách B: copy thư mục từ Windows sang
+
+Dùng khi đã có sẵn thư mục `onejack` trên Windows, ví dụ nhận qua USB hoặc file zip.
+
+1. Trong PowerShell, `cd` tới **thư mục cha** của `onejack`, rồi chạy:
+   ```
+   scp -r onejack root@<EVE_IP>:/root/
+   ```
+2. SSH vào EVE và sửa định dạng file. **Bắt buộc**, vì Windows có thể đã đổi xuống dòng thành CRLF và làm mất quyền chạy:
+   ```
+   cd /root/onejack
+   sed -i 's/\r$//' lab/*.sh lab/nodes.conf scripts/*.sh Makefile
+   chmod +x lab/*.sh scripts/*.sh
+   rm -rf build
+   ```
+
+> Nếu bỏ qua bước 2, lỗi sẽ có dạng `/bin/bash^M: bad interpreter`, `$'\r': command not found` hoặc `Permission denied`.
+
+---
+
+## 7. Build và dựng lab (làm một lần)
+
+Mọi lệnh dưới đây chạy **trong EVE**, trong thư mục `/root/onejack`:
+
+```
+ssh root@<EVE_IP>
+cd /root/onejack
+```
+
+### 7.1. Cài công cụ
+
+```
+apt-get update
+apt-get install -y build-essential tmux gnuplot-nox
+```
+
+| Gói | Dùng để |
+|---|---|
+| `build-essential` | gcc, make, thư viện C tĩnh để build 4 chương trình |
+| `tmux` | màn hình demo chia 4 ô |
+| `gnuplot-nox` | vẽ biểu đồ kết quả |
+
+### 7.2. Build và chạy unit test
+
+```
+make && make test
+```
+
+Kết quả đúng: thư mục `build/` có 4 file `server`, `client`, `attacker`, `guard`, và `make test` chạy hết mà không báo lỗi.
+
+Các chương trình được biên dịch **tĩnh** (`-static`) nên chép vào node Alpine là chạy được ngay, không cần cài thêm thư viện.
+
+### 7.3. Tạo image Alpine cho các node (khoảng 2 phút, cần Internet)
+
+```
+bash lab/eve-make-image.sh
+```
+
+Script này tải công cụ `alpine-make-vm-image`, tạo một ổ đĩa Alpine Linux có sẵn `openssh`, `iproute2`, `iptables`, rồi đặt vào `/opt/unetlab/addons/qemu/linux-alpine-demo/`.
+
+Kết quả đúng: dòng cuối là `Đã tạo image: .../virtioa.qcow2`.
+
+### 7.4. Tạo lab 6 node trong EVE
+
+```
+bash lab/eve-create-lab.sh
+```
+
+Script gọi API của EVE để tạo lab `collab-defense` gồm 6 node, 6 mạng, rồi bật các node lên. Script cũng gán IP `172.30.0.1` cho cổng `pnet1` của EVE, dùng làm mạng quản lý để SSH vào node.
+
+Kết quả đúng: dòng cuối là `Lab collab-defense đã tạo và khởi động...`.
+
+Mở `http://<EVE_IP>` trên trình duyệt → File manager → mở lab **collab-defense** để xem sơ đồ mạng.
+
+### 7.5. Cấu hình node và kiểm tra
+
+```
+scripts/lab-up.sh
+```
+
+Script bật 6 node, chờ các node nhận IP, chép chương trình và cấu hình vào từng node, rồi kiểm tra kết nối. Mất khoảng 40 giây tới 2 phút.
+
+Kết quả đúng: dòng cuối là **`SẴN SÀNG`**. Nếu ra `LỖI: <bước>`, xem mục 10.
+
+---
+
+## 8. Chạy demo (mỗi lần bật máy)
+
+### 8.1. Khởi động
+
+1. Mở VMware, bấm **Power on** máy `eve-ng`, đợi khoảng 1 phút.
+2. Mở PowerShell:
+   ```
+   ssh root@<EVE_IP>
+   cd /root/onejack
+   scripts/lab-up.sh
+   ```
+   Phải thấy **`SẴN SÀNG`**.
+
+> IP của EVE do NAT của VMware cấp, thường giữ nguyên sau mỗi lần khởi động lại. Nếu không SSH được, xem lại IP trên màn hình máy EVE trong VMware.
+
+### 8.2. Chạy 3 lượt
+
+Mỗi lượt dài 60 giây, tấn công bắt đầu ở giây 15. Chạy xong một lượt thì gõ `exit` để thoát màn hình tmux.
+
+```
+scripts/tmux-demo.sh off       # không hợp tác: chỉ R3 tự chặn
+scripts/tmux-demo.sh on        # hợp tác: cảnh báo qua mạng điều khiển riêng
+scripts/tmux-demo.sh inband    # hợp tác: cảnh báo đi chung đường dữ liệu, ưu tiên bằng QoS
+```
+
+Màn hình chia 4 ô:
+
+| Vị trí | Hiển thị |
+|---|---|
+| Trên trái | RTT và tỉ lệ mất gói của client |
+| Dưới trái | Lưu lượng link R1 → R2 (Mbit/s) |
+| Trên phải | Sự kiện: R3 phát hiện, gửi cảnh báo, R1/R2 chặn |
+| Dưới phải | Tiến trình `demo.sh` đang chạy |
+
+Kết quả mong đợi:
+- **off:** sau giây 15, RTT tăng lên khoảng 400 ms, link R1 → R2 đầy 10 Mbit/s.
+- **on / inband:** RTT chỉ tăng trong khoảng 1 giây rồi về khoảng 2 ms, link R1 → R2 gần như trống.
+
+Phím tắt tmux: **Ctrl+B** rồi **D** để thoát màn hình nhưng vẫn để chạy nền. Vào lại bằng `tmux attach`.
+
+### 8.3. Vẽ biểu đồ và in bảng so sánh
+
+```
+scripts/plot.sh
+```
+
+Biểu đồ được lưu ở `results/rtt.png`, `results/loss.png`, `results/link.png`. Để lấy về Windows, mở một PowerShell **mới** (không phải phiên đang ssh) rồi chạy:
+
+```
+scp root@<EVE_IP>:/root/onejack/results/*.png .
+```
+
+### 8.4. (Tùy chọn) Kiểm chứng làn ưu tiên QoS
+
+```
+scripts/qos-check.sh
+```
+
+Mất khoảng 20 giây. Script so sánh RTT của truy vấn thường (khoảng 400 ms) với truy vấn đánh dấu ưu tiên (khoảng 2 ms) khi đường đang nghẽn.
+
+### 8.5. Dọn dẹp
+
+```
+scripts/reset.sh     # dừng mọi tiến trình demo, xóa rule chặn
+```
+
+Khi xong việc: tắt máy EVE bằng lệnh `poweroff` trong EVE, hoặc bấm **Suspend** trong VMware để lần sau mở nhanh hơn.
+
+---
+
+## 9. Phương án dự phòng: mini-lab không cần node EVE
+
+Nếu các node EVE gặp lỗi, ví dụ máy yếu hoặc ảo hóa lồng nhau không chạy, ta vẫn demo được bằng **network namespace**. Cách này dựng cùng mô hình mạng ngay trong máy EVE mà không cần máy ảo con nào. Vẫn cần làm xong bước 7.1 và 7.2.
+
+```
+cd /root/onejack
+lab/netns-up.sh
+LAB=netns scripts/lab-up.sh
+LAB=netns scripts/tmux-demo.sh off
+LAB=netns scripts/tmux-demo.sh on
+LAB=netns scripts/tmux-demo.sh inband
+LAB=netns scripts/qos-check.sh
+scripts/plot.sh
+lab/netns-down.sh     # xóa mini-lab khi xong
+```
+
+---
+
+## 10. Xử lý lỗi thường gặp
+
+| Hiện tượng | Nguyên nhân | Cách sửa |
+|---|---|---|
+| VMware báo *"Virtualized Intel VT-x/EPT is not supported on this platform"* | Hyper-V hoặc Memory integrity vẫn đang bật | Làm lại bước 2, khởi động lại máy, kiểm tra bằng `systeminfo` |
+| `egrep -c '(vmx\|svm)' /proc/cpuinfo` ra `0` | Chưa tick VT-x trong VMware hoặc BIOS chưa bật ảo hóa | Tắt máy EVE, tick ô ở bước 4.2, kiểm tra BIOS |
+| `ssh: connect to host ... Connection timed out` | Sai IP hoặc máy EVE chưa bật xong | Xem IP trên màn hình máy EVE trong VMware |
+| `bad interpreter`, `$'\r': command not found` | File bị xuống dòng kiểu Windows (CRLF) | Chạy lại lệnh `sed` ở cách B, bước 6 |
+| `Permission denied` khi chạy `scripts/...` | File `.sh` mất quyền chạy | `chmod +x lab/*.sh scripts/*.sh` |
+| `make` báo `cannot find -lc` | Thiếu thư viện C tĩnh | `apt-get install -y build-essential` |
+| `eve-make-image.sh` lỗi khi `wget` | EVE không có Internet | Kiểm tra mạng NAT của VMware, thử `ping 8.8.8.8` trong EVE |
+| `lab-up.sh` báo `LỖI: chỉ x/6 node SSH được` | Node chưa khởi động xong hoặc không chạy được | Chờ thêm rồi chạy lại. Mở web EVE xem node có màu xanh không. Nếu node không lên, dùng mục 9 |
+| `lab-up.sh` báo `LỖI: RAM trống dưới 500MB` | Máy EVE thiếu RAM | Tắt bớt ứng dụng, hoặc tăng RAM cho máy EVE trong VMware |
+| Node lên nhưng rất chậm | Máy thật thiếu RAM hoặc đang mở nhiều ứng dụng nặng | Tắt trình duyệt nhiều tab và IDE, tăng RAM cho máy EVE |
+| Kết quả demo lạ, còn rule chặn cũ | Lượt trước bị ngắt giữa chừng | `scripts/reset.sh` rồi `scripts/lab-up.sh` |
+
+---
+
+## 11. Tóm tắt nhanh
+
+**Cài lần đầu:**
+
+```
+# Windows: tắt Hyper-V → cài VMware → tạo VM EVE (NAT, tick VT-x) → cài EVE
+# PowerShell:
+ssh-keygen -t ed25519
+type $env:USERPROFILE\.ssh\id_ed25519.pub | ssh root@<EVE_IP> "mkdir -p ~/.ssh && cat >> ~/.ssh/authorized_keys"
+ssh root@<EVE_IP>
+
+# Trong EVE:
+apt-get update && apt-get install -y git build-essential tmux gnuplot-nox
+git clone -b v2 https://github.com/hdnguyen02/onejack.git /root/onejack
+cd /root/onejack
+make && make test
+bash lab/eve-make-image.sh
+bash lab/eve-create-lab.sh
+scripts/lab-up.sh            # → SẴN SÀNG
+```
+
+**Mỗi lần demo:**
+
+```
+ssh root@<EVE_IP>
+cd /root/onejack && scripts/lab-up.sh
+scripts/tmux-demo.sh off
+scripts/tmux-demo.sh on
+scripts/tmux-demo.sh inband
+scripts/plot.sh
+```
