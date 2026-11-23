@@ -3,7 +3,7 @@
 # rồi chạy lab/<node>.sh để đặt IP, route, tc. Chạy trong máy ảo EVE.
 set -eu
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-SSH_OPTS="-o BatchMode=yes -o ConnectTimeout=5 -o StrictHostKeyChecking=accept-new -o LogLevel=ERROR"
+SSH_OPTS="-o BatchMode=yes -o ConnectTimeout=5 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR"
 
 while read -r node ip; do
     case "$node" in

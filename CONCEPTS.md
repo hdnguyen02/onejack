@@ -104,7 +104,7 @@ File này giải thích từ cơ bản tới các phần dùng trong demo. Đọ
 
 | Lượt | Chuyện gì xảy ra | Kết quả mong đợi |
 |---|---|---|
-| **off**, không hợp tác | R3 phát hiện và tự chặn. R1, R2 không biết gì. | Server được bảo vệ, nhưng link R1→R2→R3 vẫn đầy rác, client bị **trễ cao**: RTT từ khoảng 0,2 ms tăng lên khoảng 400 ms. |
+| **off**, không hợp tác | R3 phát hiện và tự chặn. R1, R2 không biết gì. | Server được bảo vệ, nhưng link R1→R2→R3 vẫn đầy rác, client bị **trễ cao**: RTT từ khoảng 2 ms tăng lên khoảng 400 ms. |
 | **on**, có hợp tác | R3 phát hiện, chặn, rồi **gửi cảnh báo** cho R1, R2 qua mạng điều khiển riêng. R1 chặn ngay ở cửa vào. | Trong 1–2 giây, rác biến mất khỏi mạng, client **trở lại bình thường**. |
 | **inband**, có hợp tác | Giống on, nhưng cảnh báo đi **chung đường** R3 → R2 → R1 và được **ưu tiên bằng QoS**. | Giống on: R1 chặn 5 ms sau khi R3 phát hiện. |
 
@@ -168,7 +168,7 @@ Giảng viên thường đánh giá cao khi bạn tự nêu ra hạn chế:
 ## 11. Câu hỏi giảng viên có thể hỏi và gợi ý trả lời
 
 - **"Sao không chặn luôn ở R1 từ đầu?"** R1 không biết lưu lượng nào là xấu. Chỉ phía server mới thấy ai đang dồn truy vấn vào. Hợp tác giúp đưa thông tin từ nơi *thấy* tới nơi *chặn hiệu quả nhất*.
-- **"Cải thiện hiệu năng ở chỗ nào?"** Băng thông link R1→R2→R3 không còn bị rác chiếm, RTT của client giảm từ khoảng 400 ms về khoảng 0,2 ms. Biểu đồ so sánh hai lượt chứng minh điều này.
+- **"Cải thiện hiệu năng ở chỗ nào?"** Băng thông link R1→R2→R3 không còn bị rác chiếm, RTT của client giảm từ khoảng 400 ms về khoảng 2 ms. Biểu đồ so sánh hai lượt chứng minh điều này.
 - **"Sao client bị trễ mà không mất gói?"** Hàng đợi ở nút cổ chai giới hạn theo số byte. Gói rác 1000 byte tới khi hàng đợi gần đầy thì bị vứt, còn gói truy vấn của client rất nhỏ nên vẫn chen vào được, chỉ phải chờ khoảng 400 ms. Với ứng dụng thật như gọi điện hay game, trễ 400 ms đã là không dùng được.
 - **"Vì sao giới hạn link xuống 10 Mbit/s?"** Để mô phỏng một nút cổ chai thật. Link ảo trong máy tính quá nhanh nên sẽ không thấy nghẽn.
 - **"Cảnh báo bị flood làm mất thì sao?"** Cảnh báo đi trên mạng điều khiển riêng nên không bị ảnh hưởng.

@@ -17,5 +17,5 @@ if [ -z "$ip" ] || [ "$ip" = "0.0.0.0" ]; then
     echo "node-run: chưa có IP quản lý cho '$node' trong lab/nodes.conf" >&2
     exit 1
 fi
-exec ssh -o BatchMode=yes -o ConnectTimeout=5 -o StrictHostKeyChecking=accept-new \
+exec ssh -o BatchMode=yes -o ConnectTimeout=5 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
     -o LogLevel=ERROR "root@$ip" "$*"

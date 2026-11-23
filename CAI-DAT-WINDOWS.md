@@ -272,7 +272,6 @@ scripts/lab-up.sh
 Script bật 6 node, chờ các node nhận IP, chép chương trình và cấu hình vào từng node, rồi kiểm tra kết nối. Mất khoảng 40 giây tới 2 phút.
 
 Kết quả đúng: dòng cuối là **`SẴN SÀNG`**. Nếu ra `LỖI: <bước>`, xem mục 10.
-
 ---
 
 ## 8. Chạy demo (mỗi lần bật máy)
@@ -374,8 +373,7 @@ lab/netns-down.sh     # xóa mini-lab khi xong
 | `Permission denied` khi chạy `scripts/...` | File `.sh` mất quyền chạy | `chmod +x lab/*.sh scripts/*.sh` |
 | `make` báo `cannot find -lc` | Thiếu thư viện C tĩnh | `apt-get install -y build-essential` |
 | `eve-make-image.sh` lỗi khi `wget` | EVE không có Internet | Kiểm tra mạng NAT của VMware, thử `ping 8.8.8.8` trong EVE |
-| `lab-up.sh` báo `LỖI: chỉ x/6 node SSH được` | Node chưa khởi động xong hoặc không chạy được | Chờ thêm rồi chạy lại. Mở web EVE xem node có màu xanh không. Nếu node không lên, dùng mục 9 |
-| `lab-up.sh` báo `LỖI: RAM trống dưới 500MB` | Máy EVE thiếu RAM | Tắt bớt ứng dụng, hoặc tăng RAM cho máy EVE trong VMware |
+| `lab-up.sh` báo `LỖI: chỉ x/6 node SSH được` | Node chưa khởi động xong hoặc không chạy được | Chờ thêm rồi chạy lại. Mở web EVE xem node có màu xanh không. Nếu node không lên, dùng mục 9 || `lab-up.sh` báo `LỖI: RAM trống dưới 500MB` | Máy EVE thiếu RAM | Tắt bớt ứng dụng, hoặc tăng RAM cho máy EVE trong VMware |
 | Node lên nhưng rất chậm | Máy thật thiếu RAM hoặc đang mở nhiều ứng dụng nặng | Tắt trình duyệt nhiều tab và IDE, tăng RAM cho máy EVE |
 | Kết quả demo lạ, còn rule chặn cũ | Lượt trước bị ngắt giữa chừng | `scripts/reset.sh` rồi `scripts/lab-up.sh` |
 

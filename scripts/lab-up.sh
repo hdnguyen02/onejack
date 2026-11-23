@@ -40,7 +40,7 @@ if [ "$LAB" = "eve" ]; then
             case "$node" in
                 ''|'#'*) continue ;;
             esac
-            if ssh -n -o BatchMode=yes -o ConnectTimeout=2 -o StrictHostKeyChecking=accept-new \
+            if ssh -n -o BatchMode=yes -o ConnectTimeout=2 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
                 -o LogLevel=ERROR "root@$ip" true 2>/dev/null; then
                 ready=$((ready + 1))
             fi
