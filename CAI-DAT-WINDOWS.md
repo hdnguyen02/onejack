@@ -1,6 +1,6 @@
 # Cài đặt và chạy demo trên Windows 11
 
-Hướng dẫn từng bước để chạy demo **onejack** (cải thiện hiệu năng mạng: giảm độ trễ và tăng băng thông) trên một máy Windows 11, từ lúc chưa có gì tới lúc chạy xong 4 lượt demo.
+Hướng dẫn từng bước để chạy demo **onejack** (cải thiện hiệu năng mạng: giảm độ trễ) trên một máy Windows 11, từ lúc chưa có gì tới lúc chạy xong 3 lượt demo.
 
 Tổng quan dự án, mô hình mạng và kết quả đo xem trong [README.md](README.md). Các khái niệm mạng xem trong [CONCEPTS.md](CONCEPTS.md).
 
@@ -289,15 +289,14 @@ Kết quả đúng: dòng cuối là **`SẴN SÀNG`**. Nếu ra `LỖI: <bướ
 
 > IP của EVE do NAT của VMware cấp, thường giữ nguyên sau mỗi lần khởi động lại. Nếu không SSH được, xem lại IP trên màn hình máy EVE trong VMware.
 
-### 8.2. Chạy 4 lượt
+### 8.2. Chạy 3 lượt
 
 Mỗi lượt dài 60 giây, tải nặng bắt đầu ở giây 15. Chạy xong một lượt thì gõ `exit` để thoát màn hình tmux.
 
 ```
-scripts/tmux-demo.sh base        # 1 đường, hàng đợi FIFO: mốc so sánh
-scripts/tmux-demo.sh fqcodel     # 1 đường, hàng đợi fq_codel: giảm độ trễ
-scripts/tmux-demo.sh multipath   # 2 đường, hàng đợi FIFO: tăng băng thông
-scripts/tmux-demo.sh combined    # 2 đường, hàng đợi fq_codel: cả hai
+scripts/tmux-demo.sh base        # mọi lưu lượng đi đường dài R1 -> R2 -> R3
+scripts/tmux-demo.sh short       # mọi lưu lượng đi đường ngắn R1 -> R3
+scripts/tmux-demo.sh balance     # chia tải ra hai đường
 ```
 
 Màn hình chia 4 ô:
@@ -305,17 +304,16 @@ Màn hình chia 4 ô:
 | Vị trí | Hiển thị |
 |---|---|
 | Trên trái | RTT, jitter, mất gói của client |
-| Dưới trái | Lưu lượng R1 gửi ra đường 1 và đường 2 (Mbit/s) |
+| Dưới trái | Lưu lượng R1 gửi ra đường dài và đường ngắn (Mbit/s) |
 | Trên phải | Thông lượng server nhận được (Mbit/s) |
-| Dưới phải | Tiến trình `demo.sh`: cấu hình router, lúc bắt đầu tải |
+| Dưới phải | Tiến trình `demo.sh`: đường đi đang dùng, lúc bắt đầu tải |
 
-Kết quả mong đợi sau giây 15:
-- **base:** RTT lên khoảng 400 ms, server nhận khoảng 9,4 Mbit/s.
-- **fqcodel:** RTT chỉ khoảng 7 ms, server vẫn khoảng 9,4 Mbit/s.
-- **multipath:** server nhận khoảng 19 Mbit/s (mỗi đường 10 Mbit/s), RTT vẫn khoảng 400 ms.
-- **combined:** server nhận khoảng 19 Mbit/s và RTT khoảng 2 ms.
+Kết quả mong đợi:
+- **base:** trước giây 15 RTT khoảng 44 ms, sau giây 15 lên khoảng 450 ms.
+- **short:** trước giây 15 RTT khoảng 22 ms, sau giây 15 vẫn lên khoảng 420 ms.
+- **balance:** RTT khoảng 33 ms cả trước lẫn sau giây 15, tải chia ra hai đường mỗi đường khoảng 6 Mbit/s.
 
-Muốn chạy cả 4 lượt liền một lèo mà không mở màn hình demo: `scripts/run-all.sh`.
+Muốn chạy cả 3 lượt liền một lèo mà không mở màn hình demo: `scripts/run-all.sh`.
 
 Phím tắt tmux: **Ctrl+B** rồi **D** để thoát màn hình nhưng vẫn để chạy nền. Vào lại bằng `tmux attach`.
 
@@ -350,9 +348,8 @@ cd /root/onejack
 lab/netns-up.sh
 LAB=netns scripts/lab-up.sh
 LAB=netns scripts/tmux-demo.sh base
-LAB=netns scripts/tmux-demo.sh fqcodel
-LAB=netns scripts/tmux-demo.sh multipath
-LAB=netns scripts/tmux-demo.sh combined
+LAB=netns scripts/tmux-demo.sh short
+LAB=netns scripts/tmux-demo.sh balance
 scripts/plot.sh
 lab/netns-down.sh     # xóa mini-lab khi xong
 ```
@@ -373,7 +370,7 @@ lab/netns-down.sh     # xóa mini-lab khi xong
 | `lab-up.sh` báo `LỖI: chỉ x/6 node SSH được` | Node chưa khởi động xong hoặc không chạy được | Chờ thêm rồi chạy lại. Mở web EVE xem node có màu xanh không. Nếu node không lên, dùng mục 9 |
 | `lab-up.sh` báo `LỖI: RAM trống dưới 500MB` | Máy EVE thiếu RAM | Tắt bớt ứng dụng, hoặc tăng RAM cho máy EVE trong VMware |
 | Node lên nhưng rất chậm | Máy thật thiếu RAM hoặc đang mở nhiều ứng dụng nặng | Tắt trình duyệt nhiều tab và IDE, tăng RAM cho máy EVE |
-| `lab-up.sh` báo `LỖI: r1 không bật được fq_codel hoặc 2 đường` | Lab cũ (trước bản v4) chưa có đường 2 | Chạy lại `bash lab/eve-create-lab.sh` rồi `scripts/lab-up.sh` |
+| `lab-up.sh` báo `LỖI: r1 không cấu hình được đường đi ...` | Lab cũ (trước bản v4) chưa có đường ngắn R1 – R3 | Chạy lại `bash lab/eve-create-lab.sh` rồi `scripts/lab-up.sh` |
 | Kết quả demo lạ | Lượt trước bị ngắt giữa chừng | `scripts/reset.sh` rồi `scripts/lab-up.sh` |
 
 ---
@@ -405,8 +402,7 @@ scripts/lab-up.sh            # → SẴN SÀNG
 ssh root@<EVE_IP>
 cd /root/onejack && scripts/lab-up.sh
 scripts/tmux-demo.sh base
-scripts/tmux-demo.sh fqcodel
-scripts/tmux-demo.sh multipath
-scripts/tmux-demo.sh combined
+scripts/tmux-demo.sh short
+scripts/tmux-demo.sh balance
 scripts/plot.sh
 ```

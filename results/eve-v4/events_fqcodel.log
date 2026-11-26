@@ -1,6 +1,0 @@
-10:01:35.944 [demo] router: 1 đường, hàng đợi fqcodel
-10:01:36.100 [R1] đường tới server: 10.0.3.0/24 via 10.0.12.2 dev eth2 
-10:01:36.245 [R1] hàng đợi eth2: tbf fq_codel 
-10:01:36.251 [demo] client bắt đầu gửi 20 truy vấn/giây
-10:01:51.257 [demo] BẮT ĐẦU TẢI NẶNG: 8 luồng, 5000 gói/s × 1000 byte
-10:02:39.524 [demo] kết thúc lượt

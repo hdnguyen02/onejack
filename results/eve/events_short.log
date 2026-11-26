@@ -1,0 +1,5 @@
+10:42:25.083 [demo] router: đường đi short
+10:42:25.224 [R1] đường tới server: 10.0.3.0/24 via 10.0.13.3 dev eth3 
+10:42:25.227 [demo] client bắt đầu gửi 20 truy vấn/giây
+10:42:40.231 [demo] BẮT ĐẦU TẢI NẶNG: 32 luồng, 1500 gói/s × 1000 byte
+10:43:28.335 [demo] kết thúc lượt

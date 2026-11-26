@@ -36,7 +36,7 @@ done
 sleep 2
 api GET "/labs/$LAB.unl/nodes/wipe" > /dev/null || true
 api DELETE "/labs/$LAB.unl" > /dev/null || true
-api POST /labs "{\"path\":\"/\",\"name\":\"$LAB\",\"version\":\"1\",\"author\":\"onejack\",\"description\":\"Network performance: latency and bandwidth\"}" > /dev/null
+api POST /labs "{\"path\":\"/\",\"name\":\"$LAB\",\"version\":\"1\",\"author\":\"onejack\",\"description\":\"Network performance: latency reduction\"}" > /dev/null
 
 # 3. Các mạng. Thứ tự tạo quyết định id mạng (1..6).
 net() {

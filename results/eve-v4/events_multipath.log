@@ -1,6 +1,0 @@
-10:02:41.104 [demo] router: 2 đường, hàng đợi fifo
-10:02:41.286 [R1] đường tới server: 10.0.3.0/24 	nexthop via 10.0.12.2 dev eth2 weight 1 	nexthop via 10.0.13.3 dev eth3 weight 1 
-10:02:41.437 [R1] hàng đợi eth2: tbf 
-10:02:41.439 [demo] client bắt đầu gửi 20 truy vấn/giây
-10:02:56.443 [demo] BẮT ĐẦU TẢI NẶNG: 8 luồng, 5000 gói/s × 1000 byte
-10:03:44.643 [demo] kết thúc lượt

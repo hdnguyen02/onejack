@@ -1,9 +1,8 @@
 #!/bin/bash
 # Chạy một lượt đo và thu số liệu về results/.
-#   demo.sh base      : 1 đường, hàng đợi fifo       (mốc so sánh)
-#   demo.sh fqcodel   : 1 đường, hàng đợi fq_codel   (giảm độ trễ)
-#   demo.sh multipath : 2 đường, hàng đợi fifo       (tăng băng thông)
-#   demo.sh combined  : 2 đường, hàng đợi fq_codel   (cả hai)
+#   demo.sh base    : mọi lưu lượng đi đường dài R1 -> R2 -> R3   (mốc so sánh)
+#   demo.sh short   : mọi lưu lượng đi đường ngắn R1 -> R3          (ít thiết bị trung gian)
+#   demo.sh balance : chia tải ra cả hai đường                      (tránh một đường quá tải)
 # Backend chọn bằng biến LAB=netns|eve (xem node-run.sh).
 set -u
 
@@ -11,26 +10,20 @@ set -u
 DURATION=60          # tổng thời gian một lượt (giây)
 LOAD_AT=15           # giây bắt đầu có tải nặng
 CLIENT_RATE=20       # truy vấn/giây của client
-LOAD_RATE=5000       # gói/giây của loadgen
-LOAD_SIZE=1000       # byte mỗi gói tải (5000 × 1000 byte ≈ 40 Mbit/s)
-LOAD_FLOWS=8         # số luồng tải song song
+LOAD_RATE=1500       # gói/giây của loadgen
+LOAD_SIZE=1000       # byte mỗi gói tải (1500 × 1000 byte = 12 Mbit/s, hơn một đường 10 Mbit/s)
+LOAD_FLOWS=32        # số luồng tải song song (nhiều luồng thì chia tải ra 2 đường gần đều)
 # -------------------------------------------
 
 MODE="${1:-}"
 if [ "$MODE" = "base" ]; then
-    QUEUE=fifo
-    PATHS=1
-elif [ "$MODE" = "fqcodel" ]; then
-    QUEUE=fqcodel
-    PATHS=1
-elif [ "$MODE" = "multipath" ]; then
-    QUEUE=fifo
-    PATHS=2
-elif [ "$MODE" = "combined" ]; then
-    QUEUE=fqcodel
-    PATHS=2
+    ROUTE=long
+elif [ "$MODE" = "short" ]; then
+    ROUTE=short
+elif [ "$MODE" = "balance" ]; then
+    ROUTE=balance
 else
-    echo "Cách dùng: $0 base|fqcodel|multipath|combined" >&2
+    echo "Cách dùng: $0 base|short|balance" >&2
     exit 1
 fi
 
@@ -65,18 +58,17 @@ event() {
 "$ROOT/scripts/reset.sh"
 : > "$EVENTS"
 
-echo "=== Lượt '$MODE' bắt đầu: $PATHS đường, hàng đợi $QUEUE (LAB=$LAB) ==="
+echo "=== Lượt '$MODE' bắt đầu: đường đi $ROUTE (LAB=$LAB) ==="
 
 # Cấu hình lại 3 router theo lượt này.
 for r in r1 r2 r3; do
-    if ! "$RUN" "$r" "sh $CONF/$r.sh $QUEUE $PATHS" > /dev/null 2>&1; then
+    if ! "$RUN" "$r" "sh $CONF/$r.sh $ROUTE" > /dev/null 2>&1; then
         echo "LỖI: không cấu hình được $r" >&2
         exit 1
     fi
 done
-event "[demo] router: $PATHS đường, hàng đợi $QUEUE"
+event "[demo] router: đường đi $ROUTE"
 event "[R1] đường tới server: $("$RUN" r1 "ip route show 10.0.3.0/24" 2>/dev/null | tr '\n' ' ' | tr -s ' ')"
-event "[R1] hàng đợi eth2: $("$RUN" r1 "tc qdisc show dev eth2" 2>/dev/null | awk '{ print $2 }' | tr '\n' ' ')"
 
 # CSV của server và client ghi ra stderr để thu về được cả khi chạy qua SSH.
 "$RUN" server "$BIN/server -o /dev/stderr" > "$OUT/server_$MODE.log" 2> "$OUT/server_$MODE.csv" &

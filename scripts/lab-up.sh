@@ -68,7 +68,7 @@ step "Dọn tiến trình cũ"
 step "Client ping server qua R1 -> R2 -> R3"
 "$RUN" client "ping -c2 -W2 10.0.3.10" > /dev/null 2>&1 || fail "client không ping được server"
 
-step "R1 ping R3 qua đường 2 (nối thẳng)"
+step "R1 ping R3 qua đường ngắn (nối thẳng)"
 "$RUN" r1 "ping -c2 -W2 10.0.13.3" > /dev/null 2>&1 || fail "R1 không ping được R3 (10.0.13.3)"
 
 if [ "$LAB" = "eve" ]; then
@@ -76,15 +76,16 @@ if [ "$LAB" = "eve" ]; then
 else
     CONF="$ROOT/lab"
 fi
-step "Thử cấu hình 2 đường + fq_codel trên router"
-for r in r1 r2 r3; do
-    "$RUN" "$r" "sh $CONF/$r.sh fqcodel 2" > /dev/null 2>&1 || fail "$r không bật được fq_codel hoặc 2 đường"
+step "Thử cấu hình đường ngắn và chia tải trên router"
+for mode in short balance; do
+    for r in r1 r2 r3; do
+        "$RUN" "$r" "sh $CONF/$r.sh $mode" > /dev/null 2>&1 || fail "$r không cấu hình được đường đi $mode"
+    done
+    "$RUN" client "ping -c2 -W2 10.0.3.10" > /dev/null 2>&1 || fail "client không ping được server khi đường đi là $mode"
 done
-"$RUN" r1 "tc qdisc show dev eth2" 2>/dev/null | grep -q fq_codel || fail "R1 chưa có hàng đợi fq_codel"
-"$RUN" r1 "ip route show 10.0.3.0/24" 2>/dev/null | grep -q 10.0.13.3 || fail "R1 chưa có đường 2 tới server"
-"$RUN" client "ping -c2 -W2 10.0.3.10" > /dev/null 2>&1 || fail "client không ping được server khi bật 2 đường"
+"$RUN" r1 "ip route show 10.0.3.0/24" 2>/dev/null | grep -q 10.0.13.3 || fail "R1 chưa có đường ngắn tới server"
 for r in r1 r2 r3; do
-    "$RUN" "$r" "sh $CONF/$r.sh fifo 1" > /dev/null 2>&1 || fail "$r không trả về cấu hình mặc định"
+    "$RUN" "$r" "sh $CONF/$r.sh long" > /dev/null 2>&1 || fail "$r không trả về đường dài mặc định"
 done
 
 step "Client gửi truy vấn thật trong 3 giây"

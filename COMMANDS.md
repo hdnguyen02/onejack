@@ -9,11 +9,11 @@ Mỗi bước làm xong thì đánh dấu `[x]`. Claude sẽ thêm bước mới
 
 ---
 
-## Bước 1: Chạy thử mini-lab trên máy (khoảng 5 phút)
+## Bước 1: Chạy thử mini-lab trên máy (khoảng 4 phút)
 
-Bước này dựng mạng ảo bằng namespace trên chính máy bạn, rồi chạy đủ 4 lượt đo.
+Bước này dựng mạng ảo bằng namespace trên chính máy bạn, rồi chạy đủ 3 lượt đo.
 
-- [ ] Dựng lab và chạy 4 lượt:
+- [ ] Dựng lab và chạy 3 lượt:
   ```
   ! cd ~/Desktop/onejack && make && sudo lab/netns-up.sh && sudo LAB=netns scripts/lab-up.sh && sudo LAB=netns scripts/run-all.sh
   ```
@@ -23,7 +23,7 @@ Các lệnh dùng thêm khi cần:
 
 | Mục đích | Lệnh |
 |---|---|
-| Chạy lại một lượt | `! cd ~/Desktop/onejack && sudo LAB=netns scripts/demo.sh base` (hoặc `fqcodel`, `multipath`, `combined`) |
+| Chạy lại một lượt | `! cd ~/Desktop/onejack && sudo LAB=netns scripts/demo.sh base` (hoặc `short`, `balance`) |
 | Dừng mọi chương trình đang chạy | `! cd ~/Desktop/onejack && sudo LAB=netns scripts/reset.sh` |
 | Xóa mini-lab | `! cd ~/Desktop/onejack && sudo lab/netns-down.sh` |
 | Dựng lại mini-lab (sau khi khởi động lại máy) | `! cd ~/Desktop/onejack && sudo lab/netns-down.sh; sudo lab/netns-up.sh` |
@@ -73,10 +73,9 @@ virsh -c qemu:///system start eve-ng
 ssh root@192.168.122.88
 cd /root/onejack && scripts/lab-up.sh
 scripts/tmux-demo.sh base
-scripts/tmux-demo.sh fqcodel
-scripts/tmux-demo.sh multipath
-scripts/tmux-demo.sh combined
+scripts/tmux-demo.sh short
+scripts/tmux-demo.sh balance
 scripts/plot.sh
 ```
 
-- [ ] Quay màn hình 4 lượt làm video dự phòng (Ubuntu: Ctrl + Shift + Alt + R để bắt đầu/dừng quay).
+- [ ] Quay màn hình 3 lượt làm video dự phòng (Ubuntu: Ctrl + Shift + Alt + R để bắt đầu/dừng quay).
