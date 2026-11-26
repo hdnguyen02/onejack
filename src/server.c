@@ -1,5 +1,7 @@
-// server: nhận truy vấn UDP "Q <seq> <ts>", trả lời "A <seq> <ts>".
-// Mỗi giây in số truy vấn nhận được, tách theo IP nguồn.
+// server: nhận truy vấn UDP "Q <seq> <ts>" và trả lời "A <seq> <ts>".
+// Gói tải "D ..." của loadgen chỉ được đếm, không trả lời.
+// Mỗi giây in số gói, thông lượng nhận được (Mbit/s) và số gói theo từng IP nguồn.
+// -o file.csv: ghi thêm CSV mỗi giây: t,recv_pkts,recv_mbit
 #include <arpa/inet.h>
 #include <errno.h>
 #include <netinet/in.h>
@@ -38,9 +40,9 @@ static void count_source(uint32_t ip)
     }
 }
 
-static void print_second(int t, uint32_t recv, uint32_t replied)
+static void print_second(int t, uint32_t recv, uint32_t replied, double mbit)
 {
-    printf("[server] t=%d recv=%u replied=%u top=", t, recv, replied);
+    printf("[server] t=%2d nhận=%u gói (%.2f Mbit/s) trả lời=%u nguồn=", t, recv, mbit, replied);
     for (int i = 0; i < source_count; i++) {
         char ip[INET_ADDRSTRLEN];
         struct in_addr a = { .s_addr = sources[i].ip };
@@ -58,14 +60,28 @@ static void print_second(int t, uint32_t recv, uint32_t replied)
 int main(int argc, char **argv)
 {
     int port = QUERY_PORT;
+    const char *csv_path = NULL;
     int opt;
-    while ((opt = getopt(argc, argv, "p:")) != -1) {
+    while ((opt = getopt(argc, argv, "p:o:")) != -1) {
         if (opt == 'p') {
             port = atoi(optarg);
+        } else if (opt == 'o') {
+            csv_path = optarg;
         } else {
-            fprintf(stderr, "Cách dùng: %s [-p port]\n", argv[0]);
+            fprintf(stderr, "Cách dùng: %s [-p port] [-o file.csv]\n", argv[0]);
             return 1;
         }
+    }
+
+    FILE *csv = NULL;
+    if (csv_path != NULL) {
+        csv = fopen(csv_path, "w");
+        if (csv == NULL) {
+            perror("fopen");
+            return 1;
+        }
+        fprintf(csv, "t,recv_pkts,recv_mbit\n");
+        fflush(csv);
     }
 
     int fd = socket(AF_INET, SOCK_DGRAM, 0);
@@ -95,6 +111,7 @@ int main(int argc, char **argv)
     uint64_t next_tick = start + 1000000;
     int t = 0;
     uint32_t recv_count = 0;
+    uint64_t recv_bytes = 0;
     uint32_t replied = 0;
     char buf[2048];
 
@@ -113,6 +130,7 @@ int main(int argc, char **argv)
                     break;
                 }
                 recv_count++;
+                recv_bytes += (uint64_t)n;
                 count_source(from.sin_addr.s_addr);
 
                 char kind;
@@ -132,8 +150,15 @@ int main(int argc, char **argv)
         uint64_t now = now_us();
         while (now >= next_tick) {
             t++;
-            print_second(t, recv_count, replied);
+            // Thông lượng tính theo phần dữ liệu UDP nhận được.
+            double mbit = (double)recv_bytes * 8.0 / 1000000.0;
+            print_second(t, recv_count, replied, mbit);
+            if (csv != NULL) {
+                fprintf(csv, "%d,%u,%.3f\n", t, recv_count, mbit);
+                fflush(csv);
+            }
             recv_count = 0;
+            recv_bytes = 0;
             replied = 0;
             next_tick += 1000000;
         }

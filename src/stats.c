@@ -40,6 +40,20 @@ void stats_on_reply(struct stats *s, uint32_t seq, uint64_t t_us)
     slot->state = SLOT_DONE;
     s->recv++;
     s->rtt_sum_us += rtt;
+
+    // Jitter: so RTT này với RTT của trả lời liền trước.
+    if (s->has_last) {
+        uint64_t diff;
+        if (rtt > s->last_rtt_us) {
+            diff = rtt - s->last_rtt_us;
+        } else {
+            diff = s->last_rtt_us - rtt;
+        }
+        s->jitter_sum_us += diff;
+        s->jitter_count++;
+    }
+    s->last_rtt_us = rtt;
+    s->has_last = 1;
 }
 
 void stats_tick(struct stats *s, uint64_t now, struct stats_row *out)
@@ -69,8 +83,16 @@ void stats_tick(struct stats *s, uint64_t now, struct stats_row *out)
         out->rtt_avg_ms = 0.0;
     }
 
+    if (s->jitter_count > 0) {
+        out->jitter_ms = (double)s->jitter_sum_us / s->jitter_count / 1000.0;
+    } else {
+        out->jitter_ms = 0.0;
+    }
+
     s->sent = 0;
     s->recv = 0;
     s->lost = 0;
     s->rtt_sum_us = 0;
+    s->jitter_sum_us = 0;
+    s->jitter_count = 0;
 }

@@ -1,4 +1,4 @@
-// Thống kê theo giây cho client: số gói gửi/nhận, % mất gói, RTT trung bình.
+// Thống kê theo giây cho client: số gói gửi/nhận, % mất gói, RTT trung bình, jitter.
 #ifndef STATS_H
 #define STATS_H
 
@@ -25,6 +25,11 @@ struct stats {
     uint32_t recv;
     uint32_t lost;
     uint64_t rtt_sum_us;
+    // Jitter: trung bình độ lệch RTT giữa hai trả lời liên tiếp.
+    uint64_t last_rtt_us;                   // RTT của trả lời trước đó (giữ qua các giây)
+    int has_last;
+    uint64_t jitter_sum_us;
+    uint32_t jitter_count;
 };
 
 struct stats_row {
@@ -32,6 +37,7 @@ struct stats_row {
     uint32_t recv;
     double loss_pct;
     double rtt_avg_ms;
+    double jitter_ms;
 };
 
 void stats_init(struct stats *s);

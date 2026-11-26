@@ -1,0 +1,60 @@
+[client] t= 1 gửi=20 nhận=20 mất=  0.0% rtt=   5.24 ms jitter=  3.76 ms
+[client] t= 2 gửi=20 nhận=20 mất=  0.0% rtt=   4.13 ms jitter=  2.90 ms
+[client] t= 3 gửi=20 nhận=20 mất=  0.0% rtt=   3.67 ms jitter=  2.36 ms
+[client] t= 4 gửi=20 nhận=20 mất=  0.0% rtt=   5.00 ms jitter=  3.21 ms
+[client] t= 5 gửi=20 nhận=20 mất=  0.0% rtt=   4.14 ms jitter=  3.44 ms
+[client] t= 6 gửi=20 nhận=20 mất=  0.0% rtt=   5.74 ms jitter=  5.06 ms
+[client] t= 7 gửi=20 nhận=20 mất=  0.0% rtt=   3.99 ms jitter=  2.73 ms
+[client] t= 8 gửi=20 nhận=20 mất=  0.0% rtt=   4.18 ms jitter=  3.01 ms
+[client] t= 9 gửi=20 nhận=20 mất=  0.0% rtt=   4.74 ms jitter=  4.14 ms
+[client] t=10 gửi=20 nhận=20 mất=  0.0% rtt=   3.31 ms jitter=  1.92 ms
+[client] t=11 gửi=20 nhận=20 mất=  0.0% rtt=   3.44 ms jitter=  2.10 ms
+[client] t=12 gửi=20 nhận=20 mất=  0.0% rtt=   3.89 ms jitter=  1.91 ms
+[client] t=13 gửi=20 nhận=20 mất=  0.0% rtt=   4.75 ms jitter=  3.35 ms
+[client] t=14 gửi=20 nhận=20 mất=  0.0% rtt=   4.76 ms jitter=  4.47 ms
+[client] t=15 gửi=20 nhận=20 mất=  0.0% rtt=   4.07 ms jitter=  3.52 ms
+[client] t=16 gửi=20 nhận=12 mất=  0.0% rtt= 320.55 ms jitter= 35.38 ms
+[client] t=17 gửi=20 nhận=20 mất=  0.0% rtt= 415.68 ms jitter=  2.70 ms
+[client] t=18 gửi=20 nhận=20 mất=  0.0% rtt= 416.38 ms jitter=  3.42 ms
+[client] t=19 gửi=20 nhận=20 mất=  0.0% rtt= 412.18 ms jitter=  2.66 ms
+[client] t=20 gửi=20 nhận=20 mất=  0.0% rtt= 415.10 ms jitter=  3.55 ms
+[client] t=21 gửi=20 nhận=20 mất=  0.0% rtt= 419.93 ms jitter=  3.67 ms
+[client] t=22 gửi=20 nhận=20 mất=  0.0% rtt= 416.83 ms jitter=  2.24 ms
+[client] t=23 gửi=20 nhận=20 mất=  0.0% rtt= 416.07 ms jitter=  3.66 ms
+[client] t=24 gửi=20 nhận=20 mất=  0.0% rtt= 410.19 ms jitter=  1.83 ms
+[client] t=25 gửi=20 nhận=20 mất=  0.0% rtt= 412.61 ms jitter=  2.29 ms
+[client] t=26 gửi=20 nhận=20 mất=  0.0% rtt= 411.98 ms jitter=  1.48 ms
+[client] t=27 gửi=20 nhận=20 mất=  0.0% rtt= 414.68 ms jitter=  2.78 ms
+[client] t=28 gửi=20 nhận=20 mất=  0.0% rtt= 417.51 ms jitter=  2.17 ms
+[client] t=29 gửi=20 nhận=20 mất=  0.0% rtt= 422.83 ms jitter=  3.30 ms
+[client] t=30 gửi=20 nhận=20 mất=  0.0% rtt= 417.80 ms jitter=  2.16 ms
+[client] t=31 gửi=20 nhận=20 mất=  0.0% rtt= 423.43 ms jitter=  1.67 ms
+[client] t=32 gửi=20 nhận=20 mất=  0.0% rtt= 422.84 ms jitter=  1.81 ms
+[client] t=33 gửi=20 nhận=20 mất=  0.0% rtt= 428.39 ms jitter=  2.62 ms
+[client] t=34 gửi=20 nhận=20 mất=  0.0% rtt= 420.90 ms jitter=  2.58 ms
+[client] t=35 gửi=20 nhận=20 mất=  0.0% rtt= 429.38 ms jitter=  3.46 ms
+[client] t=36 gửi=20 nhận=20 mất=  0.0% rtt= 446.78 ms jitter=  3.66 ms
+[client] t=37 gửi=20 nhận=19 mất=  0.0% rtt= 451.76 ms jitter=  2.51 ms
+[client] t=38 gửi=20 nhận=20 mất=  0.0% rtt= 457.03 ms jitter=  1.93 ms
+[client] t=39 gửi=20 nhận=21 mất=  0.0% rtt= 450.67 ms jitter=  3.19 ms
+[client] t=40 gửi=20 nhận=20 mất=  0.0% rtt= 440.79 ms jitter=  2.45 ms
+[client] t=41 gửi=20 nhận=20 mất=  0.0% rtt= 446.59 ms jitter=  3.76 ms
+[client] t=42 gửi=20 nhận=20 mất=  0.0% rtt= 440.88 ms jitter=  2.21 ms
+[client] t=43 gửi=20 nhận=20 mất=  0.0% rtt= 435.83 ms jitter=  3.25 ms
+[client] t=44 gửi=20 nhận=20 mất=  0.0% rtt= 427.95 ms jitter=  2.69 ms
+[client] t=45 gửi=20 nhận=20 mất=  0.0% rtt= 434.41 ms jitter=  2.51 ms
+[client] t=46 gửi=20 nhận=20 mất=  0.0% rtt= 433.79 ms jitter=  2.85 ms
+[client] t=47 gửi=20 nhận=20 mất=  0.0% rtt= 431.93 ms jitter=  2.48 ms
+[client] t=48 gửi=20 nhận=20 mất=  0.0% rtt= 429.95 ms jitter=  1.73 ms
+[client] t=49 gửi=20 nhận=20 mất=  0.0% rtt= 431.10 ms jitter=  3.49 ms
+[client] t=50 gửi=20 nhận=20 mất=  0.0% rtt= 432.46 ms jitter=  3.63 ms
+[client] t=51 gửi=20 nhận=19 mất=  0.0% rtt= 443.27 ms jitter=  2.54 ms
+[client] t=52 gửi=20 nhận=21 mất=  0.0% rtt= 441.55 ms jitter=  2.64 ms
+[client] t=53 gửi=20 nhận=20 mất=  0.0% rtt= 442.73 ms jitter=  3.57 ms
+[client] t=54 gửi=20 nhận=20 mất=  0.0% rtt= 437.91 ms jitter=  2.31 ms
+[client] t=55 gửi=20 nhận=20 mất=  0.0% rtt= 442.37 ms jitter=  1.68 ms
+[client] t=56 gửi=20 nhận=20 mất=  0.0% rtt= 440.26 ms jitter=  2.65 ms
+[client] t=57 gửi=20 nhận=20 mất=  0.0% rtt= 439.86 ms jitter=  1.20 ms
+[client] t=58 gửi=20 nhận=20 mất=  0.0% rtt= 434.58 ms jitter=  1.90 ms
+[client] t=59 gửi=20 nhận=20 mất=  0.0% rtt= 437.33 ms jitter=  1.42 ms
+[client] t=60 gửi=20 nhận=20 mất=  0.0% rtt= 436.35 ms jitter=  1.45 ms

@@ -1,9 +1,9 @@
-# Build 4 chương trình dạng tĩnh vào build/, `make test` chạy unit test.
+# Build 3 chương trình dạng tĩnh vào build/, `make test` chạy unit test.
 CC      = gcc
 CFLAGS  = -O2 -Wall -Wextra -std=c11 -D_GNU_SOURCE -Isrc
 LDFLAGS = -static
 
-MAINS   = server client attacker guard
+MAINS   = server client loadgen
 HEADERS = $(wildcard src/*.h)
 # Các module dùng chung = mọi file .c trong src/ trừ các file có main()
 LIB_SRC = $(filter-out $(addprefix src/,$(addsuffix .c,$(MAINS))),$(wildcard src/*.c))

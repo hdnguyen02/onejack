@@ -1,24 +1,36 @@
 #!/bin/bash
-# Chạy một lượt demo và thu số liệu về results/.
-#   demo.sh off : không hợp tác (chỉ R3 tự phát hiện và chặn)
-#   demo.sh on     : có hợp tác, cảnh báo đi mạng điều khiển riêng (10.0.99.0/24)
-#   demo.sh inband : có hợp tác, cảnh báo đi CHUNG đường dữ liệu R3 -> R2 -> R1,
-#                    được đánh dấu ưu tiên (QoS) để router cho đi trước
+# Chạy một lượt đo và thu số liệu về results/.
+#   demo.sh base      : 1 đường, hàng đợi fifo       (mốc so sánh)
+#   demo.sh fqcodel   : 1 đường, hàng đợi fq_codel   (giảm độ trễ)
+#   demo.sh multipath : 2 đường, hàng đợi fifo       (tăng băng thông)
+#   demo.sh combined  : 2 đường, hàng đợi fq_codel   (cả hai)
 # Backend chọn bằng biến LAB=netns|eve (xem node-run.sh).
 set -u
 
-# ---- Thông số demo (chỉnh ở đây) ----
+# ---- Thông số thí nghiệm (chỉnh ở đây) ----
 DURATION=60          # tổng thời gian một lượt (giây)
-ATTACK_AT=15         # giây bắt đầu tấn công
-CLIENT_RATE=20       # gói/s của client thật
-ATTACK_RATE=5000     # gói/s của attacker
-ATTACK_SIZE=1000     # byte mỗi gói tấn công
-THRESHOLD=200        # ngưỡng phát hiện (gói/s)
-# -------------------------------------
+LOAD_AT=15           # giây bắt đầu có tải nặng
+CLIENT_RATE=20       # truy vấn/giây của client
+LOAD_RATE=5000       # gói/giây của loadgen
+LOAD_SIZE=1000       # byte mỗi gói tải (5000 × 1000 byte ≈ 40 Mbit/s)
+LOAD_FLOWS=8         # số luồng tải song song
+# -------------------------------------------
 
 MODE="${1:-}"
-if [ "$MODE" != "off" ] && [ "$MODE" != "on" ] && [ "$MODE" != "inband" ]; then
-    echo "Cách dùng: $0 off|on|inband" >&2
+if [ "$MODE" = "base" ]; then
+    QUEUE=fifo
+    PATHS=1
+elif [ "$MODE" = "fqcodel" ]; then
+    QUEUE=fqcodel
+    PATHS=1
+elif [ "$MODE" = "multipath" ]; then
+    QUEUE=fifo
+    PATHS=2
+elif [ "$MODE" = "combined" ]; then
+    QUEUE=fqcodel
+    PATHS=2
+else
+    echo "Cách dùng: $0 base|fqcodel|multipath|combined" >&2
     exit 1
 fi
 
@@ -31,64 +43,60 @@ mkdir -p "$OUT"
 
 if [ "$LAB" = "netns" ]; then
     BIN="$ROOT/build"
+    CONF="$ROOT/lab"
     LINKMON="$ROOT/scripts/linkmon.sh"
 else
     BIN="/root"
+    CONF="/root"
     LINKMON="/root/linkmon.sh"
 fi
 
-WHITE="-W 10.0.3.10 -W 10.0.1.20"
 EVENTS="$OUT/events_$MODE.log"
 
 stamp() {
     date +%H:%M:%S.%3N
 }
 
-# Đóng dấu giờ lại bằng đồng hồ của máy chạy demo.sh, vì đồng hồ các node EVE
-# lệch nhau tới cả giây. Bỏ giờ do guard tự in (chữ đầu dòng), thay bằng giờ ở đây.
-restamp() {
-    while IFS= read -r line; do
-        echo "$(stamp) ${line#* }"
-    done
+# Ghi sự kiện vào log và in ra màn hình.
+event() {
+    echo "$(stamp) $*" | tee -a "$EVENTS"
 }
 
 "$ROOT/scripts/reset.sh"
 : > "$EVENTS"
 
-echo "=== Lượt '$MODE' bắt đầu (LAB=$LAB) ==="
+echo "=== Lượt '$MODE' bắt đầu: $PATHS đường, hàng đợi $QUEUE (LAB=$LAB) ==="
 
-"$RUN" server "$BIN/server" > "$OUT/server_$MODE.log" 2>&1 &
+# Cấu hình lại 3 router theo lượt này.
+for r in r1 r2 r3; do
+    if ! "$RUN" "$r" "sh $CONF/$r.sh $QUEUE $PATHS" > /dev/null 2>&1; then
+        echo "LỖI: không cấu hình được $r" >&2
+        exit 1
+    fi
+done
+event "[demo] router: $PATHS đường, hàng đợi $QUEUE"
+event "[R1] đường tới server: $("$RUN" r1 "ip route show 10.0.3.0/24" 2>/dev/null | tr '\n' ' ' | tr -s ' ')"
+event "[R1] hàng đợi eth2: $("$RUN" r1 "tc qdisc show dev eth2" 2>/dev/null | awk '{ print $2 }' | tr '\n' ' ')"
 
-if [ "$MODE" = "on" ]; then
-    "$RUN" r3 "$BIN/guard -n R3 -d -i eth1 -t $THRESHOLD $WHITE -P 10.0.99.1 -P 10.0.99.2" 2>&1 | restamp >> "$EVENTS" &
-    "$RUN" r1 "$BIN/guard -n R1 -l -b 10.0.99.1 $WHITE" 2>&1 | restamp >> "$EVENTS" &
-    "$RUN" r2 "$BIN/guard -n R2 -l -b 10.0.99.2 $WHITE" 2>&1 | restamp >> "$EVENTS" &
-elif [ "$MODE" = "inband" ]; then
-    # R1 nghe trên IP phía R2 (10.0.12.1), R2 nghe trên IP phía R3 (10.0.23.2).
-    "$RUN" r3 "$BIN/guard -n R3 -d -i eth1 -t $THRESHOLD $WHITE -P 10.0.12.1 -P 10.0.23.2 -Q" 2>&1 | restamp >> "$EVENTS" &
-    "$RUN" r1 "$BIN/guard -n R1 -l -b 10.0.12.1 $WHITE" 2>&1 | restamp >> "$EVENTS" &
-    "$RUN" r2 "$BIN/guard -n R2 -l -b 10.0.23.2 $WHITE" 2>&1 | restamp >> "$EVENTS" &
-else
-    "$RUN" r3 "$BIN/guard -n R3 -d -i eth1 -t $THRESHOLD $WHITE" 2>&1 | restamp >> "$EVENTS" &
-fi
-sleep 2
-
-"$RUN" r1 "sh $LINKMON eth2 $DURATION" > "$OUT/link_$MODE.csv" 2>/dev/null &
-# CSV của client ghi ra stderr để thu về được cả khi chạy qua SSH.
+# CSV của server và client ghi ra stderr để thu về được cả khi chạy qua SSH.
+"$RUN" server "$BIN/server -o /dev/stderr" > "$OUT/server_$MODE.log" 2> "$OUT/server_$MODE.csv" &
+"$RUN" r1 "sh $LINKMON $DURATION eth2 eth3" > "$OUT/link_$MODE.csv" 2>/dev/null &
 "$RUN" client "$BIN/client -s 10.0.3.10 -r $CLIENT_RATE -d $DURATION -o /dev/stderr" \
     > "$OUT/client_$MODE.log" 2> "$OUT/client_$MODE.csv" &
 CLIENT_PID=$!
+event "[demo] client bắt đầu gửi $CLIENT_RATE truy vấn/giây"
 
-sleep "$ATTACK_AT"
-echo "$(stamp) [demo] BẮT ĐẦU TẤN CÔNG" >> "$EVENTS"
-"$RUN" attacker "$BIN/attacker -s 10.0.3.10 -r $ATTACK_RATE -l $ATTACK_SIZE -d $((DURATION - ATTACK_AT))" \
-    > "$OUT/attacker_$MODE.log" 2>&1 &
+sleep "$LOAD_AT"
+event "[demo] BẮT ĐẦU TẢI NẶNG: $LOAD_FLOWS luồng, $LOAD_RATE gói/s × $LOAD_SIZE byte"
+"$RUN" loadgen "$BIN/loadgen -s 10.0.3.10 -r $LOAD_RATE -l $LOAD_SIZE -f $LOAD_FLOWS -d $((DURATION - LOAD_AT))" \
+    > "$OUT/loadgen_$MODE.log" 2>&1 &
 
 wait "$CLIENT_PID"
 sleep 1
 "$ROOT/scripts/reset.sh"
 sleep 1
 wait 2>/dev/null
+event "[demo] kết thúc lượt"
 
 # Chạy bằng sudo thì trả quyền sở hữu file kết quả cho người dùng.
 if [ -n "${SUDO_USER:-}" ]; then
@@ -96,4 +104,3 @@ if [ -n "${SUDO_USER:-}" ]; then
 fi
 
 echo "=== Lượt '$MODE' xong. Kết quả trong results/*_$MODE.* ==="
-grep -E "PHÁT HIỆN|NHẬN|BẮT ĐẦU" "$EVENTS"

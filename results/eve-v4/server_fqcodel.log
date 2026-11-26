@@ -1,0 +1,63 @@
+[server] đang nghe UDP cổng 9000
+[server] t= 1 nhận=21 gói (0.00 Mbit/s) trả lời=21 nguồn=10.0.1.20:21
+[server] t= 2 nhận=20 gói (0.00 Mbit/s) trả lời=20 nguồn=10.0.1.20:20
+[server] t= 3 nhận=20 gói (0.00 Mbit/s) trả lời=20 nguồn=10.0.1.20:20
+[server] t= 4 nhận=20 gói (0.00 Mbit/s) trả lời=20 nguồn=10.0.1.20:20
+[server] t= 5 nhận=20 gói (0.00 Mbit/s) trả lời=20 nguồn=10.0.1.20:20
+[server] t= 6 nhận=20 gói (0.00 Mbit/s) trả lời=20 nguồn=10.0.1.20:20
+[server] t= 7 nhận=20 gói (0.00 Mbit/s) trả lời=20 nguồn=10.0.1.20:20
+[server] t= 8 nhận=20 gói (0.00 Mbit/s) trả lời=20 nguồn=10.0.1.20:20
+[server] t= 9 nhận=20 gói (0.00 Mbit/s) trả lời=20 nguồn=10.0.1.20:20
+[server] t=10 nhận=20 gói (0.00 Mbit/s) trả lời=20 nguồn=10.0.1.20:20
+[server] t=11 nhận=20 gói (0.00 Mbit/s) trả lời=20 nguồn=10.0.1.20:20
+[server] t=12 nhận=20 gói (0.00 Mbit/s) trả lời=20 nguồn=10.0.1.20:20
+[server] t=13 nhận=20 gói (0.00 Mbit/s) trả lời=20 nguồn=10.0.1.20:20
+[server] t=14 nhận=20 gói (0.00 Mbit/s) trả lời=20 nguồn=10.0.1.20:20
+[server] t=15 nhận=25 gói (0.05 Mbit/s) trả lời=19 nguồn=10.0.1.20:19,10.0.1.10:6
+[server] t=16 nhận=1196 gói (9.41 Mbit/s) trả lời=20 nguồn=10.0.1.10:1176,10.0.1.20:20
+[server] t=17 nhận=1212 gói (9.54 Mbit/s) trả lời=20 nguồn=10.0.1.10:1192,10.0.1.20:20
+[server] t=18 nhận=1206 gói (9.49 Mbit/s) trả lời=20 nguồn=10.0.1.10:1186,10.0.1.20:20
+[server] t=19 nhận=1207 gói (9.50 Mbit/s) trả lời=20 nguồn=10.0.1.10:1187,10.0.1.20:20
+[server] t=20 nhận=1202 gói (9.46 Mbit/s) trả lời=20 nguồn=10.0.1.10:1182,10.0.1.20:20
+[server] t=21 nhận=1198 gói (9.43 Mbit/s) trả lời=20 nguồn=10.0.1.10:1178,10.0.1.20:20
+[server] t=22 nhận=1212 gói (9.54 Mbit/s) trả lời=20 nguồn=10.0.1.10:1192,10.0.1.20:20
+[server] t=23 nhận=1202 gói (9.46 Mbit/s) trả lời=20 nguồn=10.0.1.10:1182,10.0.1.20:20
+[server] t=24 nhận=1198 gói (9.43 Mbit/s) trả lời=20 nguồn=10.0.1.10:1178,10.0.1.20:20
+[server] t=25 nhận=1189 gói (9.35 Mbit/s) trả lời=20 nguồn=10.0.1.10:1169,10.0.1.20:20
+[server] t=26 nhận=1183 gói (9.31 Mbit/s) trả lời=20 nguồn=10.0.1.10:1163,10.0.1.20:20
+[server] t=27 nhận=1185 gói (9.32 Mbit/s) trả lời=20 nguồn=10.0.1.10:1165,10.0.1.20:20
+[server] t=28 nhận=1187 gói (9.34 Mbit/s) trả lời=20 nguồn=10.0.1.10:1167,10.0.1.20:20
+[server] t=29 nhận=1189 gói (9.35 Mbit/s) trả lời=20 nguồn=10.0.1.10:1169,10.0.1.20:20
+[server] t=30 nhận=1192 gói (9.38 Mbit/s) trả lời=20 nguồn=10.0.1.10:1172,10.0.1.20:20
+[server] t=31 nhận=1189 gói (9.35 Mbit/s) trả lời=20 nguồn=10.0.1.10:1169,10.0.1.20:20
+[server] t=32 nhận=1201 gói (9.45 Mbit/s) trả lời=20 nguồn=10.0.1.10:1181,10.0.1.20:20
+[server] t=33 nhận=1203 gói (9.47 Mbit/s) trả lời=20 nguồn=10.0.1.10:1183,10.0.1.20:20
+[server] t=34 nhận=1192 gói (9.38 Mbit/s) trả lời=20 nguồn=10.0.1.10:1172,10.0.1.20:20
+[server] t=35 nhận=1196 gói (9.41 Mbit/s) trả lời=20 nguồn=10.0.1.10:1176,10.0.1.20:20
+[server] t=36 nhận=1180 gói (9.28 Mbit/s) trả lời=20 nguồn=10.0.1.10:1160,10.0.1.20:20
+[server] t=37 nhận=1210 gói (9.52 Mbit/s) trả lời=20 nguồn=10.0.1.10:1190,10.0.1.20:20
+[server] t=38 nhận=1195 gói (9.40 Mbit/s) trả lời=20 nguồn=10.0.1.10:1175,10.0.1.20:20
+[server] t=39 nhận=1201 gói (9.45 Mbit/s) trả lời=20 nguồn=10.0.1.10:1181,10.0.1.20:20
+[server] t=40 nhận=1199 gói (9.43 Mbit/s) trả lời=20 nguồn=10.0.1.10:1179,10.0.1.20:20
+[server] t=41 nhận=1208 gói (9.51 Mbit/s) trả lời=20 nguồn=10.0.1.10:1188,10.0.1.20:20
+[server] t=42 nhận=1186 gói (9.33 Mbit/s) trả lời=20 nguồn=10.0.1.10:1166,10.0.1.20:20
+[server] t=43 nhận=1199 gói (9.43 Mbit/s) trả lời=20 nguồn=10.0.1.10:1179,10.0.1.20:20
+[server] t=44 nhận=1204 gói (9.47 Mbit/s) trả lời=20 nguồn=10.0.1.10:1184,10.0.1.20:20
+[server] t=45 nhận=1204 gói (9.47 Mbit/s) trả lời=20 nguồn=10.0.1.10:1184,10.0.1.20:20
+[server] t=46 nhận=1198 gói (9.43 Mbit/s) trả lời=20 nguồn=10.0.1.10:1178,10.0.1.20:20
+[server] t=47 nhận=1197 gói (9.42 Mbit/s) trả lời=20 nguồn=10.0.1.10:1177,10.0.1.20:20
+[server] t=48 nhận=1205 gói (9.48 Mbit/s) trả lời=20 nguồn=10.0.1.10:1185,10.0.1.20:20
+[server] t=49 nhận=1212 gói (9.54 Mbit/s) trả lời=20 nguồn=10.0.1.10:1192,10.0.1.20:20
+[server] t=50 nhận=1202 gói (9.46 Mbit/s) trả lời=20 nguồn=10.0.1.10:1182,10.0.1.20:20
+[server] t=51 nhận=1202 gói (9.46 Mbit/s) trả lời=20 nguồn=10.0.1.10:1182,10.0.1.20:20
+[server] t=52 nhận=1199 gói (9.43 Mbit/s) trả lời=20 nguồn=10.0.1.10:1179,10.0.1.20:20
+[server] t=53 nhận=1190 gói (9.36 Mbit/s) trả lời=20 nguồn=10.0.1.10:1170,10.0.1.20:20
+[server] t=54 nhận=1195 gói (9.40 Mbit/s) trả lời=20 nguồn=10.0.1.10:1175,10.0.1.20:20
+[server] t=55 nhận=1201 gói (9.45 Mbit/s) trả lời=20 nguồn=10.0.1.10:1181,10.0.1.20:20
+[server] t=56 nhận=1196 gói (9.41 Mbit/s) trả lời=20 nguồn=10.0.1.10:1176,10.0.1.20:20
+[server] t=57 nhận=1205 gói (9.48 Mbit/s) trả lời=20 nguồn=10.0.1.10:1185,10.0.1.20:20
+[server] t=58 nhận=1190 gói (9.36 Mbit/s) trả lời=20 nguồn=10.0.1.10:1170,10.0.1.20:20
+[server] t=59 nhận=1211 gói (9.53 Mbit/s) trả lời=20 nguồn=10.0.1.10:1191,10.0.1.20:20
+[server] t=60 nhận=1195 gói (9.40 Mbit/s) trả lời=20 nguồn=10.0.1.10:1175,10.0.1.20:20
+[server] t=61 nhận=1194 gói (9.55 Mbit/s) trả lời=0 nguồn=10.0.1.10:1194
+[server] t=62 nhận=171 gói (1.37 Mbit/s) trả lời=0 nguồn=10.0.1.10:171

@@ -1,6 +1,5 @@
-// client: gửi truy vấn đều đặn tới server, mỗi giây in và ghi CSV:
-// t,sent,recv,loss_pct,rtt_avg_ms
-// -Q: đánh dấu truy vấn là ưu tiên (QoS), dùng để kiểm tra làn ưu tiên của router.
+// client: người dùng bình thường. Gửi truy vấn đều đặn tới server, mỗi giây in và ghi CSV:
+// t,sent,recv,loss_pct,rtt_avg_ms,jitter_ms
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <poll.h>
@@ -23,10 +22,9 @@ int main(int argc, char **argv)
     int rate = 20;
     int duration = 60;
     const char *csv_path = NULL;
-    int priority = 0;
 
     int opt;
-    while ((opt = getopt(argc, argv, "s:p:r:d:o:Q")) != -1) {
+    while ((opt = getopt(argc, argv, "s:p:r:d:o:")) != -1) {
         if (opt == 's') {
             server_ip = optarg;
         } else if (opt == 'p') {
@@ -37,15 +35,13 @@ int main(int argc, char **argv)
             duration = atoi(optarg);
         } else if (opt == 'o') {
             csv_path = optarg;
-        } else if (opt == 'Q') {
-            priority = 1;
         } else {
             server_ip = NULL;
             break;
         }
     }
     if (server_ip == NULL || rate <= 0 || duration <= 0) {
-        fprintf(stderr, "Cách dùng: %s -s <server_ip> [-p 9000] [-r 20] [-d 60] [-o file.csv] [-Q]\n", argv[0]);
+        fprintf(stderr, "Cách dùng: %s -s <server_ip> [-p 9000] [-r 20] [-d 60] [-o file.csv]\n", argv[0]);
         return 1;
     }
 
@@ -63,13 +59,6 @@ int main(int argc, char **argv)
         perror("socket/connect");
         return 1;
     }
-    if (priority) {
-        int tos = TOS_PRIORITY;
-        if (setsockopt(fd, IPPROTO_IP, IP_TOS, &tos, sizeof(tos)) < 0) {
-            perror("setsockopt IP_TOS");
-            return 1;
-        }
-    }
 
     FILE *csv = NULL;
     if (csv_path != NULL) {
@@ -78,7 +67,7 @@ int main(int argc, char **argv)
             perror("fopen");
             return 1;
         }
-        fprintf(csv, "t,sent,recv,loss_pct,rtt_avg_ms\n");
+        fprintf(csv, "t,sent,recv,loss_pct,rtt_avg_ms,jitter_ms\n");
         fflush(csv);
     }
 
@@ -127,11 +116,11 @@ int main(int argc, char **argv)
             t++;
             struct stats_row r;
             stats_tick(&st, now, &r);
-            printf("[client] t=%2d gửi=%u nhận=%u mất=%5.1f%% rtt=%7.2f ms\n",
-                   t, r.sent, r.recv, r.loss_pct, r.rtt_avg_ms);
+            printf("[client] t=%2d gửi=%u nhận=%u mất=%5.1f%% rtt=%7.2f ms jitter=%6.2f ms\n",
+                   t, r.sent, r.recv, r.loss_pct, r.rtt_avg_ms, r.jitter_ms);
             fflush(stdout);
             if (csv != NULL) {
-                fprintf(csv, "%d,%u,%u,%.1f,%.2f\n", t, r.sent, r.recv, r.loss_pct, r.rtt_avg_ms);
+                fprintf(csv, "%d,%u,%u,%.1f,%.2f,%.2f\n", t, r.sent, r.recv, r.loss_pct, r.rtt_avg_ms, r.jitter_ms);
                 fflush(csv);
             }
             next_tick += 1000000;

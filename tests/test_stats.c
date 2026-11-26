@@ -98,8 +98,53 @@ static void test_counters_reset_each_tick(void)
     CHECK(near(r.rtt_avg_ms, 0.0));
 }
 
+static void test_jitter_is_mean_rtt_change(void)
+{
+    stats_init(&s);
+    // RTT lần lượt 10 ms, 14 ms, 12 ms -> độ lệch 4 ms và 2 ms -> jitter 3 ms.
+    stats_on_send(&s, 1, 0);
+    stats_on_send(&s, 2, 0);
+    stats_on_send(&s, 3, 0);
+    stats_on_reply(&s, 1, 10000);
+    stats_on_reply(&s, 2, 14000);
+    stats_on_reply(&s, 3, 12000);
+    struct stats_row r;
+    stats_tick(&s, 2000000, &r);
+    CHECK(near(r.jitter_ms, 3.0));
+}
+
+static void test_jitter_zero_when_rtt_constant(void)
+{
+    stats_init(&s);
+    for (uint32_t i = 1; i <= 5; i++) {
+        stats_on_send(&s, i, 0);
+        stats_on_reply(&s, i, 2000);
+    }
+    struct stats_row r;
+    stats_tick(&s, 2000000, &r);
+    CHECK(near(r.jitter_ms, 0.0));
+}
+
+static void test_jitter_carries_last_rtt_across_ticks(void)
+{
+    stats_init(&s);
+    stats_on_send(&s, 1, 0);
+    stats_on_reply(&s, 1, 5000);   // 5 ms
+    struct stats_row r;
+    stats_tick(&s, 1000000, &r);
+    CHECK(near(r.jitter_ms, 0.0));   // mới một trả lời, chưa có độ lệch
+
+    stats_on_send(&s, 2, 1000000);
+    stats_on_reply(&s, 2, 1009000);  // 9 ms, lệch 4 ms so với trả lời của giây trước
+    stats_tick(&s, 2000000, &r);
+    CHECK(near(r.jitter_ms, 4.0));
+}
+
 int main(void)
 {
+    test_jitter_is_mean_rtt_change();
+    test_jitter_zero_when_rtt_constant();
+    test_jitter_carries_last_rtt_across_ticks();
     test_all_replied();
     test_half_lost_after_timeout();
     test_pending_not_lost_before_timeout();

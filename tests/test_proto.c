@@ -31,7 +31,7 @@ static void test_parse_answer(void)
 
 static void test_parse_with_padding(void)
 {
-    // Gói của attacker: phần đầu hợp lệ, phía sau đệm tới 1000 byte, không có '\0'.
+    // Truy vấn có phần đệm phía sau (không có '\0') vẫn đọc được phần đầu.
     char pkt[1000];
     memset(pkt, 'x', sizeof(pkt));
     memcpy(pkt, "Q 1 5 ", 6);
@@ -43,6 +43,19 @@ static void test_parse_with_padding(void)
     CHECK(kind == 'Q');
     CHECK(seq == 1);
     CHECK(ts == 5);
+}
+
+static void test_load_packet_is_not_a_query(void)
+{
+    // Gói tải của loadgen bắt đầu bằng 'D': server không được coi là truy vấn để trả lời.
+    char pkt[1000];
+    memset(pkt, 'x', sizeof(pkt));
+    memcpy(pkt, "D 17 ", 5);
+
+    char kind = 0;
+    uint32_t seq = 0;
+    uint64_t ts = 0;
+    CHECK(proto_parse(pkt, sizeof(pkt), &kind, &seq, &ts) != 0);
 }
 
 static void test_parse_rejects_bad_input(void)
@@ -69,6 +82,7 @@ int main(void)
     test_format_and_parse_roundtrip();
     test_parse_answer();
     test_parse_with_padding();
+    test_load_packet_is_not_a_query();
     test_parse_rejects_bad_input();
     test_now_us_increases();
     printf("test_proto: OK\n");
