@@ -1,81 +1,88 @@
-# Cải thiện hiệu năng mạng nhờ các node cộng tác chặn truy vấn xấu
+# Cải thiện hiệu năng mạng: giảm độ trễ và tăng băng thông
 
-Đồ án môn học: demo bằng C trên Linux, chạy trong EVE-NG.
+Đồ án chạy trên EVE-NG, các node là máy Linux (Alpine), chương trình đo đạc viết bằng C.
 
-Một máy tấn công gửi dồn dập truy vấn rác (UDP flood) tới server. Router R3 đứng cạnh server phát hiện kẻ tấn công.
+Một máy tải nặng (`loadgen`, mô phỏng tải file, xem video) chạy chung đường với một người dùng bình thường (`client`, mô phỏng thao tác cần phản hồi nhanh). Khi đường truyền bị dùng hết, người dùng bình thường bị chậm. Đồ án cải thiện theo hai hướng, cả hai đều chỉ thay đổi cách router **chọn đường và chuyển tiếp** gói:
 
-- **Không hợp tác:** R3 tự chặn. Server được bảo vệ, nhưng rác vẫn chạy đầy đường R1 → R2 → R3, người dùng thật vẫn bị chậm.
-- **Có hợp tác:** R3 gửi cảnh báo cho R1 và R2. R1 chặn ngay ở cửa vào, mạng thông thoáng lại trong khoảng 1 giây.
-
-Cảnh báo có thể đi theo hai cách, mỗi cách là một lượt demo:
-
-- **`on`:** cảnh báo đi trên một mạng điều khiển riêng.
-- **`inband`:** cảnh báo đi chung đường dữ liệu R3 → R2 → R1, được đánh dấu ưu tiên (QoS) để router cho đi trước đống rác. Cách này giống thực tế hơn, vì ngoài đời các router ở xa nhau, không phải lúc nào cũng có mạng riêng.
-
-Các khái niệm mạng cần biết để trình bày nằm trong [CONCEPTS.md](CONCEPTS.md).
+| Hướng | Vấn đề | Giải pháp trên router |
+|---|---|---|
+| **Giảm độ trễ** | Hàng đợi FIFO dồn đầy gói của luồng tải nặng, gói của client phải xếp sau, chờ khoảng 400 ms | Đổi hàng đợi sang **fq_codel**: chia hàng đợi theo từng luồng, gửi xoay vòng giữa các luồng, chủ động bỏ bớt gói khi gói chờ quá lâu |
+| **Tăng băng thông** | Chỉ dùng một đường 10 Mbit/s trong khi còn một đường khác để không | **Định tuyến nhiều đường (ECMP)**: R1 và R3 chia các luồng ra cả hai đường, tổng băng thông lên 20 Mbit/s |
 
 ---
 
 ## 1. Kết quả đo trên EVE-NG
 
-Trung bình sau khi bị tấn công (giây 16 tới 60), lấy từ `scripts/plot.sh results/eve-v2`:
+Mỗi lượt 60 giây, tải nặng bắt đầu ở giây 15. Lấy từ `scripts/plot.sh results/eve-v4`:
 
-| Lượt | RTT của client | Mất gói | Lưu lượng link R1 → R2 |
-|---|---|---|---|
-| **off**: không hợp tác | **403 ms** | 0% | **10 Mbit/s** (đầy, toàn rác) |
-| **on**: hợp tác, mạng điều khiển riêng | **6,9 ms** (sau 1 giây về ~2 ms) | 0% | **0,18 Mbit/s** |
-| **inband**: hợp tác, chung đường + QoS | **7,2 ms** (sau 1 giây về ~2 ms) | 0% | **0,19 Mbit/s** |
+| Lượt | Số đường | Hàng đợi | RTT chưa tải | RTT có tải | Jitter có tải | Mất gói | Server nhận được |
+|---|---|---|---|---|---|---|---|
+| **base** | 1 | FIFO | 4,3 ms | **430 ms** | 2,6 ms | 0% | **9,4 Mbit/s** |
+| **fqcodel** | 1 | fq_codel | 4,9 ms | **7,2 ms** | 3,6 ms | 0% | 9,4 Mbit/s |
+| **multipath** | 2 | FIFO | 3,5 ms | 404 ms | 0,7 ms | 0% | **18,9 Mbit/s** |
+| **combined** | 2 | fq_codel | 2,7 ms | **2,2 ms** | 0,6 ms | 0% | **19,2 Mbit/s** |
 
-- R3 phát hiện kẻ tấn công khoảng **0,6 giây** sau khi bắt đầu tấn công.
-- R1 chặn **5 ms** sau khi R3 phát hiện, ở cả lượt on lẫn inband.
-- Lúc bình thường RTT khoảng 2 ms.
-- Client không mất gói vì hàng đợi ở nút cổ chai giới hạn theo byte: gói rác 1000 byte bị vứt, còn gói truy vấn nhỏ vẫn chen vào được nhưng phải chờ khoảng 400 ms.
+- **fq_codel giảm độ trễ:** RTT lúc có tải giảm từ 430 ms xuống 7 ms, gần bằng lúc chưa có tải.
+- **Hai đường tăng băng thông:** thông lượng server nhận được tăng gấp đôi, từ 9,4 lên 18,9 Mbit/s. Mỗi đường chạy đủ 10 Mbit/s.
+- **Kết hợp cả hai:** vừa có 19,2 Mbit/s, vừa giữ RTT khoảng 2 ms.
+- Chỉ thêm đường mà không đổi hàng đợi thì băng thông tăng nhưng độ trễ không giảm, vì tải nặng vẫn làm đầy hàng đợi của mỗi đường. Hai giải pháp bổ sung cho nhau.
+- Client không mất gói vì hàng đợi FIFO giới hạn theo byte: gói tải 1000 byte bị bỏ khi hàng đợi đầy, truy vấn nhỏ của client vẫn chen vào được nhưng phải chờ.
+- RTT lúc chưa tải khác nhau giữa các lượt (2,7 tới 4,9 ms) vì 6 máy ảo chạy chung CPU của laptop.
 
-**Kiểm chứng QoS** (`scripts/qos-check.sh`): cho attacker làm nghẽn đường và không bật guard, rồi đo trên cùng con đường đó:
-
-| Loại truy vấn | RTT |
-|---|---|
-| Truy vấn thường | **405 ms** (xếp hàng sau đống rác) |
-| Truy vấn đánh dấu ưu tiên | **1,9 ms** (đi làn ưu tiên) |
-
-Gói cảnh báo ở lượt inband được đánh dấu y như truy vấn ưu tiên, nên dù đường có nghẽn, cảnh báo vẫn tới nơi ngay.
-
-![RTT](results/eve-v2/rtt.png)
-![Link](results/eve-v2/link.png)
+![RTT](results/eve-v4/rtt.png)
+![RTT phóng to](results/eve-v4/rtt_low.png)
+![Thông lượng](results/eve-v4/throughput.png)
+![Từng đường](results/eve-v4/paths.png)
 
 ---
 
 ## 2. Mô hình mạng
 
 ```
- Attacker 10.0.1.10 ─┐
-                     ├─ R1 ══10Mbit══ R2 ══10Mbit══ R3 ── Server 10.0.3.10
- Client   10.0.1.20 ─┘   │             │              │
-                         └──── mạng điều khiển 10.0.99.0/24 ────┘
+                                        đường 1: 10 Mbit/s
+                          ┌──── R2 ────────────────────────┐
+ Loadgen 10.0.1.10 ─┐     │ 10.0.12.0/24     10.0.23.0/24  │
+                    ├── R1                                 R3 ── Server 10.0.3.10
+ Client  10.0.1.20 ─┘     │         10.0.13.0/24           │
+                          └────────────────────────────────┘
+                                        đường 2: 10 Mbit/s
 ```
 
-- Lượt `on` gửi cảnh báo qua mạng điều khiển (đường dưới).
-- Lượt `inband` gửi cảnh báo theo chính đường dữ liệu R3 → R2 → R1 (đường trên), tới IP 10.0.23.2 của R2 và 10.0.12.1 của R1.
+- **Đường 1:** R1 → R2 → R3. **Đường 2:** R1 → R3 nối thẳng.
+- Mọi link giữa hai router bị giới hạn 10 Mbit/s bằng `tc tbf` để tạo đường truyền có băng thông hữu hạn.
+- Loadgen gửi khoảng 40 Mbit/s, gấp 4 lần một đường, chia làm 8 luồng UDP.
 
-**Hàng đợi 2 làn (QoS) trên các link giữa router.** Mỗi chiều của link R1–R2 và R2–R3 bị giới hạn 10 Mbit/s và chia làm 2 làn:
+### 2.1. Địa chỉ IP
 
-| Làn | Gói nào đi làn này | Ưu tiên |
+| Node | Card | IP | Ghi chú |
+|---|---|---|---|
+| Loadgen | eth1 | 10.0.1.10/24 | gateway 10.0.1.1 |
+| Client | eth1 | 10.0.1.20/24 | gateway 10.0.1.1 |
+| R1 | eth1 / eth2 / eth3 | 10.0.1.1 / 10.0.12.1 / 10.0.13.1 | eth2 = đường 1, eth3 = đường 2 |
+| R2 | eth1 / eth2 | 10.0.12.2 / 10.0.23.2 | router giữa đường 1 |
+| R3 | eth1 / eth2 / eth3 | 10.0.23.3 / 10.0.3.1 / 10.0.13.3 | eth1 = đường 1, eth3 = đường 2 |
+| Server | eth1 | 10.0.3.10/24 | gateway 10.0.3.1 |
+
+Mỗi node còn có `eth0` thuộc mạng quản lý 172.30.0.0/24 (máy EVE là .1, node 1..6 là .11 tới .16), chỉ dùng để SSH điều khiển, không tham gia đo.
+
+### 2.2. Định tuyến
+
+| Router | Đích | 1 đường | 2 đường |
+|---|---|---|---|
+| R1 | 10.0.3.0/24 (server) | qua 10.0.12.2 (R2) | qua 10.0.12.2 **và** 10.0.13.3 (R3), cùng trọng số |
+| R3 | 10.0.1.0/24 (client) | qua 10.0.23.2 (R2) | qua 10.0.23.2 **và** 10.0.13.1 (R1), cùng trọng số |
+| R2 | 10.0.1.0/24, 10.0.3.0/24 | qua R1, qua R3 | như cũ |
+
+Với 2 đường, Linux chọn đường cho **từng luồng** theo IP và cổng nguồn/đích (`net.ipv4.fib_multipath_hash_policy=1`). Gói của cùng một luồng luôn đi cùng một đường nên không bị đảo thứ tự. Loadgen dùng 8 cổng nguồn 20000–20007 nên các luồng được chia ra cả hai đường.
+
+### 2.3. Hàng đợi trên link giữa router
+
+| Kiểu | Cấu hình `tc` | Hoạt động |
 |---|---|---|
-| Làn 1 | Gói có byte TOS = `0xB8` (DSCP EF, "ưu tiên cao") | Luôn được gửi trước |
-| Làn 2 | Mọi gói khác | Chỉ được gửi khi làn 1 trống |
+| **fifo** | `tbf rate 10mbit latency 400ms` | Một hàng đợi chung khoảng 500KB. Gói tới sau xếp sau tất cả, đầy thì bỏ gói mới |
+| **fq_codel** | `tbf rate 10mbit` + con `fq_codel` | Mỗi luồng một hàng riêng, gửi xoay vòng nên luồng nhỏ không phải chờ luồng lớn. Gói nào chờ quá 5 ms liên tục thì bị bỏ bớt, giữ hàng đợi luôn ngắn |
 
-Mỗi làn chứa tối đa 500KB, tức khoảng 400 ms ở 10 Mbit/s. Cấu hình bằng `tc` trong hàm `bottleneck` của `lab/r1.sh`, `lab/r2.sh`, `lab/r3.sh`.
-
-| Mạng | Địa chỉ | Dùng để |
-|---|---|---|
-| LAN1 | 10.0.1.0/24 | Attacker, Client, R1 (.1) |
-| R1–R2 | 10.0.12.0/24 | dữ liệu, giới hạn 10 Mbit/s |
-| R2–R3 | 10.0.23.0/24 | dữ liệu, giới hạn 10 Mbit/s |
-| R3–Server | 10.0.3.0/24 | Server (.10), R3 (.1) |
-| CTRL | 10.0.99.0/24 | cảnh báo giữa R1 (.1), R2 (.2), R3 (.3) |
-| MGMT | 172.30.0.0/24 | quản lý: máy EVE (.1) SSH vào node 1..6 (.11 tới .16) |
-
-Trong mỗi node: `eth0` là MGMT, `eth1` trở đi là mạng dữ liệu. Chi tiết nằm trong `lab/<node>.sh`.
+Cấu hình nằm trong `lab/r1.sh`, `lab/r2.sh`, `lab/r3.sh`. Mỗi file nhận 2 tham số: `sh r1.sh <fifo|fqcodel> <1|2>`.
 
 ---
 
@@ -83,96 +90,54 @@ Trong mỗi node: `eth0` là MGMT, `eth1` trở đi là mạng dữ liệu. Chi 
 
 | Đường dẫn | Nội dung |
 |---|---|
-| `src/` | 4 chương trình C (`server`, `client`, `attacker`, `guard`) và các module dùng chung |
-| `tests/` | unit test, chạy bằng `make test` |
-| `lab/<node>.sh` | cấu hình IP, route, `tc` cho từng node |
-| `lab/nodes.conf` | IP quản lý của 6 node EVE |
-| `lab/eve-make-image.sh` | tạo image Alpine cho node EVE (chạy một lần) |
-| `lab/eve-create-lab.sh` | tạo lab 6 node trong EVE qua API (chạy một lần) |
-| `lab/netns-up.sh`, `lab/netns-down.sh` | mini-lab dự phòng bằng network namespace |
-| `scripts/lab-up.sh` | chuẩn bị lab trước giờ demo, in `SẴN SÀNG` khi mọi thứ ổn |
-| `scripts/tmux-demo.sh off\|on` | màn hình demo 4 ô |
-| `scripts/demo.sh off\|on` | chạy một lượt 60 giây, ghi kết quả vào `results/` |
-| `scripts/plot.sh` | vẽ biểu đồ và in bảng tóm tắt |
-| `scripts/reset.sh` | dừng mọi tiến trình demo, xóa rule chặn |
-| `scripts/qos-check.sh` | kiểm chứng làn ưu tiên: so RTT truy vấn thường và truy vấn ưu tiên khi đường nghẽn |
-| `results/eve-v2/` | kết quả một lần chạy tốt trên EVE (off, on, inband) |
-| `results/eve/`, `results/netns/` | kết quả bản trước, chưa có QoS |
+| `src/server.c` | Server: trả lời truy vấn của client, đếm thông lượng nhận được mỗi giây |
+| `src/client.c` | Client: gửi 20 truy vấn/giây, đo RTT, jitter, mất gói |
+| `src/loadgen.c` | Máy tải nặng: gửi UDP tốc độ cố định, chia nhiều luồng |
+| `src/proto.c`, `src/stats.c` | Định dạng gói, tính RTT/jitter/mất gói (dùng chung) |
+| `tests/` | Unit test, chạy bằng `make test` |
+| `lab/<node>.sh` | IP, route, hàng đợi của từng node |
+| `lab/eve-make-image.sh`, `lab/eve-create-lab.sh` | Tạo image Alpine và lab `net-perf` trong EVE (chạy một lần) |
+| `lab/netns-up.sh`, `lab/netns-down.sh` | Mini-lab dự phòng bằng network namespace |
+| `scripts/lab-up.sh` | Chuẩn bị lab trước giờ demo, in `SẴN SÀNG` khi mọi thứ ổn |
+| `scripts/demo.sh <lượt>` | Chạy một lượt 60 giây, ghi kết quả vào `results/` |
+| `scripts/tmux-demo.sh <lượt>` | Màn hình demo 4 ô |
+| `scripts/run-all.sh` | Chạy liên tiếp 4 lượt rồi vẽ biểu đồ |
+| `scripts/plot.sh` | Vẽ biểu đồ và in bảng so sánh |
+| `scripts/reset.sh` | Dừng mọi chương trình đo trên các node |
+| `results/eve-v4/` | Kết quả một lần chạy đủ 4 lượt trên EVE |
 
 ---
 
 ## 4. Cài đặt (làm một lần)
 
-Mọi script đều chạy **bên trong máy ảo EVE-NG**. Máy ảo EVE bản chất là Ubuntu 22.04. Máy thật chỉ cần phần mềm chạy máy ảo, trình duyệt và lệnh `ssh`, nên cài trên Ubuntu hay Windows đều được.
+Mọi script đều chạy **bên trong máy ảo EVE-NG** (Ubuntu 22.04). Máy thật chỉ cần phần mềm máy ảo, trình duyệt và `ssh`. Cách cài EVE trên Windows xem `CAI-DAT-WINDOWS.md`.
 
-Cấu hình tối thiểu: RAM 16GB, ổ cứng trống 70GB, CPU bật ảo hóa (Intel VT-x hoặc AMD-V).
+Cấu hình tối thiểu: RAM 16GB, ổ trống 70GB, CPU bật ảo hóa (VT-x hoặc AMD-V).
 
-### 4.1. Cài máy ảo EVE-NG
-
-**Trên Ubuntu (KVM):**
+**Cài EVE trên Ubuntu (KVM):**
 
 ```
-sudo apt-get update
 sudo apt-get install -y qemu-kvm libvirt-daemon-system libvirt-clients virtinst virt-manager
 sudo usermod -aG libvirt,kvm $USER     # rồi đăng xuất, đăng nhập lại
-```
-
-Tải `eve-ce-prod-6.2.0-4-full.iso` từ eve-ng.net (Download → Community) vào `~/Downloads/`, rồi tạo máy ảo:
-
-```
 virt-install --connect qemu:///system --name eve-ng --memory 6144 --vcpus 4 \
   --cpu host-passthrough --disk size=60,format=qcow2 \
   --cdrom ~/Downloads/eve-ce-prod-6.2.0-4-full.iso \
   --network network=default --os-variant ubuntu22.04 --graphics spice --noautoconsole
-virt-manager    # mở màn hình máy ảo eve-ng để cài
 ```
 
-**Trên Windows (VMware Workstation Pro, miễn phí):**
+Cài EVE trong máy ảo: chọn **Install EVE VM**, để mặc định; đăng nhập `root` / `eve`, chọn IP **dhcp**. Màn hình đăng nhập hiện IP của EVE (dưới đây viết là `<EVE_IP>`). Web: `http://<EVE_IP>`, tài khoản `admin` / `eve`.
 
-1. Tắt Hyper-V để VMware chạy được máy ảo lồng nhau:
-   - Vào "Turn Windows features on or off", bỏ tick Hyper-V, Virtual Machine Platform, Windows Hypervisor Platform, Windows Sandbox, Windows Subsystem for Linux.
-   - Vào Windows Security → Device security → Core isolation, tắt Memory integrity.
-   - Mở cmd bằng quyền Administrator, chạy `bcdedit /set hypervisorlaunchtype off`.
-   - Khởi động lại máy.
-2. Cài VMware Workstation Pro (tải ở support.broadcom.com, cần tài khoản Broadcom).
-3. New Virtual Machine → chọn file ISO EVE-NG, Guest OS là Linux / Ubuntu 64-bit. Cấu hình RAM 6GB, 4 CPU, ổ 60GB, mạng NAT. Ở mục Processors, tick **Virtualize Intel VT-x/EPT or AMD-V/RVI**.
-
-**Cài EVE trong máy ảo (giống nhau cho cả hai):**
-
-1. Ở menu khởi động, chọn **Install EVE VM**, để mặc định hết.
-2. Sau khi máy khởi động lại, đăng nhập `root` / `eve`. Trình thiết lập lần đầu sẽ hỏi:
-   - Đặt mật khẩu root mới.
-   - Hostname, domain: để mặc định.
-   - IP: chọn **dhcp**.
-   - NTP: để trống.
-   - Proxy: chọn direct.
-3. Màn hình đăng nhập hiện địa chỉ IP của EVE. Bên dưới, IP này viết là `<EVE_IP>`.
-4. Giao diện web: `http://<EVE_IP>`, tài khoản `admin` / `eve`.
-
-### 4.2. Đưa dự án vào EVE và dựng lab
-
-Chạy trên máy thật (Ubuntu: terminal, Windows: cmd hoặc PowerShell), trong thư mục cha của `onejack`:
+**Đưa dự án vào EVE và dựng lab:**
 
 ```
-ssh-copy-id root@<EVE_IP>            # Windows không có ssh-copy-id, xem ghi chú bên dưới
+ssh-copy-id root@<EVE_IP>
 scp -r onejack root@<EVE_IP>:/root/
 ssh root@<EVE_IP>
-```
-
-Trên Windows, thay `ssh-copy-id` bằng lệnh sau (tạo khóa trước bằng `ssh-keygen` nếu chưa có):
-
-```
-type %USERPROFILE%\.ssh\id_ed25519.pub | ssh root@<EVE_IP> "mkdir -p ~/.ssh && cat >> ~/.ssh/authorized_keys"
-```
-
-Sau đó, trong máy EVE:
-
-```
 cd /root/onejack
-apt-get install -y gnuplot-nox      # để vẽ biểu đồ
-make && make test                   # build 4 chương trình C (biên dịch tĩnh)
+apt-get install -y gnuplot-nox
+make && make test                   # build 3 chương trình C (biên dịch tĩnh)
 bash lab/eve-make-image.sh          # tạo image Alpine, khoảng 2 phút
-bash lab/eve-create-lab.sh          # tạo lab collab-defense 6 node và bật lên
+bash lab/eve-create-lab.sh          # tạo lab net-perf 6 node và bật lên
 scripts/lab-up.sh                   # cấu hình node, kiểm tra, phải in SẴN SÀNG
 ```
 
@@ -180,105 +145,71 @@ scripts/lab-up.sh                   # cấu hình node, kiểm tra, phải in S�
 
 ## 5. Chạy demo
 
-Mỗi lần bật máy:
+```
+virsh -c qemu:///system start eve-ng      # Windows: Power on trong VMware
+ssh root@<EVE_IP>
+cd /root/onejack
+scripts/lab-up.sh                         # khoảng 40 giây, phải in SẴN SÀNG
+```
 
-1. Bật máy ảo EVE:
-   - Ubuntu: `virsh -c qemu:///system start eve-ng`
-   - Windows: bấm Power on trong VMware.
-2. SSH vào EVE và chuẩn bị lab:
-   ```
-   ssh root@<EVE_IP>
-   cd /root/onejack
-   scripts/lab-up.sh          # khoảng 40 giây, phải in SẴN SÀNG
-   ```
-3. Chạy các lượt trên màn hình demo. Mỗi lượt 60 giây, tấn công bắt đầu ở giây 15.
-   ```
-   scripts/tmux-demo.sh off      # không hợp tác, chạy xong gõ exit
-   scripts/tmux-demo.sh on       # hợp tác qua mạng điều khiển riêng
-   scripts/tmux-demo.sh inband   # hợp tác, cảnh báo đi chung đường + QoS
-   ```
+Chạy từng lượt trên màn hình demo (mỗi lượt 60 giây, tải nặng bắt đầu ở giây 15, xong gõ `exit`):
 
-   Màn hình chia 4 ô:
+```
+scripts/tmux-demo.sh base        # 1 đường, FIFO: mốc so sánh
+scripts/tmux-demo.sh fqcodel     # 1 đường, fq_codel: giảm độ trễ
+scripts/tmux-demo.sh multipath   # 2 đường, FIFO: tăng băng thông
+scripts/tmux-demo.sh combined    # 2 đường, fq_codel: cả hai
+scripts/plot.sh                  # vẽ biểu đồ, in bảng so sánh
+```
 
-   | Vị trí | Hiển thị |
-   |---|---|
-   | Trên trái | RTT của client |
-   | Dưới trái | Lưu lượng link R1 → R2 |
-   | Trên phải | Sự kiện phát hiện và cảnh báo |
-   | Dưới phải | Tiến trình `demo.sh` |
-4. Vẽ biểu đồ và in bảng so sánh:
-   ```
-   scripts/plot.sh
-   ```
-   Biểu đồ nằm ở `results/rtt.png`, `results/loss.png`, `results/link.png`. Để lấy về máy thật: `scp root@<EVE_IP>:/root/onejack/results/*.png .`
+Hoặc chạy cả 4 lượt liền một lèo, không có màn hình demo: `scripts/run-all.sh`.
 
-5. (Tùy chọn) Chứng minh làn ưu tiên hoạt động, mất khoảng 20 giây:
-   ```
-   scripts/qos-check.sh
-   ```
+Màn hình demo chia 4 ô:
 
-Muốn đổi thông số (thời gian, tốc độ tấn công, ngưỡng phát hiện), sửa phần đầu `scripts/demo.sh`.
+| Vị trí | Hiển thị |
+|---|---|
+| Trên trái | RTT, jitter, mất gói của client mỗi giây |
+| Dưới trái | Lưu lượng R1 gửi ra đường 1 và đường 2 |
+| Trên phải | Thông lượng server nhận được |
+| Dưới phải | Tiến trình `demo.sh`: cấu hình router, lúc bắt đầu tải |
+
+Biểu đồ nằm ở `results/*.png`. Lấy về máy thật: `scp root@<EVE_IP>:/root/onejack/results/*.png .`
+
+Muốn đổi thông số (thời gian, tốc độ tải, số luồng), sửa phần đầu `scripts/demo.sh`.
 
 ---
 
 ## 6. Phương án dự phòng
 
-Nếu lab EVE gặp sự cố lúc demo, có hai cách:
-
-**Mini-lab bằng network namespace.** Dựng cùng mô hình mạng nhưng không cần máy ảo node nào. Chạy được trên máy Ubuntu thật hoặc ngay trong máy ảo EVE, nên Windows cũng dùng được.
+**Mini-lab bằng network namespace**, cùng mô hình nhưng không cần máy ảo node. Chạy được trên Ubuntu thật (thêm `sudo`) hoặc trong máy ảo EVE:
 
 ```
-lab/netns-up.sh                     # trên Ubuntu thật thì thêm sudo trước mỗi lệnh
+lab/netns-up.sh
 LAB=netns scripts/lab-up.sh
-LAB=netns scripts/tmux-demo.sh off
-LAB=netns scripts/tmux-demo.sh on
-LAB=netns scripts/tmux-demo.sh inband
-LAB=netns scripts/qos-check.sh
+LAB=netns scripts/tmux-demo.sh base
+LAB=netns scripts/run-all.sh
 lab/netns-down.sh
 ```
 
-**Video quay sẵn** hai lượt chạy thành công, lưu trong `results/`.
+**Biểu đồ có sẵn** trong `results/eve-v4/`.
 
 ---
 
-## 7. Các chương trình C
+## 7. Hạn chế và hướng phát triển
 
-| Chương trình | Chạy ở | Làm gì |
-|---|---|---|
-| `server` | Server | Nghe UDP cổng 9000, trả lời mọi truy vấn `Q <số thứ tự> <thời điểm>`, mỗi giây in số gói nhận được. |
-| `client` | Client | Gửi 20 truy vấn/giây, khớp trả lời theo số thứ tự để tính RTT và tỉ lệ mất gói (quá 1 giây không trả lời thì tính là mất), ghi CSV. Cờ `-Q` đánh dấu truy vấn là ưu tiên, chỉ dùng trong `qos-check.sh`. |
-| `attacker` | Attacker | Gửi 5000 gói UDP/giây, mỗi gói 1000 byte, tức khoảng 40 Mbit/s, gấp 4 lần nút cổ chai. |
-| `guard` | R1, R2, R3 | Xem chi tiết bên dưới. |
-
-`guard` gồm hai phần, chạy trong một vòng lặp `poll()`:
-
-- **Phát hiện (R3, cờ `-d`).** Dùng raw socket `AF_PACKET` để đọc mọi gói đi vào cổng `eth1`. Đếm số gói của từng IP nguồn trong mỗi giây (`ratecount.c`). IP nào vượt ngưỡng 200 gói/giây và không nằm trong whitelist (`-W`) thì bị chặn bằng `iptables -A GUARD -s <ip> -j DROP` (`firewall.c`, gọi qua `fork` + `execvp`, không qua shell). Nếu có danh sách peer (`-P`), R3 gửi cảnh báo `BLOCK <ip> R3` tới từng peer (`alert.c`). Có cờ `-Q` thì gói cảnh báo được đánh dấu ưu tiên bằng `setsockopt(IP_TOS, 0xB8)`, để router cho đi làn 1.
-- **Nghe cảnh báo (R1, R2, cờ `-l`).** Nghe UDP trên IP chỉ định bằng `-b`: IP mạng điều khiển ở lượt on, IP mạng dữ liệu ở lượt inband. Nhận cảnh báo hợp lệ thì chặn IP đó. IP đã chặn rồi thì bỏ qua (`blocklist.c`).
-
-Khi nhận Ctrl+C hoặc SIGTERM, `guard` xóa chain `GUARD` để trả mạng về như cũ.
+1. **Chia đường theo luồng, không theo gói.** Một luồng đơn lẻ chỉ dùng được một đường, tối đa 10 Mbit/s. Muốn một luồng dùng cả hai đường cần giao thức nhiều đường như MPTCP.
+2. **Hai đường có cùng tốc độ.** Khi hai đường khác tốc độ cần đặt trọng số theo băng thông (`weight` của `ip route`).
+3. **Đường được cấu hình tĩnh.** Khi một đường đứt, route không tự đổi. Có thể chạy giao thức định tuyến động (OSPF) để router tự cập nhật.
+4. **Lưu lượng mô phỏng bằng UDP tốc độ cố định**, chưa có TCP tự điều chỉnh tốc độ như tải file thật.
+5. **Môi trường ảo trên một laptop**, các con số tuyệt đối sẽ khác trên thiết bị thật, nhưng xu hướng so sánh giữa các lượt vẫn đúng.
 
 ---
 
-## 8. Hạn chế và hướng phát triển
+## 8. Checklist trước giờ trình bày
 
-1. **Cảnh báo chưa được xác thực.** Kẻ xấu có thể giả cảnh báo để mạng chặn người vô tội. Hướng sửa: ký cảnh báo bằng HMAC.
-2. **Không chống IP giả mạo.** Kẻ tấn công đổi IP nguồn liên tục thì chặn theo IP không hiệu quả. Hướng sửa: lọc theo cổng vào (BCP 38).
-3. **Chỉ có một kẻ tấn công.** DDoS thật đến từ hàng nghìn máy.
-4. **Chặn vĩnh viễn.** Chưa tự gỡ chặn sau một thời gian (TTL).
-5. **Gửi cảnh báo tới mọi node.** Mạng lớn cần cách lan truyền thông minh hơn.
-6. **Mạng điều khiển là một switch chung (lượt on).** Ngoài thực tế, các router cách nhau rất xa nên không cắm chung một switch được. Lượt **inband** đã xử lý điểm này: cảnh báo đi chung đường dữ liệu và được ưu tiên bằng QoS. Ngoài đời còn có các cách khác: đường truyền quản lý riêng (out-of-band), VPN, hoặc nhà mạng truyền lệnh chặn từng chặng qua kết nối có sẵn giữa các router (BGP FlowSpec).
-7. **QoS tin vào dấu ưu tiên trên gói.** Nếu kẻ tấn công cũng đánh dấu gói rác là ưu tiên thì sẽ chen được vào làn 1. Ngoài thực tế, router ở cửa vào xóa dấu ưu tiên trên mọi gói đến từ bên ngoài, chỉ giữ dấu cho gói của chính hệ thống (gọi là "trust boundary"). Demo chưa làm bước này.
-
-Ngoài thực tế, ý tưởng này đã được dùng ở quy mô Internet: BGP FlowSpec, RTBH (Remote Triggered Black Hole).
-
----
-
-## 9. Checklist trước giờ trình bày
-
-- [ ] Tắt các ứng dụng nặng (trình duyệt nhiều tab, IDE). Không mở VirtualBox cùng lúc.
-- [ ] Bật máy ảo EVE trước giờ trình bày 10 phút.
+- [ ] Tắt các ứng dụng nặng. Bật máy ảo EVE trước 10 phút.
 - [ ] `ssh root@<EVE_IP>`, `cd /root/onejack`, chạy `scripts/lab-up.sh` và thấy `SẴN SÀNG`.
-- [ ] Tập chạy `scripts/tmux-demo.sh off` một lần.
-- [ ] Phóng to chữ terminal (Ctrl + Shift + +) để cả lớp đọc được.
-- [ ] Mở sẵn trang web EVE (`http://<EVE_IP>`, lab `collab-defense`) để chỉ sơ đồ mạng.
-- [ ] Để sẵn video dự phòng và các biểu đồ trong `results/eve-v2/`.
+- [ ] Tập chạy `scripts/tmux-demo.sh base` một lần.
+- [ ] Phóng to chữ terminal (Ctrl + Shift + +).
+- [ ] Mở sẵn web EVE, lab `net-perf`, để chỉ sơ đồ mạng.
+- [ ] Để sẵn biểu đồ trong `results/eve-v4/`.

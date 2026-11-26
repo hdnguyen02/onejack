@@ -1,6 +1,6 @@
 # Cài đặt và chạy demo trên Windows 11
 
-Hướng dẫn từng bước để chạy demo **onejack** (các node cộng tác chặn truy vấn xấu) trên một máy Windows 11, từ lúc chưa có gì tới lúc chạy xong 3 lượt demo.
+Hướng dẫn từng bước để chạy demo **onejack** (cải thiện hiệu năng mạng: giảm độ trễ và tăng băng thông) trên một máy Windows 11, từ lúc chưa có gì tới lúc chạy xong 4 lượt demo.
 
 Tổng quan dự án, mô hình mạng và kết quả đo xem trong [README.md](README.md). Các khái niệm mạng xem trong [CONCEPTS.md](CONCEPTS.md).
 
@@ -14,7 +14,7 @@ Các script và chương trình C của dự án đều chạy trên **Linux**, 
 Windows 11 (máy thật)
  └─ VMware Workstation Pro
      └─ Máy ảo EVE-NG (Ubuntu 22.04)        ← code dự án nằm ở /root/onejack
-         └─ 6 máy ảo Alpine nhỏ: attacker, client, r1, r2, r3, server
+         └─ 6 máy ảo Alpine nhỏ: loadgen, client, r1, r2, r3, server
 ```
 
 - Máy ảo EVE-NG lại chạy 6 máy ảo con bên trong, gọi là **ảo hóa lồng nhau** (nested virtualization). Đây là lý do phải tắt Hyper-V ở bước 2.
@@ -182,11 +182,11 @@ Trong phiên `ssh root@<EVE_IP>`:
 ```
 apt-get update
 apt-get install -y git
-git clone -b v2 https://github.com/hdnguyen02/onejack.git /root/onejack
+git clone -b v4 https://github.com/hdnguyen02/onejack.git /root/onejack
 ```
 
 Lưu ý:
-- Nhánh dùng cho demo là **`v2`**. Trước khi clone, đảm bảo máy đang code đã `git push` nhánh này lên GitHub.
+- Nhánh dùng cho demo là **`v4`**. Trước khi clone, đảm bảo máy đang code đã `git push` nhánh này lên GitHub.
 - Nếu repo để **private**, git sẽ hỏi username và password. Ô password **không** nhập mật khẩu GitHub mà nhập **Personal Access Token**: vào GitHub → Settings → Developer settings → Personal access tokens để tạo.
 
 ### Cách B: copy thư mục từ Windows sang
@@ -237,7 +237,7 @@ apt-get install -y build-essential tmux gnuplot-nox
 make && make test
 ```
 
-Kết quả đúng: thư mục `build/` có 4 file `server`, `client`, `attacker`, `guard`, và `make test` chạy hết mà không báo lỗi.
+Kết quả đúng: thư mục `build/` có 3 file `server`, `client`, `loadgen`, và `make test` chạy hết mà không báo lỗi.
 
 Các chương trình được biên dịch **tĩnh** (`-static`) nên chép vào node Alpine là chạy được ngay, không cần cài thêm thư viện.
 
@@ -247,7 +247,7 @@ Các chương trình được biên dịch **tĩnh** (`-static`) nên chép vào
 bash lab/eve-make-image.sh
 ```
 
-Script này tải công cụ `alpine-make-vm-image`, tạo một ổ đĩa Alpine Linux có sẵn `openssh`, `iproute2`, `iptables`, rồi đặt vào `/opt/unetlab/addons/qemu/linux-alpine-demo/`.
+Script này tải công cụ `alpine-make-vm-image`, tạo một ổ đĩa Alpine Linux có sẵn `openssh`, `iproute2` (lệnh `ip`, `tc`), rồi đặt vào `/opt/unetlab/addons/qemu/linux-alpine-demo/`.
 
 Kết quả đúng: dòng cuối là `Đã tạo image: .../virtioa.qcow2`.
 
@@ -257,11 +257,11 @@ Kết quả đúng: dòng cuối là `Đã tạo image: .../virtioa.qcow2`.
 bash lab/eve-create-lab.sh
 ```
 
-Script gọi API của EVE để tạo lab `collab-defense` gồm 6 node, 6 mạng, rồi bật các node lên. Script cũng gán IP `172.30.0.1` cho cổng `pnet1` của EVE, dùng làm mạng quản lý để SSH vào node.
+Script gọi API của EVE để tạo lab `net-perf` gồm 6 node, 6 mạng, rồi bật các node lên. Script cũng gán IP `172.30.0.1` cho cổng `pnet1` của EVE, dùng làm mạng quản lý để SSH vào node.
 
-Kết quả đúng: dòng cuối là `Lab collab-defense đã tạo và khởi động...`.
+Kết quả đúng: dòng cuối là `Lab net-perf đã tạo và khởi động...`.
 
-Mở `http://<EVE_IP>` trên trình duyệt → File manager → mở lab **collab-defense** để xem sơ đồ mạng.
+Mở `http://<EVE_IP>` trên trình duyệt → File manager → mở lab **net-perf** để xem sơ đồ mạng.
 
 ### 7.5. Cấu hình node và kiểm tra
 
@@ -289,28 +289,33 @@ Kết quả đúng: dòng cuối là **`SẴN SÀNG`**. Nếu ra `LỖI: <bướ
 
 > IP của EVE do NAT của VMware cấp, thường giữ nguyên sau mỗi lần khởi động lại. Nếu không SSH được, xem lại IP trên màn hình máy EVE trong VMware.
 
-### 8.2. Chạy 3 lượt
+### 8.2. Chạy 4 lượt
 
-Mỗi lượt dài 60 giây, tấn công bắt đầu ở giây 15. Chạy xong một lượt thì gõ `exit` để thoát màn hình tmux.
+Mỗi lượt dài 60 giây, tải nặng bắt đầu ở giây 15. Chạy xong một lượt thì gõ `exit` để thoát màn hình tmux.
 
 ```
-scripts/tmux-demo.sh off       # không hợp tác: chỉ R3 tự chặn
-scripts/tmux-demo.sh on        # hợp tác: cảnh báo qua mạng điều khiển riêng
-scripts/tmux-demo.sh inband    # hợp tác: cảnh báo đi chung đường dữ liệu, ưu tiên bằng QoS
+scripts/tmux-demo.sh base        # 1 đường, hàng đợi FIFO: mốc so sánh
+scripts/tmux-demo.sh fqcodel     # 1 đường, hàng đợi fq_codel: giảm độ trễ
+scripts/tmux-demo.sh multipath   # 2 đường, hàng đợi FIFO: tăng băng thông
+scripts/tmux-demo.sh combined    # 2 đường, hàng đợi fq_codel: cả hai
 ```
 
 Màn hình chia 4 ô:
 
 | Vị trí | Hiển thị |
 |---|---|
-| Trên trái | RTT và tỉ lệ mất gói của client |
-| Dưới trái | Lưu lượng link R1 → R2 (Mbit/s) |
-| Trên phải | Sự kiện: R3 phát hiện, gửi cảnh báo, R1/R2 chặn |
-| Dưới phải | Tiến trình `demo.sh` đang chạy |
+| Trên trái | RTT, jitter, mất gói của client |
+| Dưới trái | Lưu lượng R1 gửi ra đường 1 và đường 2 (Mbit/s) |
+| Trên phải | Thông lượng server nhận được (Mbit/s) |
+| Dưới phải | Tiến trình `demo.sh`: cấu hình router, lúc bắt đầu tải |
 
-Kết quả mong đợi:
-- **off:** sau giây 15, RTT tăng lên khoảng 400 ms, link R1 → R2 đầy 10 Mbit/s.
-- **on / inband:** RTT chỉ tăng trong khoảng 1 giây rồi về khoảng 2 ms, link R1 → R2 gần như trống.
+Kết quả mong đợi sau giây 15:
+- **base:** RTT lên khoảng 400 ms, server nhận khoảng 9,4 Mbit/s.
+- **fqcodel:** RTT chỉ khoảng 7 ms, server vẫn khoảng 9,4 Mbit/s.
+- **multipath:** server nhận khoảng 19 Mbit/s (mỗi đường 10 Mbit/s), RTT vẫn khoảng 400 ms.
+- **combined:** server nhận khoảng 19 Mbit/s và RTT khoảng 2 ms.
+
+Muốn chạy cả 4 lượt liền một lèo mà không mở màn hình demo: `scripts/run-all.sh`.
 
 Phím tắt tmux: **Ctrl+B** rồi **D** để thoát màn hình nhưng vẫn để chạy nền. Vào lại bằng `tmux attach`.
 
@@ -320,24 +325,16 @@ Phím tắt tmux: **Ctrl+B** rồi **D** để thoát màn hình nhưng vẫn đ
 scripts/plot.sh
 ```
 
-Biểu đồ được lưu ở `results/rtt.png`, `results/loss.png`, `results/link.png`. Để lấy về Windows, mở một PowerShell **mới** (không phải phiên đang ssh) rồi chạy:
+Biểu đồ được lưu ở `results/rtt.png`, `results/rtt_low.png`, `results/jitter.png`, `results/throughput.png`, `results/paths.png`. Để lấy về Windows, mở một PowerShell **mới** (không phải phiên đang ssh) rồi chạy:
 
 ```
 scp root@<EVE_IP>:/root/onejack/results/*.png .
 ```
 
-### 8.4. (Tùy chọn) Kiểm chứng làn ưu tiên QoS
+### 8.4. Dọn dẹp
 
 ```
-scripts/qos-check.sh
-```
-
-Mất khoảng 20 giây. Script so sánh RTT của truy vấn thường (khoảng 400 ms) với truy vấn đánh dấu ưu tiên (khoảng 2 ms) khi đường đang nghẽn.
-
-### 8.5. Dọn dẹp
-
-```
-scripts/reset.sh     # dừng mọi tiến trình demo, xóa rule chặn
+scripts/reset.sh     # dừng mọi chương trình đo trên các node
 ```
 
 Khi xong việc: tắt máy EVE bằng lệnh `poweroff` trong EVE, hoặc bấm **Suspend** trong VMware để lần sau mở nhanh hơn.
@@ -352,10 +349,10 @@ Nếu các node EVE gặp lỗi, ví dụ máy yếu hoặc ảo hóa lồng nha
 cd /root/onejack
 lab/netns-up.sh
 LAB=netns scripts/lab-up.sh
-LAB=netns scripts/tmux-demo.sh off
-LAB=netns scripts/tmux-demo.sh on
-LAB=netns scripts/tmux-demo.sh inband
-LAB=netns scripts/qos-check.sh
+LAB=netns scripts/tmux-demo.sh base
+LAB=netns scripts/tmux-demo.sh fqcodel
+LAB=netns scripts/tmux-demo.sh multipath
+LAB=netns scripts/tmux-demo.sh combined
 scripts/plot.sh
 lab/netns-down.sh     # xóa mini-lab khi xong
 ```
@@ -373,9 +370,11 @@ lab/netns-down.sh     # xóa mini-lab khi xong
 | `Permission denied` khi chạy `scripts/...` | File `.sh` mất quyền chạy | `chmod +x lab/*.sh scripts/*.sh` |
 | `make` báo `cannot find -lc` | Thiếu thư viện C tĩnh | `apt-get install -y build-essential` |
 | `eve-make-image.sh` lỗi khi `wget` | EVE không có Internet | Kiểm tra mạng NAT của VMware, thử `ping 8.8.8.8` trong EVE |
-| `lab-up.sh` báo `LỖI: chỉ x/6 node SSH được` | Node chưa khởi động xong hoặc không chạy được | Chờ thêm rồi chạy lại. Mở web EVE xem node có màu xanh không. Nếu node không lên, dùng mục 9 || `lab-up.sh` báo `LỖI: RAM trống dưới 500MB` | Máy EVE thiếu RAM | Tắt bớt ứng dụng, hoặc tăng RAM cho máy EVE trong VMware |
+| `lab-up.sh` báo `LỖI: chỉ x/6 node SSH được` | Node chưa khởi động xong hoặc không chạy được | Chờ thêm rồi chạy lại. Mở web EVE xem node có màu xanh không. Nếu node không lên, dùng mục 9 |
+| `lab-up.sh` báo `LỖI: RAM trống dưới 500MB` | Máy EVE thiếu RAM | Tắt bớt ứng dụng, hoặc tăng RAM cho máy EVE trong VMware |
 | Node lên nhưng rất chậm | Máy thật thiếu RAM hoặc đang mở nhiều ứng dụng nặng | Tắt trình duyệt nhiều tab và IDE, tăng RAM cho máy EVE |
-| Kết quả demo lạ, còn rule chặn cũ | Lượt trước bị ngắt giữa chừng | `scripts/reset.sh` rồi `scripts/lab-up.sh` |
+| `lab-up.sh` báo `LỖI: r1 không bật được fq_codel hoặc 2 đường` | Lab cũ (trước bản v4) chưa có đường 2 | Chạy lại `bash lab/eve-create-lab.sh` rồi `scripts/lab-up.sh` |
+| Kết quả demo lạ | Lượt trước bị ngắt giữa chừng | `scripts/reset.sh` rồi `scripts/lab-up.sh` |
 
 ---
 
@@ -392,7 +391,7 @@ ssh root@<EVE_IP>
 
 # Trong EVE:
 apt-get update && apt-get install -y git build-essential tmux gnuplot-nox
-git clone -b v2 https://github.com/hdnguyen02/onejack.git /root/onejack
+git clone -b v4 https://github.com/hdnguyen02/onejack.git /root/onejack
 cd /root/onejack
 make && make test
 bash lab/eve-make-image.sh
@@ -405,8 +404,9 @@ scripts/lab-up.sh            # → SẴN SÀNG
 ```
 ssh root@<EVE_IP>
 cd /root/onejack && scripts/lab-up.sh
-scripts/tmux-demo.sh off
-scripts/tmux-demo.sh on
-scripts/tmux-demo.sh inband
+scripts/tmux-demo.sh base
+scripts/tmux-demo.sh fqcodel
+scripts/tmux-demo.sh multipath
+scripts/tmux-demo.sh combined
 scripts/plot.sh
 ```
