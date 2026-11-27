@@ -296,17 +296,6 @@ def tmux_balance():
     img.save(OUT / "tmux_balance.png", dpi=(DPI, DPI))
 
 
-def eve_placeholder():
-    """Khung chờ: người dùng thay bằng ảnh chụp giao diện web EVE-NG mở lab net-perf."""
-    c = Canvas(7)
-    c.draw.rectangle([10, 10, WIDTH - 10, c.img.height - 10], outline=GREY, width=4)
-    c.text((WIDTH / 2, c.img.height / 2),
-           "[Ảnh chụp giao diện EVE-NG: lab net-perf với 6 node]\n"
-           "Mở http://<IP máy EVE>, vào lab net-perf, chụp màn hình\n"
-           "rồi dán đè lên khung này (giữ nguyên nhãn hình bên dưới).", F_TEXT, GREY)
-    c.save("eve_placeholder.png")
-
-
 def charts():
     subprocess.run([str(ROOT / "scripts/plot.sh"), str(DATA)], check=True, stdout=subprocess.DEVNULL)
     for name in ["rtt.png", "rtt_low.png", "jitter.png", "throughput.png", "paths.png"]:
@@ -323,7 +312,6 @@ def main():
     ecmp_hash()
     experiment_flow()
     tmux_balance()
-    eve_placeholder()
     charts()
     for path in sorted(OUT.glob("*.png")):
         print(path.name)

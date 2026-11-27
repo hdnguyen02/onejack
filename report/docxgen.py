@@ -180,7 +180,10 @@ def column_widths(rows: list) -> list:
     count = len(rows[0])
     weights = []
     for col in range(count):
-        longest = max(len(row[col]) for row in rows if col < len(row))
+        # Tiêu đề được phép xuống dòng giữa các từ, nên chỉ cần đủ rộng cho từ dài nhất.
+        header_word = max((len(word) for word in rows[0][col].split()), default=0) if col < len(rows[0]) else 0
+        body = [len(row[col]) for row in rows[1:] if col < len(row)]
+        longest = max(body + [header_word])
         weights.append(min(max(longest, 6), 60))
     total = sum(weights)
     widths = [max(TEXT_WIDTH_DXA * w // total, MIN_COLUMN_DXA) for w in weights]
@@ -191,7 +194,9 @@ def column_widths(rows: list) -> list:
 
 
 def table(rows: list, facts: dict) -> str:
-    widths = column_widths(rows)
+    # Chia độ rộng theo chữ thật sẽ hiện ra (sau khi thay {{số liệu}}), không theo mã token.
+    shown = [[substitute(cell, facts) for cell in row] for row in rows]
+    widths = column_widths(shown)
     grid = "".join(f'<w:gridCol w:w="{w}"/>' for w in widths)
     cell_ppr = '<w:spacing w:before="40" w:after="40" w:line="240" w:lineRule="auto"/><w:ind w:firstLine="0"/><w:jc w:val="left"/>'
     xml = (

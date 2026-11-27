@@ -63,7 +63,7 @@ Bảng: Kế hoạch thực hiện khóa luận
 | 11/11 – 14/11/2026 | Cài EVE-NG trên KVM; tạo image Alpine và lab bằng API; viết chương trình đo bằng C và các script điều khiển | Môi trường thử nghiệm và bộ công cụ đo chạy được |
 | 26/11/2026 | Điều chỉnh hướng đề tài theo góp ý của giáo viên hướng dẫn: tập trung vào giảm độ trễ bằng cách chọn đường | Mô hình hai đường đi, ba kịch bản thử nghiệm |
 | 26/11 – 27/11/2026 | Đo ba kịch bản trên EVE-NG; viết báo cáo | Bộ số liệu dùng trong báo cáo |
-| [27/11 – 05/12/2026] | [Hoàn thiện báo cáo theo góp ý của giáo viên hướng dẫn] | [ ] |
+| 28/11 – 05/12/2026 | Gửi bản báo cáo cho giáo viên hướng dẫn, chỉnh sửa theo góp ý; chụp ảnh lab, tập chạy demo | Bản báo cáo hoàn chỉnh |
 | Trước 06/12/2026 | Nộp báo cáo cho giáo viên hướng dẫn | |
 | 07/12 – 18/12/2026 | Bộ môn phản biện đánh giá đề tài | |
 | 23/12/2026 | Báo cáo trước hội đồng | |
@@ -77,4 +77,3 @@ Bảng: Nhật ký làm việc
 | 12/11/2026 | Cài KVM và EVE-NG; tạo image Alpine; tạo lab bằng REST API; sửa lỗi lượt thử nghiệm bị treo trên Alpine và lỗi trùng địa chỉ quản lý; viết script chuẩn bị lab, màn hình tmux, vẽ biểu đồ | Lab chạy ổn định trên EVE-NG |
 | 26/11/2026 | Đổi mô hình sang hai đường đi; thêm độ trễ truyền cho đường truyền; viết loadgen nhiều luồng; thêm jitter cho client; viết ba kịch bản chọn đường và đo trên EVE-NG | Tăng số luồng tải để chia đều ra hai đường |
 | 27/11/2026 | Sửa cách tính trung bình thông lượng; viết lại báo cáo | |
-| [...] | [...] | [...] |

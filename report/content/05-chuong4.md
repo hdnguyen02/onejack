@@ -52,7 +52,7 @@ Script `lab/eve-make-image.sh` dùng công cụ `alpine-make-vm-image` [[REF:11]
 
 Lab `net-perf` với sáu node, sáu mạng và toàn bộ dây nối được tạo bằng script `lab/eve-create-lab.sh` qua REST API của EVE-NG [[REF:12]]. Script lần lượt đăng nhập, tạo lab, tạo mạng, tạo node, gán card mạng của từng node vào mạng rồi khởi động các node. Nhờ vậy lab có thể tạo lại y hệt chỉ bằng một lệnh.
 
-![Lab net-perf trên giao diện web của EVE-NG](../figures/eve_placeholder.png)
+![Lab net-perf trên giao diện web của EVE-NG](../figures/eve_topology.png)
 
 ### Cấu hình đường truyền và chọn đường
 

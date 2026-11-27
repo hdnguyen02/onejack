@@ -6,7 +6,7 @@ Cảm ơn gia đình và bạn bè đã luôn ở bên, động viên và tạo 
 
 Khóa luận khó tránh khỏi những điểm chưa hoàn thiện. Em rất mong nhận được ý kiến đóng góp của quý thầy cô để đề tài được tốt hơn.
 
->> TP. Hồ Chí Minh, ngày ..... tháng ..... năm 2026
+>> TP. Hồ Chí Minh, ngày 05 tháng 12 năm 2026
 
 >> **Sinh viên thực hiện**
 

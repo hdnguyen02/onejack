@@ -12,13 +12,14 @@ Nếu Word không hỏi, nhấn `Ctrl + A` rồi `F9` để cập nhật toàn b
 
 Đã điền sẵn: họ tên, MSSV 21143751, lớp DHCNTT17ATT, ngành Công Nghệ Thông Tin (tiếng Anh: Information Technology), giáo viên hướng dẫn ThS. Nguyễn Xuân Lô, năm 2026. Bìa không ghi khóa học. Nếu cần ghi khóa, thêm vào dòng "Lớp: DHCNTT17ATT" trên bìa tiếng Việt.
 
-## 3. Những chỗ phải tự bổ sung
+## 3. Những chỗ đã điền sẵn, cần kiểm tra lại
 
-- **Tên đề tài:** bìa đang ghi "CẢI THIỆN HIỆU NĂNG MẠNG: GIẢM ĐỘ TRỄ BẰNG CÁCH CHỌN ĐƯỜNG VÀ PHÂN PHỐI TẢI GIỮA CÁC ROUTER". Nếu giáo viên chốt tên khác, sửa `TITLE_VI` và `TITLE_EN` trong `report/frontmatter.py` rồi sinh lại.
-- **Hình 4.2 (ảnh chụp EVE-NG):** đang là khung chờ. Mở `http://<IP máy EVE>`, vào lab **net-perf**, chụp màn hình rồi dán đè lên khung trong Word (hoặc lưu đè `report/figures/eve_placeholder.png` rồi sinh lại).
-
-- **Tài liệu tham khảo, nhóm Tiếng Việt:** nếu giáo viên yêu cầu tài liệu tiếng Việt thì thêm vào đầu danh mục. Khi đó **phải đánh số lại** toàn bộ danh mục và các trích dẫn `[1]`…`[14]` trong bài, vì số trích dẫn được ghi cố định.
-- **Phụ lục C, D:** kiểm tra lại các mốc ngày cho đúng thực tế, điền tiếp kế hoạch và nhật ký cho các tuần sau.
+- **Tên đề tài:** "CẢI THIỆN HIỆU NĂNG MẠNG: GIẢM ĐỘ TRỄ BẰNG CÁCH CHỌN ĐƯỜNG VÀ PHÂN PHỐI TẢI GIỮA CÁC ROUTER". Nếu giáo viên đổi tên, sửa `TITLE_VI` và `TITLE_EN` trong `report/frontmatter.py` rồi sinh lại (hoặc sửa thẳng trên bìa trong Word).
+- **Hình 4.2:** ảnh chụp thật lab `net-perf` trên giao diện web EVE-NG (`report/figures/eve_topology.png`).
+- **Ngày ở Lời cảm ơn:** đang ghi 05/12/2026. Đổi nếu nộp ngày khác.
+- **Phụ lục C, D:** kế hoạch và nhật ký đã điền theo các mốc thực tế. Nếu giáo viên góp ý sau ngày 28/11, thêm dòng vào nhật ký.
+- **Tài liệu tham khảo:** chỉ có tài liệu tiếng Anh và trang web. Nếu giáo viên yêu cầu thêm tài liệu tiếng Việt thì thêm mục "Tiếng Việt" lên đầu và **đánh số lại** toàn bộ danh mục cùng các trích dẫn `[1]`…`[14]` trong bài.
+- Hai trang "Nhận xét của giáo viên" để trống, giáo viên tự ghi.
 
 ## 4. Đọc lại và viết lại
 

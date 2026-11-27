@@ -1,9 +1,5 @@
 #! TÀI LIỆU THAM KHẢO
 
-**Tiếng Việt**
-
-[Bổ sung tài liệu tiếng Việt nếu giáo viên hướng dẫn yêu cầu. Khi thêm, đánh số lại toàn bộ danh mục và các trích dẫn trong bài.]
-
 **Tiếng Anh**
 
 [1]. Almes G., Kalidindi S., Zekauskas M. (1999), "A Round-trip Delay Metric for IPPM", *RFC 2681*, Internet Engineering Task Force.
