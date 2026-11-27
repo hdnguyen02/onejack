@@ -223,7 +223,7 @@ def update_settings(work: Path) -> None:
 def build(out: Path, publish: bool = False) -> Path:
     """Sinh file vào thư mục out. publish=True mới chép đè file nộp report/BaoCao_KLTN_onejack.docx."""
     out.mkdir(parents=True, exist_ok=True)
-    facts = load_facts(ROOT / "results/eve-v2-report", ROOT / "scripts/demo.sh")
+    facts = load_facts(ROOT / "results/eve", ROOT / "scripts/demo.sh")
     media = MediaRegistry()
     state = RenderState()
 

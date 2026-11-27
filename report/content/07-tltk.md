@@ -6,28 +6,32 @@
 
 **Tiếng Anh**
 
-[1]. Davie B., Charny A., Bennett J. C. R., Benson K., Le Boudec J. Y., Courtney W., Davari S., Firoiu V., Stiliadis D. (2002), "An Expedited Forwarding PHB (Per-Hop Behavior)", *RFC 3246*, Internet Engineering Task Force.
+[1]. Almes G., Kalidindi S., Zekauskas M. (1999), "A Round-trip Delay Metric for IPPM", *RFC 2681*, Internet Engineering Task Force.
 
-[2]. Ferguson P., Senie D. (2000), "Network Ingress Filtering: Defeating Denial of Service Attacks which employ IP Source Address Spoofing", *RFC 2827 (BCP 38)*, Internet Engineering Task Force.
+[2]. Demichelis C., Chimento P. (2002), "IP Packet Delay Variation Metric for IP Performance Metrics (IPPM)", *RFC 3393*, Internet Engineering Task Force.
 
-[3]. Handley M., Rescorla E. (2006), "Internet Denial-of-Service Considerations", *RFC 4732*, Internet Architecture Board.
+[3]. Hemminger S. (2005), "Network Emulation with NetEm", *Proceedings of the 6th Australia's National Linux Conference (linux.conf.au 2005)*, Canberra.
 
-[4]. Kumari W., McPherson D. (2009), "Remote Triggered Black Hole Filtering with Unicast Reverse Path Forwarding (uRPF)", *RFC 5635*, Internet Engineering Task Force.
+[4]. Hopps C. (2000), "Analysis of an Equal-Cost Multi-Path Algorithm", *RFC 2992*, Internet Engineering Task Force.
 
-[5]. Kurose J. F., Ross K. W. (2021), *Computer Networking: A Top-Down Approach*, 8th edition, Pearson, Hoboken.
+[5]. International Telecommunication Union (2003), "One-way transmission time", *ITU-T Recommendation G.114*, Geneva.
 
-[6]. Loibl C., Hares S., Raszuk R., McPherson D., Bacher M. (2020), "Dissemination of Flow Specification Rules", *RFC 8955*, Internet Engineering Task Force.
+[6]. Kurose J. F., Ross K. W. (2021), *Computer Networking: A Top-Down Approach*, 8th edition, Pearson, Hoboken.
 
-[7]. Mirkovic J., Reiher P. (2004), "A Taxonomy of DDoS Attack and DDoS Defense Mechanisms", *ACM SIGCOMM Computer Communication Review* 34 (2), pp. 39-53.
+[7]. Postel J. (1980), "User Datagram Protocol", *RFC 768*, Internet Engineering Task Force.
 
-[8]. Nichols K., Blake S., Baker F., Black D. (1998), "Definition of the Differentiated Services Field (DS Field) in the IPv4 and IPv6 Headers", *RFC 2474*, Internet Engineering Task Force.
+[8]. Schulzrinne H., Casner S., Frederick R., Jacobson V. (2003), "RTP: A Transport Protocol for Real-Time Applications", *RFC 3550*, Internet Engineering Task Force.
 
-[9]. Postel J. (1980), "User Datagram Protocol", *RFC 768*, Internet Engineering Task Force.
+[9]. Tanenbaum A. S., Feamster N., Wetherall D. J. (2021), *Computer Networks*, 6th edition, Pearson, Hoboken.
+
+[10]. Thaler D., Hopps C. (2000), "Multipath Issues in Unicast and Multicast Next-Hop Selection", *RFC 2991*, Internet Engineering Task Force.
 
 **Trang web**
 
-[10]. Alpine Linux, alpine-make-vm-image (11-2026), https://github.com/alpinelinux/alpine-make-vm-image
+[11]. Alpine Linux, alpine-make-vm-image (11-2026), https://github.com/alpinelinux/alpine-make-vm-image
 
-[11]. EVE-NG, EVE-NG Community Edition (11-2026), https://www.eve-ng.net
+[12]. EVE-NG, EVE-NG Community Edition (11-2026), https://www.eve-ng.net
 
-[12]. man7.org, Linux manual pages: packet(7), tc-tbf(8), tc-prio(8), iptables(8) (11-2026), https://man7.org/linux/man-pages/
+[13]. The Linux Kernel documentation, IP Sysctl: fib_multipath_hash_policy (11-2026), https://docs.kernel.org/networking/ip-sysctl.html
+
+[14]. man7.org, Linux manual pages: ip-route(8), tc(8), tc-netem(8), tc-tbf(8) (11-2026), https://man7.org/linux/man-pages/

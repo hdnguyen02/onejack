@@ -98,18 +98,17 @@ add_path balance 2 "đường dài" 1
 add_path balance 3 "đường ngắn" 2
 plot paths.png "Lưu lượng R1 gửi ra từng đường (mỗi đường tối đa 10 Mbit/s)" "Mbit/s" "[0:12]" "$paths_lines"
 
-# avg <file csv> <cột>: trung bình một cột trong lúc có tải (bỏ giây đầu tiên và giây cuối).
+# avg <file csv> <cột>: trung bình một cột trong lúc có tải, từ giây LOAD_AT + 2 tới giây DURATION - 1
+# (bỏ giây đầu có tải đang chuyển trạng thái, và giây cuối tải dừng giữa chừng).
 avg() {
-    awk -F, -v a="$LOAD_AT" -v c="$2" 'NR > 1 && $1 > a + 1 { last = $1; v[$1] = $c }
-        END { s = 0; n = 0; for (t in v) { if (t + 0 < last) { s += v[t]; n++ } }
-              if (n) printf "%.2f", s / n; else printf "-" }' "$1"
+    awk -F, -v a="$LOAD_AT" -v d="$DURATION" -v c="$2" 'NR > 1 && $1 > a + 1 && $1 < d { s += $c; n++ }
+        END { if (n) printf "%.2f", s / n; else printf "-" }' "$1"
 }
 
 # avg_mbit <file link csv> <cột>: như avg nhưng đổi byte/giây sang Mbit/s.
 avg_mbit() {
-    awk -F, -v a="$LOAD_AT" -v c="$2" 'NR > 1 && $1 > a + 1 { last = $1; v[$1] = $c }
-        END { s = 0; n = 0; for (t in v) { if (t + 0 < last) { s += v[t]; n++ } }
-              if (n) printf "%.2f", s / n * 8 / 1000000; else printf "-" }' "$1"
+    awk -F, -v a="$LOAD_AT" -v d="$DURATION" -v c="$2" 'NR > 1 && $1 > a + 1 && $1 < d { s += $c; n++ }
+        END { if (n) printf "%.2f", s / n * 8 / 1000000; else printf "-" }' "$1"
 }
 
 # idle <file client csv>: RTT trung bình lúc chưa có tải (giây 2 tới trước lúc bắt đầu tải).
@@ -119,7 +118,7 @@ idle() {
 
 echo
 echo "Chưa tải: RTT trung bình giây 2 tới $((LOAD_AT - 1))."
-echo "Có tải: trung bình giây $((LOAD_AT + 2)) tới hết lượt."
+echo "Có tải: trung bình giây $((LOAD_AT + 2)) tới $((DURATION - 1))."
 printf "%-10s %16s %16s %11s %9s %13s %12s %13s\n" "Lượt" "RTT chưa tải" "RTT có tải" "Jitter ms" "Mất %" "Server Mbit/s" "Đường dài" "Đường ngắn"
 for m in $MODES; do
     printf "%-10s %13s ms %13s ms %11s %9s %13s %10s %10s\n" "$m" \

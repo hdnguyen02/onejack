@@ -1,64 +1,63 @@
 import unittest
 from pathlib import Path
 
-from report.facts import load_facts
+from report.facts import load_facts, vn_number
 
 ROOT = Path(__file__).resolve().parents[2]
 
 
+def facts():
+    return load_facts(ROOT / "results/eve", ROOT / "scripts/demo.sh")
+
+
 class FactsTest(unittest.TestCase):
-    def test_facts_match_dataset(self):
-        f = load_facts(ROOT / "results/eve-v2-report", ROOT / "scripts/demo.sh")
-        self.assertEqual(f["rtt_off"], "407,97")
-        self.assertEqual(f["rtt_on"], "6,29")
-        self.assertEqual(f["rtt_inband"], "6,91")
-        self.assertEqual(f["link_off"], "10,02")
-        self.assertEqual(f["link_on"], "0,17")
-        self.assertEqual(f["link_inband"], "0,19")
-        self.assertEqual(f["detect_off"], "0,566")
-        self.assertEqual(f["detect_on"], "0,495")
-        self.assertEqual(f["detect_inband"], "0,577")
-        self.assertEqual(f["block_on_ms"], "7")
-        self.assertEqual(f["block_inband_ms"], "4")
-        self.assertEqual(f["qos_normal_eve"], "401,94")
-        self.assertEqual(f["qos_prio_eve"], "3,07")
-        self.assertEqual(f["qos_normal_netns"], "399,85")
-        self.assertEqual(f["qos_prio_netns"], "0,07")
-        self.assertEqual(f["qos_prio_pkts"], "100")
-        self.assertEqual(f["qos_normal_dropped"], "55.965")
+    def test_parameters_from_scripts(self):
+        f = facts()
         self.assertEqual(f["duration"], "60")
-        self.assertEqual(f["attack_at"], "15")
+        self.assertEqual(f["load_at"], "15")
         self.assertEqual(f["client_rate"], "20")
-        self.assertEqual(f["attack_rate"], "5.000")
-        self.assertEqual(f["attack_size"], "1.000")
-        self.assertEqual(f["threshold"], "200")
-        self.assertEqual(f["bottleneck"], "10")
+        self.assertEqual(f["load_rate"], "1.500")
+        self.assertEqual(f["load_size"], "1.000")
+        self.assertEqual(f["load_flows"], "32")
+        self.assertEqual(f["load_mbit"], "12")
+        self.assertEqual(f["link_rate"], "10")
+        self.assertEqual(f["link_delay"], "10")
+        self.assertEqual(f["two_links_mbit"], "20")
         self.assertEqual(f["queue_kb"], "500")
-
-    def test_baseline_and_queue_delay(self):
-        f = load_facts(ROOT / "results/eve-v2-report", ROOT / "scripts/demo.sh")
-        self.assertEqual(f["rtt_base"], "2,24")
         self.assertEqual(f["queue_delay_ms"], "400")
+        self.assertEqual(f["prop_long_ms"], "40")
+        self.assertEqual(f["prop_short_ms"], "20")
+        self.assertEqual(f["alpine_version"], "3.20")
 
-    def test_reduction_percentages(self):
-        f = load_facts(ROOT / "results/eve-v2-report", ROOT / "scripts/demo.sh")
-        self.assertEqual(f["rtt_drop_on"], "98,5")
-        self.assertEqual(f["rtt_drop_inband"], "98,3")
-        self.assertEqual(f["link_drop_on"], "98,3")
-        self.assertEqual(f["link_drop_inband"], "98,1")
-        self.assertEqual(f["alpine_version"], "3.20.10")
-        self.assertEqual(f["iptables_version"], "1.8.10")
+    def test_measurements_match_dataset(self):
+        # Cùng cách tính với scripts/plot.sh results/eve.
+        f = facts()
+        self.assertEqual(f["idle_base"], "43,87")
+        self.assertEqual(f["idle_short"], "22,42")
+        self.assertEqual(f["idle_balance"], "32,58")
+        self.assertEqual(f["rtt_base"], "455,85")
+        self.assertEqual(f["rtt_short"], "421,55")
+        self.assertEqual(f["rtt_balance"], "32,85")
+        self.assertEqual(f["server_base"], "9,58")
+        self.assertEqual(f["server_balance"], "12,00")
+        self.assertEqual(f["long_balance"], "6,66")
+        self.assertEqual(f["short_balance"], "5,89")
 
-    def test_threshold_ratio(self):
-        f = load_facts(ROOT / "results/eve-v2-report", ROOT / "scripts/demo.sh")
-        self.assertEqual(f["threshold_ratio"], "10")
+    def test_reductions(self):
+        f = facts()
+        self.assertEqual(f["idle_drop_short"], "48,9")
+        self.assertEqual(f["rtt_drop_balance"], "92,8")
+        self.assertEqual(f["dropped_pct_base"], "20,2")
+        self.assertEqual(f["dropped_pct_balance"], "0,0")
 
     def test_english_variants(self):
-        f = load_facts(ROOT / "results/eve-v2-report", ROOT / "scripts/demo.sh")
-        self.assertEqual(f["rtt_off_en"], "407.97")
-        self.assertEqual(f["qos_normal_dropped_en"], "55,965")
-        self.assertEqual(f["attack_rate_en"], "5,000")
-        self.assertEqual(f["threshold_en"], "200")
+        f = facts()
+        self.assertEqual(f["rtt_base_en"], "455.85")
+        self.assertEqual(f["load_rate_en"], "1,500")
+
+    def test_vn_number(self):
+        self.assertEqual(vn_number(55965, 0), "55.965")
+        self.assertEqual(vn_number(3.14159, 2), "3,14")
 
 
 if __name__ == "__main__":

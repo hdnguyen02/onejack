@@ -1,222 +1,216 @@
 # THIẾT KẾ VÀ HIỆN THỰC
 
-## Kiến trúc tổng thể
+## Thiết kế mô hình mạng
 
-### Mô hình mạng
+### Thiết kế topology mạng
 
-Mô hình gồm sáu node, mỗi node là một máy Linux độc lập. Attacker và client nằm chung mạng LAN1 sau R1. Ba router R1, R2, R3 nối thành một đường thẳng. Server nằm sau R3. Ngoài đường dữ liệu, ba router còn chung một mạng điều khiển CTRL dùng cho lượt **on**, và mọi node có thêm một card mạng nối vào mạng quản lý MGMT để script điều khiển từ xa.
+Mô hình gồm sáu node, mỗi node là một máy Linux độc lập. Client và loadgen nằm chung mạng LAN1 sau R1. Giữa R1 và R3 có hai đường: đường dài đi qua R2 và đường ngắn nối thẳng. Server nằm sau R3. Mọi node có thêm một card mạng nối vào mạng quản lý MGMT để script điều khiển từ xa.
 
-![Sơ đồ mạng của hệ thống thử nghiệm](../figures/topology.png)
+![Sơ đồ mạng của mô hình thử nghiệm](../figures/topology.png)
 
-Bảng: Địa chỉ và vai trò của các node
-| Node | Địa chỉ dữ liệu | Địa chỉ điều khiển | Vai trò |
-|---|---|---|---|
-| Attacker | 10.0.1.10 | | Gửi UDP flood |
-| Client | 10.0.1.20 | | Người dùng hợp lệ, đo RTT |
-| R1 | 10.0.1.1, 10.0.12.1 | 10.0.99.1 | Router đầu vào, nghe cảnh báo |
-| R2 | 10.0.12.2, 10.0.23.2 | 10.0.99.2 | Router giữa, nghe cảnh báo |
-| R3 | 10.0.23.3, 10.0.3.1 | 10.0.99.3 | Router gần server, phát hiện và gửi cảnh báo |
-| Server | 10.0.3.10 | | Trả lời truy vấn ở cổng 9000 |
+Trên mỗi node, card mạng `eth0` luôn thuộc mạng quản lý 172.30.0.0/24, các card mạng từ `eth1` trở đi là mạng dữ liệu. Mạng quản lý chỉ dùng để SSH (Secure Shell) vào node, không có lưu lượng thử nghiệm đi qua, nên không ảnh hưởng tới số đo.
 
-Trên mỗi node, card mạng `eth0` luôn là mạng quản lý 172.30.0.0/24, các card mạng từ `eth1` trở đi là mạng dữ liệu. Nhờ quy ước này, cùng một tệp cấu hình `lab/<node>.sh` dùng được cho cả lab EVE-NG lẫn mô hình rút gọn bằng network namespace.
+### Thiết kế địa chỉ IP
 
-### Tổ chức mã nguồn
+Bảng: Địa chỉ IP của các node
+| Node | Card mạng | Địa chỉ IP | Mạng | Ghi chú |
+|---|---|---|---|---|
+| Loadgen | eth1 | 10.0.1.10/24 | LAN1 | Gateway 10.0.1.1 |
+| Client | eth1 | 10.0.1.20/24 | LAN1 | Gateway 10.0.1.1 |
+| R1 | eth1 | 10.0.1.1/24 | LAN1 | Phía người dùng |
+| R1 | eth2 | 10.0.12.1/24 | R1 – R2 | Đường dài |
+| R1 | eth3 | 10.0.13.1/24 | R1 – R3 | Đường ngắn |
+| R2 | eth1 | 10.0.12.2/24 | R1 – R2 | Đường dài |
+| R2 | eth2 | 10.0.23.2/24 | R2 – R3 | Đường dài |
+| R3 | eth1 | 10.0.23.3/24 | R2 – R3 | Đường dài |
+| R3 | eth2 | 10.0.3.1/24 | R3 – Server | Phía server |
+| R3 | eth3 | 10.0.13.3/24 | R1 – R3 | Đường ngắn |
+| Server | eth1 | 10.0.3.10/24 | R3 – Server | Gateway 10.0.3.1 |
 
-Mã nguồn chia làm ba phần. Thư mục `src/` chứa bốn chương trình C (`server`, `client`, `attacker`, `guard`) và sáu module dùng chung (`proto`, `stats`, `ratecount`, `blocklist`, `alert`, `firewall`). Thư mục `lab/` chứa cấu hình mạng cho từng node và các script dựng lab. Thư mục `scripts/` chứa các script điều khiển thử nghiệm: chạy lệnh trên một node, chuẩn bị lab, chạy một lượt, khôi phục trạng thái ban đầu, vẽ biểu đồ.
+### Thiết kế định tuyến
 
-Toàn bộ chương trình C được biên dịch tĩnh bằng `gcc -static`. Tệp thực thi được biên dịch trên một máy rồi sao chép trực tiếp sang các node Alpine mà không cần cài thêm thư viện hay trình biên dịch nào. Mọi script điều khiển đều đi qua một script trung gian là `node-run.sh`: với lab EVE-NG, script này SSH vào node; với mô hình rút gọn, nó chạy lệnh trong namespace tương ứng. Phần còn lại của hệ thống không cần biết đang chạy ở môi trường nào.
+Client, loadgen và server dùng router gần nhất làm gateway mặc định. Ba router dùng định tuyến tĩnh. Bảng định tuyến của R2 không đổi; bảng định tuyến của R1 và R3 thay đổi theo kịch bản:
 
-## Thiết kế giao thức
+Bảng: Đường tới mạng đích của R1 và R3 theo từng kịch bản
+| Router | Mạng đích | base | short | balance |
+|---|---|---|---|---|
+| R1 | 10.0.3.0/24 (server) | qua 10.0.12.2 | qua 10.0.13.3 | qua 10.0.12.2 và 10.0.13.3 |
+| R3 | 10.0.1.0/24 (người dùng) | qua 10.0.23.2 | qua 10.0.13.1 | qua 10.0.23.2 và 10.0.13.1 |
+| R2 | 10.0.1.0/24 và 10.0.3.0/24 | qua R1 và qua R3 | như base | như base |
 
-### Giao thức truy vấn
+Ở kịch bản balance, hai router kế tiếp có trọng số bằng nhau và R1, R3 đặt `net.ipv4.fib_multipath_hash_policy=1` để chọn đường theo cả địa chỉ lẫn cổng của từng luồng.
 
-Truy vấn là một gói UDP dạng văn bản `Q <số thứ tự> <thời điểm>`, trả lời có dạng `A <số thứ tự> <thời điểm>`. Server không cần xử lý gì thêm: nhận `Q` thì đổi thành `A` và gửi lại đúng địa chỉ đã gửi tới.
-
-Client tính RTT bằng đồng hồ của chính nó chứ không dựa vào đồng hồ server, vì đồng hồ của hai máy khác nhau có thể lệch nhau. Module `stats` giữ một bảng vòng 4.096 ô, vị trí của mỗi truy vấn là số thứ tự chia lấy dư cho kích thước bảng. Khi gửi, client ghi lại thời điểm gửi vào ô đó. Khi nhận trả lời, client tìm lại ô theo số thứ tự, lấy hiệu thời gian làm RTT. Truy vấn nào quá một giây chưa có trả lời thì bị tính là mất. Trả lời tới muộn hơn mức đó, trả lời trùng lặp, hoặc trả lời cho số thứ tự lạ đều bị bỏ qua.
-
-Gói của attacker cũng bắt đầu bằng `Q`, phần sau được đệm thêm ký tự cho đủ {{attack_size}} byte. Bộ phân tích gói chấp nhận phần đệm phía sau, nên nếu chỉ xét nội dung thì gói tấn công không khác gì truy vấn hợp lệ. Đây là chủ ý thiết kế: hệ thống buộc phải phân biệt bằng hành vi, đúng như tình huống thực tế.
-
-### Giao thức cảnh báo
-
-Cảnh báo là một gói UDP gửi tới cổng 9999 với nội dung `BLOCK <địa chỉ IP> <tên node>`, ví dụ `BLOCK 10.0.1.10 R3`. Vì đây là dữ liệu đến từ mạng, hàm `alert_parse` kiểm tra chặt chẽ: gói phải bắt đầu đúng bằng `BLOCK `, địa chỉ phải hợp lệ theo `inet_pton`, tên node chỉ gồm chữ, số, dấu gạch dưới và gạch ngang, dài tối đa 15 ký tự, và không được có gì khác phía sau. Gói vi phạm bất kỳ điều kiện nào đều bị bỏ qua và ghi log.
-
-Bảng: Các cổng và định dạng gói trong hệ thống
-| Loại gói | Cổng UDP | Định dạng | Chiều đi |
-|---|---|---|---|
-| Truy vấn | 9000 | `Q <seq> <ts>` | Client, attacker → server |
-| Trả lời | (cổng của bên hỏi) | `A <seq> <ts>` | Server → client |
-| Cảnh báo | 9999 | `BLOCK <ip> <node>` | R3 → R1, R2 |
-
-## Hiện thực các chương trình
-
-### Server, client và attacker
-
-**Server** mở một socket UDP ở cổng 9000, tăng bộ đệm nhận lên 4 MB để xử lý được lượng gói lớn, rồi chạy một vòng lặp: chờ bằng `poll()`, mỗi lần có dữ liệu thì đọc liên tiếp tối đa 1.000 gói, trả lời từng gói hợp lệ. Mỗi giây server in số gói nhận được, tách theo địa chỉ nguồn.
-
-**Client** gửi truy vấn đều đặn theo tốc độ cấu hình, giữa các lần gửi thì chờ trả lời tối đa 1 mili giây bằng `poll()`. Mỗi giây client tổng kết một dòng gồm số gói gửi, số gói nhận, tỉ lệ mất và RTT trung bình, in ra màn hình và ghi vào tệp CSV.
-
-**Attacker** tính số gói lẽ ra đã phải gửi tính đến thời điểm hiện tại, gửi bổ sung phần còn thiếu, rồi tạm dừng 1 mili giây. Cách gửi bổ sung này giữ cho tốc độ trung bình đúng {{attack_rate}} gói/giây dù hệ điều hành không đảm bảo thời gian tạm dừng chính xác.
-
-### Chương trình guard
-
-Guard là phần trung tâm của đề tài. Cùng một chương trình, chạy với các tham số khác nhau, sẽ đảm nhận các vai trò khác nhau trên từng router.
-
-Bảng: Các tham số dòng lệnh của guard
-| Tham số | Ý nghĩa |
-|---|---|
-| `-n <tên>` | Tên node, dùng trong log và trong gói cảnh báo |
-| `-d -i <card mạng>` | Bật phát hiện, đếm gói đi vào card mạng chỉ định |
-| `-t <ngưỡng>` | Ngưỡng gói/giây, mặc định {{threshold}} |
-| `-l -b <ip>` | Bật nghe cảnh báo trên địa chỉ chỉ định, cổng 9999 |
-| `-P <ip>` | Thêm một router nhận cảnh báo; có router nhận cảnh báo nghĩa là chế độ hợp tác |
-| `-Q` | Đánh dấu gói cảnh báo là ưu tiên (TOS `0xB8`) |
-| `-W <ip>` | Thêm địa chỉ vào whitelist, không bao giờ chặn |
-
-Ở lượt **off**, R3 chạy với `-d -i eth1` và không có router nhận cảnh báo. Ở lượt **on**, R3 có thêm hai router nhận cảnh báo là 10.0.99.1 và 10.0.99.2, còn R1, R2 chạy với `-l` nghe trên địa chỉ mạng điều khiển. Ở lượt **inband**, R3 gửi tới địa chỉ dữ liệu 10.0.12.1 và 10.0.23.2 kèm `-Q`, còn R1, R2 nghe trên chính các địa chỉ dữ liệu đó.
-
-Toàn bộ guard chạy trong một luồng duy nhất với vòng lặp `poll()`, chờ tối đa 50 mili giây trên raw socket và socket cảnh báo, như mô tả trong hình dưới.
-
-![Lưu đồ vòng lặp chính của guard](../figures/guard_flow.png)
-
-Việc đếm gói nằm trong hàm `handle_packet`. Raw socket kiểu `SOCK_DGRAM` trả về gói IP đã bỏ tiêu đề Ethernet, nên hàm chỉ cần đọc trực tiếp các byte của tiêu đề IP và UDP. Đoạn dưới là phần chính của hàm, đã lược bớt các bước kiểm tra độ dài gói:
-
-```
-if ((pkt[0] >> 4) != 4) {                 // chỉ xét IPv4
-    return;
-}
-int ihl = (pkt[0] & 0x0F) * 4;             // độ dài tiêu đề IP
-if (pkt[9] != IPPROTO_UDP) {               // chỉ xét UDP
-    return;
-}
-uint16_t dport = (uint16_t)((pkt[ihl + 2] << 8) | pkt[ihl + 3]);
-if (dport != QUERY_PORT) {                 // chỉ đếm truy vấn tới cổng 9000
-    return;
-}
-uint32_t src;
-memcpy(&src, pkt + 12, sizeof(src));       // địa chỉ nguồn
-rc_add(&rc, src);
-```
-
-Trước khi gọi hàm này, vòng lặp bỏ qua những gói có kiểu `PACKET_OUTGOING`. Raw socket gắn vào một card mạng nhận bản sao của gói theo cả hai chiều, vào và ra. Bộ lọc này chỉ giữ lại gói đi vào card mạng, để lưu lượng do chính router gửi ra trên card mạng đó không bao giờ bị tính vào số đếm.
-
-Mỗi giây, hàm `check_rates` lấy danh sách địa chỉ vượt ngưỡng. Với mỗi địa chỉ, guard kiểm tra whitelist, kiểm tra xem đã chặn chưa, gọi iptables để chặn, rồi gửi cảnh báo nếu có router nhận cảnh báo. Cuối cùng bảng đếm được xóa để bắt đầu giây mới. Khi nhận tín hiệu `SIGINT` hoặc `SIGTERM`, vòng lặp kết thúc và guard gỡ toàn bộ chain `GUARD` trước khi thoát.
-
-### Các module dùng chung
-
-- **ratecount** đếm số gói theo địa chỉ nguồn trong một bảng tối đa 256 địa chỉ. Bảng đầy thì địa chỉ mới bị bỏ qua thay vì gây lỗi chương trình.
-- **blocklist** nhớ các địa chỉ đã chặn và whitelist. Hàm `bl_allowed_to_block` từ chối mọi địa chỉ trong whitelist và mọi địa chỉ thuộc mạng điều khiển 10.0.99.0/24, để các router không bao giờ chặn nhầm lẫn nhau.
-- **alert** tạo và phân tích gói cảnh báo như đã mô tả ở mục 4.2.2.
-- **firewall** gọi iptables. Lúc khởi động, module tạo hoặc làm rỗng chain `GUARD` và gắn vào `FORWARD`. Khi chặn, nó thêm quy tắc `-A GUARD -s <ip> -j DROP`. Khi khôi phục trạng thái ban đầu, nó gỡ chain khỏi `FORWARD` rồi xóa. Mọi lệnh đều chạy bằng `fork` và `execvp` với mảng tham số riêng, không đi qua shell, nên không thể bị chèn thêm lệnh. Module có chế độ chạy thử chỉ ghi lại câu lệnh, dùng cho kiểm thử đơn vị mà không cần quyền root.
-
-## Cấu hình mạng và QoS
-
-### Định tuyến và nút cổ chai
-
-Mỗi router bật chuyển tiếp gói (`ip_forward`) và có các tuyến tĩnh tới những mạng không nối trực tiếp, ví dụ R1 đi tới 10.0.3.0/24 qua 10.0.12.2. Client và attacker dùng R1 làm gateway, server dùng R3. Lưu lượng trên đoạn R1 → R2 được đo bằng script `linkmon.sh` chạy trên R1: mỗi giây script đọc bộ đếm `tx_bytes` của card mạng `eth2` trong `/sys/class/net`, lấy hiệu so với giây trước.
-
-### Hàng đợi hai làn
-
-Mọi card mạng nối giữa hai router đều được giới hạn {{bottleneck}} Mbit/s theo cả hai chiều và chia hàng đợi làm hai làn. Cấu hình nằm trong hàm `bottleneck` dùng chung cho R1, R2, R3:
-
-```
-tc qdisc add dev "$1" root handle 1: tbf rate "$TC_RATE" burst 32kbit latency 400ms
-tc qdisc add dev "$1" parent 1:1 handle 10: prio bands 2 priomap 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
-tc qdisc add dev "$1" parent 10:1 handle 101: bfifo limit 500000
-tc qdisc add dev "$1" parent 10:2 handle 102: bfifo limit 500000
-tc filter add dev "$1" parent 10: protocol ip prio 1 u32 match ip dsfield 0xb8 0xfc flowid 10:1
-```
-
-Lớp ngoài `tbf` giới hạn tốc độ. Bên trong là `prio` với hai làn. Tham số `priomap` toàn số 1 đưa mọi gói vào làn thứ hai theo mặc định. Chỉ những gói được bộ lọc `u32` nhận ra có trường DSCP bằng EF (so khớp byte TOS `0xB8` với mặt nạ `0xFC`) mới vào làn thứ nhất. Mỗi làn chứa tối đa {{queue_kb}} KB. Ở {{bottleneck}} Mbit/s, một làn đầy cần khoảng {{queue_delay_ms}} ms để truyền hết, và đây là mức RTT mà client gặp phải khi đường bị nghẽn.
-
-Phía gửi, guard đánh dấu gói cảnh báo bằng một lệnh duy nhất trên socket cảnh báo khi có tham số `-Q`: `setsockopt(alert_fd, IPPROTO_IP, IP_TOS, &tos, sizeof(tos))` với `tos` bằng `0xB8`. Client cũng có tham số `-Q` tương tự, chỉ dùng trong script kiểm chứng QoS.
-
-## Dựng môi trường thử nghiệm
+## Thiết lập môi trường
 
 ### Cài đặt EVE-NG
 
-EVE-NG Community Edition bản 6.2.0-4 được cài vào một máy ảo KVM trên laptop chạy Ubuntu, cấp 6 GB RAM, 4 vCPU và ổ đĩa 60 GB, CPU ở chế độ `host-passthrough` để các node bên trong dùng được ảo hóa phần cứng. Trên Windows, có thể làm tương tự bằng VMware Workstation, với điều kiện tắt Hyper-V và bật tùy chọn ảo hóa VT-x cho máy ảo. Sau khi cài, mọi script của đề tài đều chạy **bên trong** máy ảo EVE-NG. Máy thật chỉ cần trình duyệt và SSH, nên quy trình không phụ thuộc hệ điều hành của máy thật.
+EVE-NG Community Edition bản 6.2.0-4 được cài vào một máy ảo KVM (Kernel-based Virtual Machine) trên laptop chạy Ubuntu, cấp 6GB RAM, 4 CPU ảo và ổ đĩa 60GB. CPU của máy ảo đặt ở chế độ `host-passthrough` để các node bên trong dùng được ảo hóa phần cứng. Trên Windows, có thể làm tương tự bằng VMware Workstation, với điều kiện tắt Hyper-V và bật tùy chọn ảo hóa VT-x cho máy ảo. Sau khi cài, mọi script của đề tài chạy bên trong máy ảo EVE-NG; máy thật chỉ cần trình duyệt và SSH.
 
 ### Tạo image và lab tự động
 
-Thay vì cài Alpine thủ công cho từng node, script `lab/eve-make-image.sh` dùng công cụ `alpine-make-vm-image` [[REF:10]] để tạo một ổ đĩa mẫu có sẵn SSH, iproute2 và iptables, kèm khóa SSH của máy EVE. Vấn đề còn lại là mỗi node cần một địa chỉ quản lý khác nhau, trong khi cả sáu node chạy chung một ổ đĩa mẫu. Lời giải dựa vào cách EVE-NG đặt địa chỉ MAC cho card mạng: định dạng là `00:50:<tenant>:<id/512>:<id%512>:<card mạng>`, trong đó `id` là số thứ tự node. Một script khởi động trong image đọc MAC của `eth0`, tính ra số thứ tự node rồi tự đặt địa chỉ 172.30.0.(10 + id).
+Script `lab/eve-make-image.sh` dùng công cụ `alpine-make-vm-image` [[REF:11]] tạo một ổ đĩa mẫu Alpine Linux {{alpine_version}} có sẵn SSH và bộ công cụ `iproute2` (lệnh `ip`, `tc`). Cả sáu node dùng chung ổ đĩa mẫu này. Để mỗi node tự nhận một địa chỉ quản lý khác nhau, một script khởi động trong image đọc địa chỉ MAC của `eth0`: EVE-NG đặt MAC theo định dạng `00:50:<tenant>:<id/512>:<id%512>:<cổng>`, từ đó tính ra số thứ tự node và đặt địa chỉ 172.30.0.(10 + số thứ tự).
 
-Lab gồm sáu node, sáu mạng và toàn bộ dây nối được tạo bằng script `lab/eve-create-lab.sh` thông qua REST API của EVE-NG [[REF:11]]: đăng nhập, tạo lab, tạo mạng, tạo node, gán card mạng của từng node vào mạng, rồi khởi động node. Nhờ vậy lab có thể được tạo lại giống hệt chỉ bằng một lệnh, thay vì kéo thả trên giao diện web.
+Lab `net-perf` gồm sáu node, sáu mạng và toàn bộ dây nối được tạo bằng script `lab/eve-create-lab.sh` thông qua REST API của EVE-NG [[REF:12]]: đăng nhập, tạo lab, tạo mạng, tạo node, gán card mạng của từng node vào mạng, rồi khởi động node. Lab có thể được tạo lại giống hệt chỉ bằng một lệnh.
 
-![Lab collab-defense trên giao diện web của EVE-NG](../figures/eve_topology.png)
+![Lab net-perf trên giao diện web của EVE-NG](../figures/eve_placeholder.png)
 
-### Kịch bản chạy thử nghiệm
+### Cấu hình đường truyền và chọn đường
 
-Mỗi lần chuẩn bị trình diễn, script `scripts/lab-up.sh` khởi động sáu node, chờ tới khi kết nối SSH được, chép chương trình và cấu hình mạng sang từng node, rồi chạy một loạt kiểm tra: client ping được server, R1 ping được R3 qua mạng điều khiển, client gửi truy vấn trong 3 giây và nhận đủ trả lời, RAM còn trống đủ dùng. Nếu tất cả đều đạt, script in ra `SẴN SÀNG`.
+Mỗi router có một tệp cấu hình `lab/<router>.sh`, nhận tham số là kịch bản chọn đường. Các đoạn đường truyền giữa hai router đều dùng chung một hàm cấu hình:
 
-Một lượt thử nghiệm do `scripts/demo.sh` điều khiển và kéo dài {{duration}} giây: khôi phục trạng thái ban đầu, khởi động server, khởi động guard theo vai trò của lượt, sau 2 giây khởi động bộ đo lưu lượng và client, tới giây thứ {{attack_at}} thì khởi động attacker, cuối lượt khôi phục trạng thái ban đầu lần nữa và lưu toàn bộ kết quả vào `results/`. Để người xem theo dõi trực tiếp, `scripts/tmux-demo.sh` chia màn hình terminal làm bốn ô: RTT của client, lưu lượng đường truyền R1 → R2, các sự kiện phát hiện và chặn, và tiến trình của `demo.sh`. Hình dưới vẽ lại nguyên văn nội dung bốn ô ở cuối lượt inband.
+```
+link() {
+    tc qdisc del dev "$1" root 2>/dev/null || true
+    tc qdisc add dev "$1" root handle 1: netem delay "$LINK_DELAY"
+    tc qdisc add dev "$1" parent 1:1 handle 10: tbf rate "$LINK_RATE" burst 32kbit latency 400ms
+}
+```
 
-![Nội dung bốn ô của màn hình theo dõi ở cuối lượt inband](../figures/tmux_inband.png)
+Bộ `netem` thêm độ trễ truyền {{link_delay}} mili giây cho mọi gói đi ra. Bộ `tbf` bên dưới giới hạn tốc độ {{link_rate}} Mbit/s; tham số `latency` quy định hàng đợi chứa được lượng dữ liệu truyền trong {{queue_delay_ms}} mili giây, tức khoảng {{queue_kb}}KB. Vì `tc` chỉ tác động lên chiều đi ra, mỗi đoạn đường truyền được cấu hình ở cả hai router hai đầu.
 
-## Kiểm thử và kết quả
+Phần chọn đường của R1 chỉ là một dòng `ip route` khác nhau theo kịch bản:
+
+```
+if [ "$ROUTE" = "short" ]; then
+    ip route replace 10.0.3.0/24 via 10.0.13.3
+elif [ "$ROUTE" = "balance" ]; then
+    ip route replace 10.0.3.0/24 nexthop via 10.0.12.2 weight 1 nexthop via 10.0.13.3 weight 1
+else
+    ip route replace 10.0.3.0/24 via 10.0.12.2
+fi
+```
+
+R3 có đoạn tương tự cho chiều về mạng 10.0.1.0/24. Đổi kịch bản chỉ cần chạy lại tệp cấu hình với tham số mới, ví dụ `sh r1.sh balance`.
+
+## Hiện thực các chương trình đo
+
+### Giao thức và các chương trình
+
+Đề tài gồm ba chương trình C, biên dịch tĩnh bằng `gcc -static` để chép thẳng sang node Alpine mà không cần cài thêm thư viện:
+
+Bảng: Các chương trình đo của đề tài
+| Chương trình | Chạy ở | Chức năng |
+|---|---|---|
+| `server` | Server | Nghe UDP cổng 9000. Truy vấn `Q <số thứ tự> <thời điểm>` được trả lời bằng `A <số thứ tự> <thời điểm>`. Gói tải `D ...` chỉ được đếm. Mỗi giây ghi số gói và thông lượng nhận được |
+| `client` | Client | Gửi {{client_rate}} truy vấn mỗi giây, khớp trả lời theo số thứ tự để tính RTT, jitter và tỷ lệ mất gói |
+| `loadgen` | Loadgen | Gửi gói UDP {{load_size}} byte với tốc độ {{load_rate}} gói/giây, chia đều cho {{load_flows}} luồng |
+
+Gói tải bắt đầu bằng ký tự `D` để server phân biệt với truy vấn và không trả lời, nhờ đó chiều về chỉ có lưu lượng nhỏ của client.
+
+Loadgen tạo mỗi luồng bằng một socket riêng, gắn cố định cổng nguồn 20000, 20001, ... để router nhận ra đó là các luồng khác nhau. Vòng lặp gửi tính số gói lẽ ra đã phải gửi tới thời điểm hiện tại, gửi bù phần còn thiếu lần lượt qua từng socket, rồi tạm dừng 1 mili giây. Cách gửi bù này giữ đúng tốc độ trung bình dù hệ điều hành không đảm bảo thời gian tạm dừng chính xác.
+
+### Tính RTT, jitter và tỷ lệ mất gói
+
+Module `stats` của client giữ một bảng vòng 4.096 ô, vị trí của mỗi truy vấn là số thứ tự chia lấy dư cho kích thước bảng. Khi gửi, client ghi thời điểm gửi vào ô đó. Khi nhận trả lời, client tìm lại ô theo số thứ tự và lấy hiệu thời gian làm RTT. Client dùng đồng hồ của chính nó (`CLOCK_MONOTONIC`), nên kết quả không phụ thuộc đồng hồ của server.
+
+Jitter được tính bằng trung bình độ lệch tuyệt đối giữa RTT của hai trả lời liên tiếp. Truy vấn quá một giây chưa có trả lời được tính là mất. Trả lời tới muộn hơn mức đó, trả lời trùng lặp hoặc trả lời cho số thứ tự lạ đều bị bỏ qua.
 
 ### Kiểm thử đơn vị
 
-Các module dùng chung được kiểm thử bằng bộ test tự viết, chạy bằng lệnh `make test`. Bốn chương trình chính không có kiểm thử đơn vị riêng, mà được kiểm tra bằng cách chạy thử nghiệm trên mô hình.
+Hai module dùng chung được kiểm thử bằng bộ test tự viết, chạy bằng lệnh `make test`:
 
 Bảng: Các bộ kiểm thử đơn vị
 | Bộ test | Số ca | Nội dung kiểm tra chính |
 |---|---|---|
-| `test_proto` | 5 | Tạo và phân tích truy vấn, chấp nhận phần đệm phía sau, từ chối gói sai định dạng, đồng hồ tăng dần |
-| `test_stats` | 7 | Tính RTT, mất gói khi quá hạn, trả lời muộn tính là mất, trả lời trùng chỉ đếm một lần, bỏ qua số thứ tự lạ |
-| `test_ratecount` | 4 | Chỉ báo địa chỉ vượt ngưỡng, đúng bằng ngưỡng không tính là vượt, bảng đầy không lỗi, xóa bộ đếm |
-| `test_blocklist` | 4 | Không chặn trùng, không bao giờ chặn mạng điều khiển và whitelist, chặn được attacker |
-| `test_alert` | 3 | Tạo và phân tích cảnh báo, từ chối cảnh báo sai định dạng, chấp nhận ký tự xuống dòng ở cuối |
-| `test_firewall` | 2 | Câu lệnh iptables chặn và gỡ bỏ đúng (chế độ chạy thử) |
+| `test_proto` | 6 | Tạo và đọc truy vấn, chấp nhận phần đệm phía sau, gói tải `D` không bị coi là truy vấn, từ chối gói sai định dạng, đồng hồ tăng dần |
+| `test_stats` | 10 | Tính RTT, mất gói khi quá hạn, trả lời muộn tính là mất, trả lời trùng chỉ đếm một lần, bỏ qua số thứ tự lạ, tính jitter đúng và giữ RTT trước đó qua các giây |
 
-Cả 25 ca kiểm thử đều đạt, trên máy phát triển và trên máy EVE-NG.
+Cả 16 ca kiểm thử đều đạt.
+
+## Tiến hành thực nghiệm
+
+### Các script điều khiển thực nghiệm
+
+Mọi bước thực nghiệm được tự động hóa bằng script:
+
+Bảng: Các script điều khiển thực nghiệm
+| Script | Chức năng |
+|---|---|
+| `scripts/lab-up.sh` | Bật sáu node, chép chương trình và cấu hình, kiểm tra kết nối và thử cả ba kịch bản chọn đường; in `SẴN SÀNG` nếu mọi bước đạt |
+| `scripts/demo.sh <kịch bản>` | Chạy một lượt {{duration}} giây và lưu số liệu |
+| `scripts/tmux-demo.sh <kịch bản>` | Chạy một lượt kèm màn hình theo dõi bốn ô |
+| `scripts/run-all.sh` | Chạy liên tiếp ba kịch bản rồi vẽ biểu đồ |
+| `scripts/plot.sh` | Tính trung bình, in bảng so sánh, vẽ biểu đồ |
+| `scripts/reset.sh` | Dừng mọi chương trình đo trên các node |
+
+Mỗi lượt diễn ra như trình bày ở mục 3.4.3: cấu hình router theo kịch bản, khởi động server, bộ đo lưu lượng trên R1 và client; tới giây thứ {{load_at}} khởi động loadgen; hết lượt thì dừng mọi chương trình và lưu kết quả.
+
+### Màn hình theo dõi
+
+Trong lúc chạy, màn hình terminal được chia làm bốn ô. Hình dưới vẽ lại nội dung bốn ô ở cuối lượt balance, lấy từ chính các tệp số liệu của lượt đó.
+
+![Nội dung bốn ô của màn hình theo dõi ở cuối lượt balance](../figures/tmux_balance.png)
 
 ### Kết quả ba lượt thử nghiệm
 
-Ba lượt được chạy liên tiếp trên lab EVE-NG với cùng thông số: client {{client_rate}} gói/giây, attacker {{attack_rate}} gói/giây × {{attack_size}} byte bắt đầu từ giây {{attack_at}}, ngưỡng {{threshold}} gói/giây. Trước khi bị tấn công, RTT trung bình của client là {{rtt_base}} ms. Bảng dưới lấy trung bình các giây sau giây thứ {{attack_at}}, tức từ lúc bị tấn công tới hết lượt.
+Ba lượt được chạy liên tiếp trên lab EVE-NG với cùng thông số: client {{client_rate}} truy vấn/giây, loadgen {{load_mbit}} Mbit/s gồm {{load_flows}} luồng, bắt đầu từ giây {{load_at}}.
 
 Bảng: Kết quả đo ba lượt thử nghiệm trên EVE-NG
-| Lượt | RTT trung bình | Mất gói | Lưu lượng R1 → R2 | R3 phát hiện sau | R1 chặn sau khi R3 phát hiện |
-|---|---|---|---|---|---|
-| off | {{rtt_off}} ms | 0% | {{link_off}} Mbit/s | {{detect_off}} giây | không chặn |
-| on | {{rtt_on}} ms | 0% | {{link_on}} Mbit/s | {{detect_on}} giây | {{block_on_ms}} ms |
-| inband | {{rtt_inband}} ms | 0% | {{link_inband}} Mbit/s | {{detect_inband}} giây | {{block_inband_ms}} ms |
+| Kịch bản | RTT chưa có tải (ms) | RTT có tải (ms) | Jitter có tải (ms) | Client mất gói (%) | Server nhận được (Mbit/s) | Đường dài (Mbit/s) | Đường ngắn (Mbit/s) |
+|---|---|---|---|---|---|---|---|
+| base | {{idle_base}} | {{rtt_base}} | {{jitter_base}} | {{loss_base}} | {{server_base}} | {{long_base}} | {{short_base}} |
+| short | {{idle_short}} | {{rtt_short}} | {{jitter_short}} | {{loss_short}} | {{server_short}} | {{long_short}} | {{short_short}} |
+| balance | {{idle_balance}} | {{rtt_balance}} | {{jitter_balance}} | {{loss_balance}} | {{server_balance}} | {{long_balance}} | {{short_balance}} |
+
+## Phân tích kết quả
+
+### Phân tích độ trễ RTT
 
 ![RTT của client trong ba lượt thử nghiệm](../figures/rtt.png)
 
-![Lưu lượng trên đường truyền R1 → R2 trong ba lượt thử nghiệm](../figures/link.png)
+Hình trên cho thấy rõ hai giai đoạn của mỗi lượt. Trước giây {{load_at}}, RTT của cả ba lượt đều thấp. Khi loadgen bắt đầu gửi, RTT của lượt base và short tăng vọt lên vài trăm mili giây trong khoảng hai giây rồi giữ nguyên tới hết lượt, còn RTT của lượt balance gần như không đổi.
 
-Ở lượt **off**, R3 chặn attacker chưa tới một giây sau khi tấn công bắt đầu, server không còn nhận gói tấn công. Nhưng đường R1 → R2 vẫn bị chiếm toàn bộ băng thông, {{link_off}} Mbit/s cho tới hết lượt, và RTT của client nằm ở mức {{rtt_off}} ms, gấp hơn một trăm lần lúc bình thường. Server được bảo vệ, còn mạng thì không.
+![RTT của client, phóng to vùng độ trễ thấp](../figures/rtt_low.png)
 
-Ở hai lượt có hợp tác, R1 nhận cảnh báo và chặn chỉ vài mili giây sau R3. Cần lưu ý các mốc thời gian này được gán khi dòng log về tới máy chạy `demo.sh` qua kết nối SSH, nên có sai số cỡ vài mili giây. Các con số này chỉ phản ánh bậc độ lớn, không phải độ trễ chính xác của gói cảnh báo. Từ giây tiếp theo, lưu lượng trên đường truyền chỉ còn lại phần của client, RTT trở lại khoảng {{rtt_base}} ms. Con số trung bình {{rtt_on}} ms và {{rtt_inband}} ms cao hơn mức bình thường do tính cả giây đầu tiên của cuộc tấn công, trước khi kịp phát hiện. Client không mất gói ở cả ba lượt. Lý do là hàng đợi giới hạn theo byte, như đã phân tích ở mục 2.2.2: gói truy vấn nhỏ vẫn được đưa vào hàng đợi, chỉ phải chờ lâu.
+Phóng to vùng độ trễ thấp cho thấy khác biệt lúc mạng chưa có tải:
 
-Để kiểm chứng việc không chặn nhầm client, bảng quy tắc iptables trên các router được ghi lại ở khoảng giây thứ 33 của một lượt **on** chạy riêng. Trên R1, router mà cả client lẫn attacker cùng đi qua, chain `GUARD` chỉ có đúng một quy tắc cho địa chỉ của attacker:
+- **base:** RTT khoảng {{idle_base}} mili giây, sát với giá trị lý thuyết {{prop_long_ms}} mili giây của bốn lần đi qua đường truyền.
+- **short:** RTT khoảng {{idle_short}} mili giây, sát với giá trị lý thuyết {{prop_short_ms}} mili giây, giảm {{idle_drop_short}}% so với base. Đây là tác dụng của đường ngắn và ít thiết bị trung gian.
+- **balance:** RTT khoảng {{idle_balance}} mili giây, gần giá trị {{prop_mixed_ms}} mili giây ứng với trường hợp chiều đi và chiều về của client được chia vào hai đường khác nhau.
 
-```
--N GUARD
--A GUARD -s 10.0.1.10/32 -j DROP
--A FORWARD -j GUARD
-```
+Phần chênh lệch nhỏ so với lý thuyết là thời gian xử lý trên các máy ảo và độ trễ phát của gói.
 
-R2 và R3 có cùng một quy tắc duy nhất như vậy (tệp `results/eve-v2-report/iptables-on.txt`). Gói của client (10.0.1.20) không khớp quy tắc nào nên vẫn được chuyển tiếp, phù hợp với việc client không mất gói và RTT trở lại mức bình thường.
+Khi có tải, phần RTT tăng thêm của lượt base là {{queue_added_base}} mili giây và của lượt short là {{queue_added_short}} mili giây, đều xấp xỉ thời gian xả hết một hàng đợi đầy ({{queue_delay_ms}} mili giây). Như vậy, khi mạng tắc nghẽn, độ trễ xếp hàng chiếm phần lớn RTT, và lợi ích của đường ngắn (khoảng {{prop_short_ms}} mili giây) trở nên không đáng kể: RTT có tải của lượt short chỉ thấp hơn lượt base {{rtt_drop_short}}%.
 
-Kết quả lượt **inband** gần như trùng với lượt **on**. Điều này đúng với dự đoán: cảnh báo đi theo chiều R3 → R2 → R1, ngược chiều với lưu lượng tấn công, nên chiều này không bị nghẽn. Để biết QoS có thực sự giữ cho cảnh báo đi được khi đường nghẽn hay không, cần một phép đo riêng.
+Ở lượt balance, phần RTT tăng thêm khi có tải chỉ là {{queue_added_balance}} mili giây. RTT có tải là {{rtt_balance}} mili giây, giảm {{rtt_drop_balance}}% so với lượt base, tức thấp hơn khoảng {{rtt_ratio_balance}} lần.
 
-### Kiểm chứng QoS
+### Phân tích Jitter
 
-Script `scripts/qos-check.sh` cho attacker làm nghẽn đường R1 → R2 → R3 và **không** khởi động guard, nên không có router nào chặn. Trong lúc đó, client gửi hai loạt truy vấn trên cùng con đường, mỗi loạt 5 giây: loạt thường, và loạt đánh dấu ưu tiên giống hệt gói cảnh báo.
+![Jitter của client trong ba lượt thử nghiệm](../figures/jitter.png)
 
-Bảng: Kết quả kiểm chứng làn ưu tiên khi đường đang nghẽn
-| Môi trường | RTT truy vấn thường | RTT truy vấn ưu tiên |
-|---|---|---|
-| EVE-NG | {{qos_normal_eve}} ms | {{qos_prio_eve}} ms |
-| Network namespace | {{qos_normal_netns}} ms | {{qos_prio_netns}} ms |
+Jitter của cả ba lượt đều nhỏ, từ {{jitter_balance}} tới {{jitter_base}} mili giây. Ở lượt base và short, hàng đợi luôn đầy nên mọi truy vấn của client chờ gần như cùng một khoảng thời gian: độ trễ cao nhưng đều. Lượt balance có jitter thấp nhất vì không có hàng đợi dồn ứ. Riêng thời điểm tải vừa bắt đầu, jitter của lượt base và short tăng vọt vì hàng đợi đang đầy dần, RTT của các truy vấn liên tiếp chênh nhau nhiều.
 
-Bộ đếm của `tc` trên R1 sau lần đo cho thấy làn ưu tiên đã chuyển {{qos_prio_pkts}} gói và không loại bỏ gói nào, trong khi làn thường loại bỏ {{qos_normal_dropped}} gói. Như vậy, gói mang dấu EF đi qua một đường đang nghẽn nhanh gần như lúc đường trống. Đây là bằng chứng cho thấy cảnh báo ở lượt inband vẫn tới nơi kể cả khi chiều đi của nó bị nghẽn.
+### Phân tích mất gói và thông lượng
+
+![Thông lượng server nhận được trong ba lượt thử nghiệm](../figures/throughput.png)
+
+Client không mất gói ở cả ba lượt. Nguyên nhân là hàng đợi giới hạn theo số byte: khi hàng đầy, gói tải {{load_size}} byte tới sau bị loại bỏ, còn truy vấn rất nhỏ của client vẫn vào được hàng, chỉ phải chờ.
+
+Lưu lượng tải thì khác. Ở lượt base và short, server chỉ nhận được {{server_base}} Mbit/s trên {{load_mbit}} Mbit/s gửi đi, tức khoảng {{dropped_pct_base}}% lưu lượng tải bị loại bỏ vì vượt băng thông của một đường. Ở lượt balance, server nhận đủ {{server_balance}} Mbit/s. Như vậy phân phối tải không những giảm độ trễ mà còn tăng lượng dữ liệu truyền được, vì tận dụng được đường truyền bị bỏ trống ở hai lượt kia.
+
+### Phân tích phân bố tải trên các đường
+
+![Lưu lượng R1 gửi ra từng đường](../figures/paths.png)
+
+Ở lượt base, đường dài chạy kín {{long_base}} Mbit/s trong khi đường ngắn bỏ trống; ở lượt short thì ngược lại, đường ngắn chạy kín {{short_short}} Mbit/s. Ở lượt balance, R1 chia {{load_flows}} luồng ra hai đường, đường dài nhận {{long_balance}} Mbit/s và đường ngắn nhận {{short_balance}} Mbit/s. Hai con số không bằng nhau tuyệt đối vì hàm băm chia theo luồng chứ không theo từng gói, nhưng cả hai đều thấp hơn băng thông {{link_rate}} Mbit/s, nên không đường nào bị tắc nghẽn.
+
+### So sánh tổng hợp
+
+Bảng: So sánh các kịch bản với kịch bản base
+| Tiêu chí | base | short | balance |
+|---|---|---|---|
+| RTT chưa có tải (ms) | {{idle_base}} | {{idle_short}} (giảm {{idle_drop_short}}%) | {{idle_balance}} |
+| RTT có tải (ms) | {{rtt_base}} | {{rtt_short}} (giảm {{rtt_drop_short}}%) | {{rtt_balance}} (giảm {{rtt_drop_balance}}%) |
+| Phần RTT tăng thêm do xếp hàng (ms) | {{queue_added_base}} | {{queue_added_short}} | {{queue_added_balance}} |
+| Lưu lượng tải bị loại bỏ (%) | {{dropped_pct_base}} | {{dropped_pct_short}} | {{dropped_pct_balance}} |
+
+Kết quả cho thấy hai cách chọn đường tác động vào hai thành phần khác nhau của độ trễ. Đường ngắn giảm phần độ trễ truyền, hiệu quả khi mạng thông thoáng. Phân phối tải loại bỏ phần độ trễ xếp hàng, thành phần chiếm phần lớn khi mạng có tải. Với mạng có lưu lượng lớn, phân phối tải mang lại mức giảm độ trễ lớn hơn nhiều.
 
 ### Một số vấn đề gặp phải
 
-Quá trình hiện thực có một số lỗi cần ghi nhận, vì chúng cho thấy những khác biệt giữa môi trường thử nghiệm và môi trường phát triển.
+Quá trình hiện thực có một số vấn đề cần ghi nhận, vì chúng cho thấy khác biệt giữa lý thuyết và môi trường chạy thật.
 
-- **Lượt thử nghiệm bị treo trên EVE-NG.** Script khôi phục trạng thái ban đầu dùng `pkill -x guard` để dừng chương trình. Lệnh này chạy đúng trên Ubuntu nhưng không tìm thấy tiến trình nào trên Alpine, vì `pkill` của BusyBox so tên với cả đường dẫn `/root/guard`. Guard không dừng, nên `demo.sh` bị treo ở bước chờ các chương trình kết thúc. Lỗi được sửa bằng cách dùng `killall`.
-- **Sáu node nhận trùng một địa chỉ quản lý.** Bản đầu tiên của script khởi động đọc sai vị trí byte trong địa chỉ MAC, nên node nào cũng tính ra cùng một số thứ tự. Sau khi đọc lại mã nguồn EVE-NG để biết đúng định dạng MAC, script được sửa và cả sáu node nhận đúng địa chỉ.
-- **Log sự kiện sai thứ tự.** Đồng hồ của các node lệch nhau gần một giây, nên dòng "R2 nhận cảnh báo" có lúc hiện trước dòng "R3 phát hiện". Cách sửa là bỏ dấu thời gian do từng node tự in, và gán lại thời điểm bằng đồng hồ của máy chạy `demo.sh` ngay khi dòng log tới nơi.
+- **Chênh lệch giữa hai đường quá nhỏ để đo.** Lúc đầu, các đường truyền chỉ được giới hạn băng thông mà không có độ trễ truyền. Vì mọi máy ảo nằm trên cùng một laptop, đi thêm một router chỉ chậm hơn chưa tới một mili giây, nhỏ hơn mức dao động tự nhiên của máy ảo. Việc thêm độ trễ truyền bằng `netem` mô phỏng đúng thực tế là các router ở xa nhau, và làm cho khác biệt giữa đường dài và đường ngắn đo được rõ ràng.
+- **Tải chia lệch khi có ít luồng.** Với 8 luồng, hàm băm của R1 có lần chia 6 luồng vào một đường và 2 luồng vào đường kia, làm đường nhận nhiều luồng gần chạm băng thông. Hàm băm của Linux còn dùng một giá trị ngẫu nhiên sinh lúc khởi động, nên cách chia thay đổi sau mỗi lần khởi động lại. Tăng số luồng lên {{load_flows}} làm cách chia ổn định quanh mức một nửa, giống mạng thật có rất nhiều luồng.
+- **Số liệu thông lượng bị kéo xuống ở cuối lượt.** Server khởi động trước và dừng sau loadgen, nên tệp số liệu của server có thêm vài giây không có tải ở cuối. Ban đầu các giây này bị tính vào trung bình, làm thông lượng của lượt balance thấp hơn thực tế. Cách tính được sửa để chỉ lấy các giây nằm trong thời gian của lượt thử nghiệm.
+- **Lượt thử nghiệm bị treo trên Alpine.** Lệnh `pkill -x` của BusyBox trên Alpine so tên với cả đường dẫn chương trình nên không tìm thấy tiến trình cần dừng. Lỗi được sửa bằng cách dùng `killall`.

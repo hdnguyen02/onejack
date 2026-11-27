@@ -14,20 +14,23 @@ Nếu Word không hỏi, nhấn `Ctrl + A` rồi `F9` để cập nhật toàn b
 
 ## 3. Những chỗ phải tự bổ sung
 
-- **Tài liệu tham khảo, nhóm Tiếng Việt:** nếu giáo viên yêu cầu tài liệu tiếng Việt thì thêm vào đầu danh mục. Khi đó **phải đánh số lại** toàn bộ danh mục và các trích dẫn `[1]`…`[12]` trong bài, vì số trích dẫn được ghi cố định.
-- **Phụ lục C, D:** điền tiếp kế hoạch và nhật ký cho các tuần sau.
+- **Tên đề tài:** bìa đang ghi "CẢI THIỆN HIỆU NĂNG MẠNG: GIẢM ĐỘ TRỄ BẰNG CÁCH CHỌN ĐƯỜNG VÀ PHÂN PHỐI TẢI GIỮA CÁC ROUTER". Nếu giáo viên chốt tên khác, sửa `TITLE_VI` và `TITLE_EN` trong `report/frontmatter.py` rồi sinh lại.
+- **Hình 4.2 (ảnh chụp EVE-NG):** đang là khung chờ. Mở `http://<IP máy EVE>`, vào lab **net-perf**, chụp màn hình rồi dán đè lên khung trong Word (hoặc lưu đè `report/figures/eve_placeholder.png` rồi sinh lại).
+
+- **Tài liệu tham khảo, nhóm Tiếng Việt:** nếu giáo viên yêu cầu tài liệu tiếng Việt thì thêm vào đầu danh mục. Khi đó **phải đánh số lại** toàn bộ danh mục và các trích dẫn `[1]`…`[14]` trong bài, vì số trích dẫn được ghi cố định.
+- **Phụ lục C, D:** kiểm tra lại các mốc ngày cho đúng thực tế, điền tiếp kế hoạch và nhật ký cho các tuần sau.
 
 ## 4. Đọc lại và viết lại
 
-Nên viết lại kỹ nhất ở những phần mang tính cá nhân: Lời mở đầu, Lời cảm ơn, mục 5.1 (đoạn tự nhận xét) và các đoạn bạn thấy chưa giống cách mình viết. Mọi con số trong bài đã khớp với dữ liệu trong `results/eve-v2-report/`. Nếu sửa câu có số liệu, giữ nguyên con số.
+Nên viết lại kỹ nhất ở những phần mang tính cá nhân: Lời mở đầu, Lời cảm ơn, mục 5.1 (đoạn tự nhận xét) và các đoạn bạn thấy chưa giống cách mình viết. Mọi con số trong bài đã khớp với dữ liệu trong `results/eve/`. Nếu sửa câu có số liệu, giữ nguyên con số.
 
 ## 5. Kiểm tra số trang trong Word
 
-Phần nội dung, từ LỜI MỞ ĐẦU tới hết TÀI LIỆU THAM KHẢO, khoảng 40 trang là mức tham khảo, không phải giới hạn trên. Đo bằng LibreOffice hiện là **40 trang**; Word có thể dàn trang lệch 1–2 trang.
+Phần nội dung, từ LỜI MỞ ĐẦU tới hết TÀI LIỆU THAM KHẢO, khoảng 40 trang là mức tham khảo, không phải giới hạn trên. Đo bằng LibreOffice hiện là **38 trang**; Word có thể dàn trang lệch 1–2 trang.
 
 ## 6. Nếu muốn sinh lại file
 
-Nội dung gốc nằm trong `report/content/*.md`, số liệu tự lấy từ `results/eve-v2-report/`. Sau khi sửa nội dung gốc, chạy:
+Nội dung gốc nằm trong `report/content/*.md`, số liệu tự lấy từ `results/eve/`. Hình minh họa vẽ lại bằng `python3 report/figures.py`. Sau khi sửa nội dung gốc, chạy:
 
 ```
 python3 report/check.py

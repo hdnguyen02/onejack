@@ -9,11 +9,14 @@ from pathlib import Path
 from report.build import build
 
 ROOT = Path(__file__).resolve().parents[2]
-VALIDATE = Path(
-    "/home/devnguyenho/.claude/skills/synced/"
-    "6eced0eb-06d5-47f3-a786-21d89e367b0b_66d3d5dd-78fe-4599-973b-5b4a18e76758/"
-    "docx/scripts/office/validate.py"
-)
+
+
+def find_validator() -> Path:
+    """validate.py của skill docx; thư mục synced đổi tên theo phiên bản nên tìm theo mẫu."""
+    matches = sorted(Path.home().glob(".claude/skills/synced/*/docx/scripts/office/validate.py"))
+    if not matches:
+        raise unittest.SkipTest("không tìm thấy docx/scripts/office/validate.py")
+    return matches[-1]
 
 
 class BuildTest(unittest.TestCase):
@@ -32,7 +35,7 @@ class BuildTest(unittest.TestCase):
     def test_build_produces_valid_docx(self):
         self.assertTrue(self.docx.exists())
         result = subprocess.run(
-            ["python3", str(VALIDATE), str(self.docx), "--original",
+            ["python3", str(find_validator()), str(self.docx), "--original",
              str(ROOT / "report/template/MauTrinhBayDoAn.docx")],
             capture_output=True, text=True,
         )

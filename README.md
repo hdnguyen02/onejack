@@ -27,11 +27,11 @@ Mỗi lượt 60 giây. Tải nặng 12 Mbit/s bắt đầu ở giây 15, vượ
 |---|---|---|---|---|---|
 | **base** | 43,9 ms | **455,9 ms** | 1,4 ms | 0% | 9,6 / 12 Mbit/s |
 | **short** | **22,4 ms** | 421,6 ms | 1,3 ms | 0% | 9,6 / 12 Mbit/s |
-| **balance** | 32,6 ms | **32,9 ms** | 1,1 ms | 0% | **11,7 / 12 Mbit/s** |
+| **balance** | 32,6 ms | **32,9 ms** | 1,1 ms | 0% | **12,0 / 12 Mbit/s** |
 
 - **Đường ngắn giảm độ trễ lúc mạng thông thoáng:** RTT từ 43,9 ms còn 22,4 ms, gần một nửa, vì gói đi qua ít link và ít router hơn.
 - **Nhưng đường ngắn không giúp được khi bị tắc nghẽn:** tải 12 Mbit/s dồn vào một đường 10 Mbit/s, gói phải xếp hàng chờ khoảng 400 ms. Đây là phần lớn nhất của độ trễ.
-- **Phân phối tải giải quyết tắc nghẽn:** tải chia ra hai đường (khoảng 6,7 và 5,9 Mbit/s), không đường nào quá tải nên không có hàng chờ. RTT khi có tải gần như bằng lúc chưa có tải: 32,9 ms so với 455,9 ms ở lượt base, **giảm khoảng 93%**. Server cũng nhận gần đủ 12 Mbit/s thay vì bị bỏ mất khoảng 20%.
+- **Phân phối tải giải quyết tắc nghẽn:** tải chia ra hai đường (khoảng 6,7 và 5,9 Mbit/s), không đường nào quá tải nên không có hàng chờ. RTT khi có tải gần như bằng lúc chưa có tải: 32,9 ms so với 455,9 ms ở lượt base, **giảm khoảng 93%**. Server cũng nhận đủ 12 Mbit/s, trong khi ở hai lượt kia khoảng 20% tải bị bỏ vì hàng đợi đầy.
 - RTT lúc chưa tải ở lượt balance (32,6 ms) nằm giữa hai đường, vì chiều đi và chiều về của client được chia vào hai đường khác nhau.
 - Client không mất gói vì hàng đợi giới hạn theo byte: gói tải 1000 byte bị bỏ khi hàng đầy, truy vấn nhỏ của client vẫn chen vào được nhưng phải chờ.
 

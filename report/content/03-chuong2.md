@@ -1,113 +1,143 @@
 # CƠ SỞ LÝ THUYẾT
 
-Chương này chỉ trình bày những kiến thức mà hệ thống dùng tới. Mỗi mục kết thúc bằng phần liên hệ với cách đề tài áp dụng, để người đọc thấy vì sao khái niệm đó cần thiết.
+## Hiệu năng mạng máy tính
 
-## Truyền thông mạng và giao thức UDP
+### Khái niệm hiệu năng mạng
 
-### Mô hình TCP/IP
+Hiệu năng mạng là mức độ một hệ thống mạng đáp ứng được nhu cầu truyền dữ liệu của người dùng: dữ liệu có tới nơi đủ không, tới nhanh không, có đều đặn không. Hiệu năng không được đánh giá bằng một con số duy nhất mà bằng một nhóm thông số, mỗi thông số phản ánh một khía cạnh khác nhau [[REF:6]] [[REF:9]].
 
-Mô hình TCP/IP chia việc truyền dữ liệu thành bốn tầng, mỗi tầng chỉ làm việc với tầng ngay trên và ngay dưới nó [[REF:5]]. Tầng ứng dụng là nơi các chương trình trao đổi dữ liệu có ý nghĩa với nhau. Tầng giao vận phân biệt các chương trình trên cùng một máy bằng số cổng. Tầng mạng đưa gói từ máy nguồn tới máy đích qua nhiều router dựa trên địa chỉ IP. Tầng liên kết đảm nhận việc truyền khung dữ liệu trên từng liên kết vật lý.
+Mỗi loại ứng dụng nhạy cảm với một thông số khác nhau. Tải tệp cần thông lượng lớn nhưng chờ thêm vài trăm mili giây cũng không sao. Ngược lại, gọi thoại, họp trực tuyến hay trò chơi trực tuyến chỉ cần lưu lượng nhỏ nhưng rất nhạy với độ trễ. Đề tài tập trung vào nhóm ứng dụng thứ hai, nên **độ trễ** là thông số chính được đánh giá.
 
-Vị trí của một thành phần trong mô hình quyết định những gì nó quan sát được. Server và client chỉ xử lý nội dung truy vấn. iptables làm việc ở tầng mạng nên chặn được theo địa chỉ IP. Còn guard cần đếm cả những gói không gửi cho chính nó, nên phải đọc gói từ tầng liên kết.
+### Các yếu tố ảnh hưởng đến hiệu năng mạng
 
-![Vị trí các thành phần của đề tài trong mô hình TCP/IP](../figures/tcpip.png)
+Hiệu năng của một kết nối phụ thuộc vào các yếu tố chính sau:
 
-### Giao thức UDP và lập trình socket
+- **Băng thông của các đường truyền** trên đường đi, đặc biệt là đường truyền có băng thông nhỏ nhất.
+- **Độ dài đường đi:** số đoạn đường truyền và số thiết bị trung gian mà gói phải đi qua.
+- **Mức tải:** tổng lưu lượng của mọi người dùng cùng đi qua một đường truyền. Khi tải vượt băng thông, đường truyền bị tắc nghẽn.
+- **Năng lực xử lý của thiết bị:** tốc độ router đọc tiêu đề gói, tra bảng định tuyến và chuyển tiếp.
+- **Cách router chọn đường:** cùng một hạ tầng, nhưng lưu lượng dồn vào một đường hay được chia đều sẽ cho hiệu năng rất khác nhau.
 
-UDP (User Datagram Protocol) là giao thức tầng giao vận đơn giản nhất: mỗi gói được gửi đi độc lập, không bắt tay trước, không xác nhận, không gửi lại khi mất [[REF:9]]. Tiêu đề UDP chỉ có bốn trường: cổng nguồn, cổng đích, độ dài và mã kiểm tra. Vì không phải chờ phản hồi, một máy có thể gửi hàng nghìn gói UDP mỗi giây với ít tài nguyên. Đây vừa là ưu điểm cho các dịch vụ cần độ trễ thấp như DNS hay trò chơi trực tuyến, vừa là lý do UDP hay bị dùng để tấn công làm nghẽn.
+Đề tài giữ nguyên băng thông, độ dài từng đường và thiết bị, chỉ thay đổi yếu tố cuối cùng là cách router chọn đường.
 
-Trên Linux, chương trình C làm việc với mạng thông qua socket. Với UDP, trình tự thường gặp là: `socket()` tạo socket kiểu `SOCK_DGRAM`, `bind()` gắn socket vào một cổng để nhận dữ liệu, `sendto()` và `recvfrom()` gửi, nhận từng gói kèm địa chỉ bên kia. Chương trình chỉ trao đổi với một địa chỉ cố định có thể gọi `connect()` một lần rồi dùng `send()` và `recv()`. Khi một chương trình phải theo dõi nhiều socket cùng lúc, hàm `poll()` cho phép chờ trên tất cả, socket nào có dữ liệu thì xử lý socket đó. Các chương trình của đề tài chỉ dùng những hàm hệ thống này, không dùng thêm thư viện mạng nào khác.
+## Các thông số đánh giá hiệu năng mạng
 
-## Hiệu năng mạng
+### Băng thông và thông lượng
 
-### Các đại lượng đo hiệu năng
+**Băng thông** (bandwidth) là lượng dữ liệu tối đa một đường truyền có thể chở trong một giây, tính bằng bit/giây. Trong đề tài, mỗi đoạn đường truyền giữa hai router có băng thông {{link_rate}} Mbit/s.
 
-**Băng thông** là lượng dữ liệu tối đa một đường truyền chuyển được trong một giây, ví dụ {{bottleneck}} Mbit/s. **Thông lượng** là lượng dữ liệu thực tế được truyền qua đường truyền, luôn nhỏ hơn hoặc bằng băng thông. **Thời gian khứ hồi (RTT)** là khoảng thời gian từ lúc gửi một truy vấn tới lúc nhận được trả lời. **Tỉ lệ mất gói** là phần trăm gói đã gửi nhưng không bao giờ có trả lời.
+**Thông lượng** (throughput) là lượng dữ liệu thực tế truyền được trong một giây. Thông lượng không bao giờ vượt băng thông. Khi lưu lượng gửi vào lớn hơn băng thông, thông lượng chỉ đạt tới mức băng thông, phần dư bị giữ lại trong hàng đợi hoặc bị loại bỏ.
 
-Đối với người dùng, RTT là đại lượng dễ cảm nhận nhất: một trang web hay một cuộc gọi trở nên chậm chạp khi RTT tăng, dù kết nối vẫn được duy trì. Vì vậy đề tài lấy RTT của client làm thước đo chính cho trải nghiệm của người dùng hợp lệ, và lấy thông lượng trên đoạn R1 → R2 làm thước đo cho mức độ lãng phí tài nguyên mạng.
+### Độ trễ
 
-### Hàng đợi, nút cổ chai và token bucket
+Độ trễ là thời gian một gói đi từ máy gửi tới máy nhận. Trên mỗi chặng, tức mỗi lần gói đi qua một router và một đoạn đường truyền, độ trễ gồm bốn thành phần [[REF:6]]:
 
-Khi gói tới router nhanh hơn tốc độ đường ra, router không thể gửi ngay mà phải cho gói xếp hàng. Đường truyền chậm nhất trên một tuyến được gọi là **nút cổ chai**, vì nó quyết định tốc độ của cả tuyến. Hàng đợi càng dài, mỗi gói càng phải chờ lâu, RTT càng tăng. Khi hàng đợi đầy, gói tới sau bị loại bỏ và trở thành gói mất.
+![Các thành phần độ trễ trên một chặng](../figures/delay_parts.png)
 
-Cần lưu ý rằng hàng đợi thường được giới hạn theo **số byte** chứ không theo số gói. Khi hàng đợi gần đầy, một gói tấn công {{attack_size}} byte không còn chỗ và bị loại bỏ, nhưng một gói truy vấn vài chục byte vẫn được đưa vào hàng đợi. Kết quả là người dùng hợp lệ ít bị mất gói nhưng bị trễ nhiều, và số liệu ở Chương 4 cho thấy đúng hiện tượng đó.
+- **Độ trễ xử lý:** thời gian router đọc tiêu đề gói và chọn cổng ra. Với router hiện đại, thời gian này rất nhỏ.
+- **Độ trễ xếp hàng:** thời gian gói chờ trong hàng đợi tới lượt được gửi. Thành phần này bằng gần 0 khi đường truyền rảnh và tăng rất nhanh khi đường truyền quá tải.
+- **Độ trễ phát:** thời gian đẩy toàn bộ các bit của gói lên đường truyền, bằng kích thước gói chia cho băng thông.
+- **Độ trễ truyền:** thời gian tín hiệu đi hết chiều dài đường truyền, phụ thuộc khoảng cách. Đường càng dài, đi qua càng nhiều chặng thì tổng độ trễ truyền càng lớn.
 
-![Hàng đợi tại nút cổ chai khi bị tấn công làm nghẽn](../figures/bottleneck_queue.png)
+Độ trễ của cả đường đi bằng tổng độ trễ của các chặng. **Thời gian khứ hồi RTT** là thời gian gói đi tới máy nhận cộng với thời gian trả lời quay về [[REF:1]]. RTT dễ đo hơn độ trễ một chiều vì chỉ cần đồng hồ của một máy, nên được đề tài dùng làm thước đo chính.
 
-Trên Linux, công cụ `tc` cho phép gắn bộ lập lịch hàng đợi vào một card mạng. Bộ lập lịch `tbf` (token bucket filter) hoạt động như một thùng chứa thẻ (token): thẻ được bổ sung đều đặn theo tốc độ cấu hình, mỗi byte gửi đi tiêu tốn một thẻ, hết thẻ thì gói phải chờ [[REF:12]]. Nhờ vậy `tbf` biến một đường truyền ảo rất nhanh thành một đường truyền có băng thông cố định. Đề tài dùng `tbf` để tạo nút cổ chai {{bottleneck}} Mbit/s, vì nếu không giới hạn, đường truyền ảo giữa các máy ảo nhanh tới mức không bao giờ nghẽn và không thể quan sát được tác động của tấn công.
+### Biến thiên độ trễ (Jitter)
 
-## Tấn công từ chối dịch vụ
+Jitter phản ánh mức độ không đều của độ trễ giữa các gói liên tiếp. Với cùng một độ trễ trung bình, jitter lớn nghĩa là có gói tới sớm, có gói tới muộn, khiến âm thanh và hình ảnh bị ngắt quãng. RFC 3393 định nghĩa biến thiên độ trễ là hiệu độ trễ của các cặp gói [[REF:2]], còn RFC 3550 dùng một cách ước lượng jitter tương tự cho luồng thoại và video [[REF:8]].
 
-### DoS, DDoS và UDP flood
+Trong đề tài, jitter được tính tại client là trung bình độ lệch tuyệt đối giữa RTT của hai trả lời liên tiếp.
 
-Tấn công từ chối dịch vụ nhắm vào tính sẵn sàng của hệ thống: dữ liệu không bị đánh cắp, nhưng người dùng hợp lệ không truy cập được [[REF:3]]. Cách đơn giản nhất là làm cạn kiệt một loại tài nguyên nào đó, có thể là CPU của máy chủ, bộ nhớ, hoặc băng thông đường truyền. Khi lưu lượng tấn công xuất phát từ nhiều máy, thường là các máy bị chiếm quyền trong một botnet, ta có tấn công DDoS. Lúc đó không còn một địa chỉ nguồn rõ ràng nào để chặn [[REF:7]].
+### Tỷ lệ mất gói
 
-UDP flood là kiểu làm cạn kiệt băng thông: kẻ tấn công gửi liên tục các gói UDP cỡ lớn tới một cổng của nạn nhân. Vì UDP không cần bắt tay, mỗi gói đều được chuyển thẳng tới đích và chiếm chỗ trên mọi đường truyền nó đi qua. Trong đề tài, attacker gửi {{attack_rate}} gói/giây, mỗi gói {{attack_size}} byte, tức khoảng bốn lần băng thông của nút cổ chai. Mỗi gói vẫn mang phần đầu đúng định dạng truy vấn, nên nếu chỉ xét từng gói riêng lẻ thì không phân biệt được với truy vấn hợp lệ.
+Tỷ lệ mất gói là phần trăm số gói gửi đi mà không tới được nơi nhận. Nguyên nhân phổ biến nhất là hàng đợi của router đã đầy nên gói mới tới bị loại bỏ. Với truy vấn của client, đề tài tính một truy vấn là mất nếu quá một giây chưa nhận được trả lời.
 
-### Phát hiện dựa trên ngưỡng tần suất
+### Mối quan hệ giữa các thông số
 
-Khi không phân biệt được bằng nội dung, có thể phân biệt bằng **hành vi**. Phương pháp đơn giản nhất là đếm số gói mỗi địa chỉ nguồn gửi trong một khoảng thời gian cố định, rồi so với một ngưỡng. Địa chỉ nào vượt ngưỡng thì bị xem là đang tấn công. Đây cũng là nguyên lý của cơ chế giới hạn tần suất (rate limiting) thường gặp ở các API.
+Các thông số có liên hệ chặt chẽ với nhau. Khi lưu lượng gửi vào còn nhỏ hơn băng thông, thông lượng tăng theo lưu lượng, hàng đợi gần như trống, độ trễ chỉ gồm độ trễ truyền và xử lý. Khi lưu lượng vượt băng thông, thông lượng dừng ở mức băng thông, hàng đợi đầy dần nên độ trễ xếp hàng tăng vọt. Khi hàng đợi đầy hẳn, gói bị loại bỏ và tỷ lệ mất gói tăng. Vì vậy, tránh để đường truyền vượt băng thông là cách hiệu quả nhất để giữ độ trễ thấp.
 
-Chọn ngưỡng là bài toán cân bằng. Ngưỡng quá thấp sẽ **báo nhầm** (false positive): chặn cả người dùng hợp lệ có nhu cầu sử dụng cao. Ngưỡng quá cao sẽ **bỏ sót** (false negative): kẻ tấn công chỉ cần gửi chậm hơn ngưỡng một chút. Cách đề tài chọn ngưỡng và dùng danh sách địa chỉ không được chặn đã nêu ở mục 1.3.
+## Tắc nghẽn và hàng đợi
 
-## Lọc gói trên Linux
+### Khái niệm tắc nghẽn mạng
 
-### Netfilter và iptables
+Tắc nghẽn xảy ra khi tổng lưu lượng muốn đi qua một đường truyền lớn hơn băng thông của đường truyền đó. Router không thể gửi nhanh hơn băng thông, nên phần lưu lượng dư phải chờ hoặc bị bỏ. Tắc nghẽn thường không do một người dùng gây ra riêng lẻ mà do nhiều luồng cùng dùng chung một đường truyền.
 
-Netfilter là khung xử lý gói nằm trong nhân Linux. Nó cung cấp các điểm móc trên đường đi của gói, tại đó có thể kiểm tra, sửa hoặc bỏ gói. iptables là công cụ dòng lệnh để khai báo quy tắc cho Netfilter [[REF:12]]. Quy tắc được gom thành các chuỗi (chain). Chain `INPUT` áp dụng cho gói gửi tới chính máy đó, `OUTPUT` cho gói máy đó gửi ra, còn `FORWARD` cho gói **được chuyển tiếp qua** máy. Router chuyển tiếp gói của người khác, nên chặn trên router phải đặt ở chain `FORWARD`.
+Điểm đáng chú ý là tắc nghẽn ảnh hưởng tới **mọi** người dùng đi chung đường truyền, kể cả người chỉ gửi rất ít dữ liệu. Trong đề tài, client chỉ gửi vài chục truy vấn nhỏ mỗi giây, nhưng vì đi chung đường với loadgen, truy vấn của client vẫn phải chờ trong cùng hàng đợi.
 
-Ngoài các chain có sẵn, người dùng có thể tạo chain riêng rồi chuyển gói từ chain có sẵn sang chain đó. Đề tài tạo một chain tên `GUARD`, gắn vào `FORWARD`, và chỉ thêm quy tắc vào chain này. Một quy tắc chặn có dạng `iptables -A GUARD -s 10.0.1.10 -j DROP`, nghĩa là loại bỏ mọi gói có địa chỉ nguồn 10.0.1.10. Cách tách chain riêng giúp khôi phục trạng thái ban đầu dễ dàng: khi chương trình dừng, chỉ cần gỡ và xóa chain `GUARD` là mạng trở về như cũ mà không ảnh hưởng tới quy tắc khác trên máy.
+### Hàng đợi và độ trễ xếp hàng
 
-### Raw socket AF_PACKET
+Mỗi cổng ra của router có một hàng đợi. Hàng đợi đơn giản nhất hoạt động theo nguyên tắc vào trước ra trước (First In First Out – FIFO): gói nào tới trước được gửi trước, gói tới sau xếp phía sau.
 
-Socket UDP thông thường chỉ nhận được những gói gửi tới đúng cổng của nó. Để đếm **mọi** gói đi ngang qua một card mạng của router, kể cả gói không dành cho router, cần một loại socket đặc biệt. Trên Linux, socket họ `AF_PACKET` nhận bản sao của các khung dữ liệu ngay ở tầng liên kết, trước khi chúng đi lên các tầng trên [[REF:12]]. Với kiểu `SOCK_DGRAM`, phần tiêu đề Ethernet được bỏ sẵn, chương trình nhận về gói IP và tự đọc các trường cần thiết như địa chỉ nguồn, giao thức, cổng đích.
+![Hàng đợi của router khi lưu lượng vào vượt băng thông](../figures/queue.png)
 
-Hai đặc điểm của `AF_PACKET` ảnh hưởng trực tiếp tới thiết kế. Thứ nhất, nó cần quyền root. Thứ hai, nó nhận được gói **trước** khi Netfilter xử lý, nên kể cả sau khi đã chặn, guard vẫn tiếp tục đếm được gói của kẻ tấn công. Chương trình vì thế phải tự nhớ những địa chỉ đã chặn để không chặn lặp lại.
+Khi hàng đợi đầy, thời gian một gói mới phải chờ bằng dung lượng hàng đợi chia cho băng thông. Với hàng đợi {{queue_kb}}KB và băng thông {{link_rate}} Mbit/s, thời gian chờ là {{queue_kb}} × 1000 × 8 / ({{link_rate}} × 1.000.000) giây, tức khoảng {{queue_delay_ms}} mili giây. Con số này lớn hơn rất nhiều so với độ trễ truyền {{link_delay}} mili giây của mỗi đoạn đường truyền.
 
-## Phòng thủ cộng tác
+Hàng đợi trong đề tài giới hạn theo **số byte** chứ không theo số gói. Khi hàng đầy, gói tải lớn tới sau bị bỏ, nhưng truy vấn rất nhỏ của client vẫn có thể chen vào phần còn trống. Vì vậy client thường không mất gói mà chỉ phải chờ lâu.
 
-### Chặn gần nạn nhân và chặn ở đầu nguồn
+## Các phương pháp giảm độ trễ
 
-Có hai vị trí để chặn lưu lượng tấn công. Chặn **gần nạn nhân** có lợi thế là quan sát rõ: mọi lưu lượng tới máy chủ đều đi qua đây, nên dễ nhận ra địa chỉ nào đang gửi tập trung truy vấn. Nhưng tới lúc bị chặn, gói tấn công đã đi qua toàn bộ đường truyền và đã chiếm băng thông của mọi đoạn phía trước. Chặn **ở đầu nguồn**, tức ở router đầu vào gần kẻ tấn công, thì ngược lại: tiết kiệm tài nguyên cho toàn bộ mạng phía sau, nhưng router đầu vào thấy lưu lượng đi tới nhiều đích khác nhau và không biết đích nào đang bị quá tải.
+Từ các thành phần của độ trễ, có thể giảm độ trễ theo các hướng sau.
 
-![Chặn gần nạn nhân so với chặn ở đầu nguồn](../figures/victim_vs_edge.png)
+### Tối ưu đường đi và dùng tuyến ngắn hơn
 
-Phòng thủ cộng tác kết hợp ưu điểm của cả hai: node gần nạn nhân đảm nhận việc phát hiện, sau đó gửi thông tin cho node ở đầu nguồn đảm nhận việc chặn. Lượng thông tin cần truyền rất nhỏ, trong đề tài chỉ là một chuỗi ký tự ngắn cho biết địa chỉ cần chặn và ai gửi.
+Nếu giữa hai điểm có nhiều đường đi, chọn đường ngắn hơn sẽ giảm tổng độ trễ truyền. Trong định tuyến, đường được chọn thường là đường có chi phí nhỏ nhất, trong đó chi phí có thể tính theo số chặng, theo băng thông hoặc theo độ trễ của từng đường truyền [[REF:9]].
 
-### RTBH và BGP FlowSpec
+Tuy nhiên, đường ngắn chỉ có lợi khi nó không bị tắc nghẽn. Nếu mọi lưu lượng cùng dồn vào đường ngắn và vượt băng thông, độ trễ xếp hàng sẽ lớn hơn rất nhiều phần độ trễ truyền tiết kiệm được.
 
-Ý tưởng trên đã được áp dụng trong thực tế ở quy mô Internet. Với RTBH, nhà mạng gắn một nhãn đặc biệt vào thông tin định tuyến của địa chỉ đang bị tấn công. Các router biên nhận được thông tin đó sẽ loại bỏ toàn bộ lưu lượng tới địa chỉ này ngay tại biên [[REF:4]]. Cách này bảo vệ được phần còn lại của mạng nhưng đồng thời chặn luôn cả lưu lượng hợp lệ tới nạn nhân. BGP FlowSpec chi tiết hơn: các router trao đổi những quy tắc lọc mô tả chính xác luồng xấu, ví dụ theo địa chỉ nguồn, giao thức và cổng, rồi mỗi router tự áp dụng quy tắc đó [[REF:6]]. Thông điệp `BLOCK <địa chỉ>` trong đề tài có thể xem là một phiên bản rút gọn của quy tắc FlowSpec.
+### Giảm số thiết bị trung gian
 
-### Kênh truyền cảnh báo
+Mỗi thiết bị trung gian thêm vào một lần xử lý, một hàng đợi và một đoạn đường truyền. Đường đi qua ít router hơn thì có ít chỗ phải chờ hơn và ít điểm có thể bị quá tải hơn. Trong mô hình của đề tài, đường ngắn R1 → R3 bỏ qua router trung gian R2.
 
-Cảnh báo phải tới được nơi cần chặn đúng lúc mạng đang bị tấn công. Có hai cách truyền. **Ngoài băng (out-of-band)** dùng một mạng quản lý riêng, tách hẳn khỏi đường dữ liệu, nên không bị ảnh hưởng bởi tình trạng nghẽn. Các nhà mạng thường có mạng quản lý như vậy để điều khiển thiết bị. **Trong băng (in-band)** cho cảnh báo đi chung đường với dữ liệu. Cách này không cần thêm hạ tầng, nhưng phải có cơ chế để cảnh báo không bị trễ trong hàng đợi phía sau lưu lượng tấn công. Đề tài thử nghiệm cả hai cách, và cơ chế dùng cho cách thứ hai là QoS.
+### Sử dụng thiết bị có khả năng xử lý nhanh hơn
 
-## Chất lượng dịch vụ (QoS)
+Thay router bằng thiết bị mạnh hơn giảm được độ trễ xử lý, và thiết bị có băng thông lớn hơn giảm được độ trễ phát. Hướng này cần thay đổi phần cứng và chi phí đầu tư, nên không thuộc phạm vi đề tài.
 
-### Trường DSCP và lớp chuyển tiếp ưu tiên EF
+### Phân phối tải
 
-QoS là tập hợp các kỹ thuật cho phép mạng đối xử khác nhau với các loại lưu lượng khác nhau. Trong mô hình phân biệt dịch vụ (DiffServ), mỗi gói IP mang một giá trị 6 bit gọi là DSCP, nằm trong byte thứ hai của tiêu đề IPv4, vốn trước đây là byte TOS [[REF:8]]. Router đọc giá trị này để quyết định gói thuộc lớp nào. Lớp chuyển tiếp ưu tiên EF (Expedited Forwarding) có DSCP bằng 46, dành cho lưu lượng cần độ trễ thấp như thoại [[REF:1]]. Vì DSCP chiếm 6 bit cao của byte TOS, giá trị byte TOS tương ứng là 46 × 4 = 184, tức `0xB8`.
+Thay vì để một đường truyền quá tải trong khi đường khác bỏ trống, router chia lưu lượng ra nhiều đường. Khi mỗi đường chỉ phải chở một phần lưu lượng và không đường nào vượt băng thông, hàng đợi không bị dồn ứ và độ trễ xếp hàng gần như bằng 0. Đây là cách tác động trực tiếp vào thành phần lớn nhất của độ trễ khi mạng có tải.
 
-Trong chương trình C, một ứng dụng đánh dấu gói của mình bằng cách đặt tùy chọn `IP_TOS` cho socket. Mọi gói gửi qua socket đó sẽ mang byte TOS đã đặt.
+Đề tài thực hiện hai hướng chọn đường: dùng tuyến ngắn hơn với ít thiết bị trung gian, và phân phối tải ra hai đường.
 
-### Hàng đợi ưu tiên và ranh giới tin cậy
+## Định tuyến và chia tải nhiều đường
 
-Việc đánh dấu chỉ có tác dụng khi router xử lý gói dựa trên dấu đó. Bộ lập lịch `prio` của Linux chia hàng đợi thành nhiều làn và luôn lấy gói từ làn có ưu tiên cao trước, làn thấp chỉ được phục vụ khi làn cao trống [[REF:12]]. Kết hợp với một bộ lọc đọc trường DSCP, gói mang dấu EF sẽ vào làn ưu tiên và vượt qua cả một hàng dài gói tấn công đang chờ.
+### Định tuyến tĩnh
 
-![Hàng đợi hai làn: gói ưu tiên luôn được gửi trước](../figures/two_lane_queue.png)
+Router quyết định chuyển gói tới đâu dựa vào **bảng định tuyến**: mỗi dòng cho biết muốn tới một mạng đích thì gửi gói qua router kế tiếp (next hop) nào. Với định tuyến tĩnh, các dòng này do người quản trị khai báo. Trên Linux, bảng định tuyến được quản lý bằng lệnh `ip route` [[REF:14]]. Ví dụ, lệnh `ip route replace 10.0.3.0/24 via 10.0.12.2` khai báo rằng gói tới mạng 10.0.3.0/24 sẽ được gửi qua router có địa chỉ 10.0.12.2.
 
-Điểm yếu là dấu do chính người gửi đặt. Nếu router tin mọi dấu, kẻ tấn công chỉ cần đánh dấu gói tấn công là EF để được đưa vào làn ưu tiên. Vì vậy mạng thực tế luôn có **ranh giới tin cậy (trust boundary)**: router đầu vào xóa hoặc ghi lại dấu trên mọi gói đến từ bên ngoài, chỉ giữ dấu cho lưu lượng do chính hệ thống sinh ra. Đề tài chưa cài đặt ranh giới này, và đây là một trong các hạn chế được nêu ở Chương 5.
+Đổi đường đi chỉ cần thay router kế tiếp trong dòng tương ứng. Router không cần khởi động lại và các kết nối đang có không bị ngắt.
 
-## Môi trường giả lập
+### Định tuyến nhiều đường chi phí bằng nhau (ECMP)
 
-### KVM, QEMU và ảo hóa lồng nhau
+Khi có nhiều đường tới cùng một đích với chi phí bằng nhau, router có thể dùng tất cả các đường thay vì chỉ một. Kỹ thuật này gọi là ECMP [[REF:4]] [[REF:10]]. Trên Linux, một dòng định tuyến có thể có nhiều router kế tiếp, mỗi router kế tiếp kèm một trọng số:
 
-KVM (Kernel-based Virtual Machine) là thành phần của nhân Linux dùng tính năng ảo hóa phần cứng của CPU để chạy máy ảo với tốc độ gần bằng máy thật, còn QEMU giả lập phần cứng như ổ đĩa và card mạng. Trong đề tài, EVE-NG là một máy ảo trên laptop, và bên trong nó lại chạy sáu máy ảo nhỏ cho sáu node. Cách chạy máy ảo trong máy ảo này gọi là **ảo hóa lồng nhau** (nested virtualization), chỉ dùng được khi CPU hỗ trợ và tính năng đã được bật.
+```
+ip route replace 10.0.3.0/24 nexthop via 10.0.12.2 weight 1 nexthop via 10.0.13.3 weight 1
+```
 
-### EVE-NG
+Nếu router chia từng gói luân phiên ra các đường, các gói của cùng một kết nối có thể tới nơi không đúng thứ tự vì mỗi đường có độ trễ khác nhau. Để tránh điều này, router chia theo **luồng**: các gói có cùng địa chỉ IP nguồn, IP đích, cổng nguồn, cổng đích và giao thức được xem là một luồng. Router tính hàm băm trên các giá trị này rồi dùng kết quả để chọn đường [[REF:4]]. Mọi gói của cùng một luồng luôn đi cùng một đường.
 
-EVE-NG là nền tảng giả lập mạng: người dùng tạo lab trên giao diện web, kéo thả các node, nối dây giữa chúng, rồi khởi động lab để các node hoạt động [[REF:11]]. Mỗi node là một máy ảo chạy từ một ổ đĩa mẫu (image). Các đường nối là các cầu mạng ảo bên trong máy EVE-NG. Bản Community miễn phí đủ cho nhu cầu của đề tài. Ngoài giao diện web, EVE-NG có REST API, đề tài dùng API này để tạo lab bằng script thay vì thao tác thủ công. Node dùng Alpine Linux, một bản Linux gọn nhẹ, được đóng gói thành image bằng công cụ `alpine-make-vm-image` [[REF:10]].
+![Router chọn đường cho từng luồng bằng hàm băm](../figures/ecmp_hash.png)
 
-### Network namespace
+Trên Linux, việc tính hàm băm có dùng cả cổng nguồn và cổng đích hay không được điều khiển bằng tham số `net.ipv4.fib_multipath_hash_policy`; giá trị 1 nghĩa là dùng cả cổng [[REF:13]]. Hàm băm chỉ chia đều khi có nhiều luồng. Nếu chỉ có vài luồng lớn, các luồng có thể dồn về cùng một đường. Vì lý do này, máy tạo tải của đề tài gửi lưu lượng thành nhiều luồng nhỏ, giống tình huống thực tế khi nhiều người dùng cùng dùng mạng.
 
-Network namespace cho phép một nhóm tiến trình có bộ card mạng, bảng định tuyến và quy tắc iptables riêng như một máy độc lập. Nối các namespace bằng cặp card mạng ảo `veth` là xây dựng được cả mạng nhiều node trên một máy. Đề tài dùng cách này làm mô hình rút gọn của lab EVE-NG để kiểm thử nhanh và làm phương án dự phòng khi trình diễn.
+## Môi trường và công cụ thực nghiệm
+
+### EVE-NG và máy ảo Linux
+
+EVE-NG (Emulated Virtual Environment – Next Generation) là nền tảng giả lập mạng chạy dưới dạng máy ảo, cho phép tạo nhiều máy ảo con và nối dây giữa chúng qua giao diện web hoặc giao diện lập trình REST [[REF:12]]. Mỗi node trong đề tài là một máy ảo Alpine Linux nhỏ gọn, được tạo bằng công cụ `alpine-make-vm-image` [[REF:11]]. Một máy Linux trở thành router khi bật tham số `net.ipv4.ip_forward=1`.
+
+### Công cụ tc: giả lập độ trễ và băng thông
+
+Công cụ `tc` (traffic control) của Linux gắn các bộ xếp hàng (queueing discipline – qdisc) vào cổng ra của card mạng [[REF:14]]. Đề tài dùng hai bộ:
+
+- **netem:** thêm độ trễ cố định cho mọi gói đi ra, dùng để giả lập độ trễ truyền của đường truyền dài [[REF:3]].
+- **tbf** (Token Bucket Filter): giới hạn tốc độ gửi ra ở một mức băng thông, gói vượt mức phải chờ trong hàng đợi có dung lượng giới hạn.
+
+Kết hợp hai bộ này, mỗi đoạn đường truyền giữa hai router có độ trễ truyền {{link_delay}} mili giây và băng thông {{link_rate}} Mbit/s.
+
+### Lập trình socket UDP trong C
+
+Các chương trình đo đạc của đề tài được viết bằng C, dùng socket UDP [[REF:7]] của hệ điều hành Linux. Vị trí của từng phần trong mô hình TCP/IP được thể hiện ở hình dưới.
+
+![Các thành phần của đề tài trong mô hình TCP/IP](../figures/tcpip.png)
+
+UDP được chọn vì không có cơ chế tự điều chỉnh tốc độ như TCP, nên tốc độ gửi của máy tạo tải đúng bằng giá trị cấu hình và các lượt thử nghiệm có điều kiện giống nhau. Truy vấn của client cũng dùng UDP để mỗi truy vấn là một gói độc lập, RTT đo được không bị ảnh hưởng bởi việc gửi lại gói của TCP.
