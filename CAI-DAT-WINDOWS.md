@@ -2,7 +2,9 @@
 
 Hướng dẫn từng bước để chạy demo **onejack** (cải thiện hiệu năng mạng: giảm độ trễ) trên một máy Windows 11, từ lúc chưa có gì tới lúc chạy xong 3 lượt demo.
 
-Tổng quan dự án, mô hình mạng và kết quả đo xem trong [README.md](README.md). Các khái niệm mạng xem trong [CONCEPTS.md](CONCEPTS.md).
+Tổng quan dự án, mô hình mạng và kết quả đo xem trong [README.md](README.md). Cách trình bày và demo với giảng viên xem trong [KICH-BAN-DEMO.md](KICH-BAN-DEMO.md).
+
+> **Máy đã cài bản cũ** (lab `collab-defense`, demo `off` / `on` / `inband`): không cần cài lại từ đầu, làm theo [mục 12](#12-cập-nhật-từ-bản-cũ-lên-bản-hiện-tại).
 
 ---
 
@@ -227,7 +229,7 @@ apt-get install -y build-essential tmux gnuplot-nox
 
 | Gói | Dùng để |
 |---|---|
-| `build-essential` | gcc, make, thư viện C tĩnh để build 4 chương trình |
+| `build-essential` | gcc, make, thư viện C tĩnh để build 3 chương trình |
 | `tmux` | màn hình demo chia 4 ô |
 | `gnuplot-nox` | vẽ biểu đồ kết quả |
 
@@ -272,6 +274,7 @@ scripts/lab-up.sh
 Script bật 6 node, chờ các node nhận IP, chép chương trình và cấu hình vào từng node, rồi kiểm tra kết nối. Mất khoảng 40 giây tới 2 phút.
 
 Kết quả đúng: dòng cuối là **`SẴN SÀNG`**. Nếu ra `LỖI: <bước>`, xem mục 10.
+
 ---
 
 ## 8. Chạy demo (mỗi lần bật máy)
@@ -406,3 +409,37 @@ scripts/tmux-demo.sh short
 scripts/tmux-demo.sh balance
 scripts/plot.sh
 ```
+
+---
+
+## 12. Cập nhật từ bản cũ lên bản hiện tại
+
+Dùng khi máy EVE đã cài và chạy được bản cũ (lab `collab-defense`, các lượt `off` / `on` / `inband`). Bản hiện tại khác bản cũ ở mấy điểm:
+
+| | Bản cũ | Bản hiện tại |
+|---|---|---|
+| Nhánh git | `v2` | `v4` |
+| Tên lab trong EVE | `collab-defense` | `net-perf` |
+| Mô hình | R1 → R2 → R3 một đường, thêm mạng điều khiển R1–R2–R3 | Hai đường: đường dài R1 → R2 → R3 và đường ngắn R1 → R3 |
+| Chương trình | `server`, `client`, `attacker`, `guard` | `server`, `client`, `loadgen` |
+| Các lượt demo | `off`, `on`, `inband` | `base`, `short`, `balance` |
+| Kiểm chứng QoS | `scripts/qos-check.sh` | Không còn |
+
+Vì cách nối dây giữa các router đã đổi, **phải tạo lại lab một lần**. Image Alpine giữ nguyên, không cần tạo lại.
+
+Trong phiên `ssh root@<EVE_IP>`:
+
+```
+cd /root/onejack
+git fetch
+git checkout v4                # hoặc git pull nếu đang ở sẵn nhánh v4
+make clean && make && make test
+bash lab/eve-create-lab.sh     # dừng lab collab-defense, tạo lab net-perf và bật 6 node
+scripts/lab-up.sh              # → SẴN SÀNG
+```
+
+Nếu đã copy code bằng cách B (bước 6) thay vì git, copy lại cả thư mục `onejack` rồi chạy lại các lệnh `sed`, `chmod`, `rm -rf build` ở cách B trước khi chạy các lệnh trên.
+
+Lab cũ `collab-defense` chỉ bị dừng, không bị xóa, vẫn thấy trong File manager của EVE. **Không bật lab cũ cùng lúc với lab mới**, vì node của hai lab dùng chung địa chỉ quản lý 172.30.0.11 tới .16.
+
+Sau đó chạy demo như mục 8.
