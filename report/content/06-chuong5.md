@@ -2,15 +2,15 @@
 
 ## Kết quả đạt được
 
-Đề tài đã hoàn thành các nội dung chính sau:
+Sau thời gian thực hiện, đề tài đã làm được các việc sau:
 
-- Tìm hiểu cơ sở lý thuyết về hiệu năng mạng, các thành phần của độ trễ, tắc nghẽn và hàng đợi, định tuyến tĩnh và định tuyến nhiều đường chi phí bằng nhau.
-- Xây dựng mô hình sáu node trên EVE-NG có hai đường đi khác nhau về độ dài, với độ trễ truyền và băng thông của từng đường truyền được giả lập nhất quán.
+- Tìm hiểu lý thuyết về hiệu năng mạng, các thành phần của độ trễ, tắc nghẽn và hàng đợi, định tuyến tĩnh và định tuyến nhiều đường chi phí bằng nhau.
+- Dựng mô hình sáu node trên EVE-NG có hai đường đi dài ngắn khác nhau, độ trễ truyền và băng thông của từng đường được giả lập giống nhau ở mọi lượt.
 - Viết ba chương trình C để tạo lưu lượng và đo RTT, jitter, tỷ lệ mất gói, thông lượng.
-- Tự động hóa toàn bộ quá trình dựng mô hình, cấu hình router, chạy thử nghiệm và vẽ biểu đồ bằng script.
-- Đo và so sánh ba cách chọn đường trên cùng một kịch bản lưu lượng.
+- Viết script để tự động dựng mô hình, cấu hình router, chạy thử nghiệm và vẽ biểu đồ.
+- Đo và so sánh ba cách chọn đường với cùng một lưu lượng.
 
-Bảng dưới đối chiếu kết quả đo với các mục tiêu đặt ra ở Chương 1.
+Bảng dưới so kết quả đo với các mục tiêu đã đặt ra ở Chương 1.
 
 Bảng: Đối chiếu kết quả với mục tiêu
 | STT | Tiêu chí (Bảng 1.1) | Kết quả đo được | Đánh giá |
@@ -21,20 +21,20 @@ Bảng: Đối chiếu kết quả với mục tiêu
 | 4 | Thông lượng không thấp hơn lượt đi đường dài | Lượt balance {{server_balance}} so với {{server_base}} Mbit/s | Đạt |
 | 5 | Kết quả tái hiện được bằng script | Mọi bước chạy bằng script, đã chạy lại trên cả lab EVE-NG lẫn mô hình rút gọn bằng network namespace | Đạt |
 
-Kết quả quan trọng nhất là sự khác biệt giữa hai cách chọn đường. Dùng đường ngắn giảm gần một nửa độ trễ khi mạng thông thoáng, nhưng gần như không giúp được khi mạng tắc nghẽn. Phân phối tải ra hai đường giữ độ trễ của người dùng gần như không đổi khi có tải, đồng thời giúp server nhận đủ toàn bộ lưu lượng. Cả hai cách đều chỉ cần thay đổi bảng định tuyến của router, không cần thêm thiết bị hay tăng băng thông.
+Qua ba lượt đo có thể thấy, dùng đường ngắn giảm được gần một nửa độ trễ khi mạng rảnh nhưng hầu như không giúp gì khi mạng tắc nghẽn. Còn khi chia tải ra hai đường, độ trễ của người dùng gần như giữ nguyên dù có tải nặng, và server vẫn nhận đủ lưu lượng. Cả hai cách chỉ cần sửa bảng định tuyến trên router, không phải thêm thiết bị hay tăng băng thông.
 
 ## Hạn chế của đề tài
 
-1. **Đường đi được cấu hình tĩnh.** Router không tự biết đường nào đang tắc nghẽn để đổi. Việc chọn kịch bản do người vận hành quyết định trước mỗi lượt.
-2. **Chia tải theo luồng.** Một luồng đơn lẻ chỉ đi được trên một đường. Nếu lưu lượng chỉ gồm vài luồng rất lớn, tải có thể dồn về một đường.
-3. **Hai đường có cùng băng thông và trọng số.** Đề tài chưa thử trường hợp hai đường khác băng thông, khi đó cần đặt trọng số tương ứng.
-4. **Lưu lượng là UDP tốc độ cố định.** Lưu lượng thực tế như tải tệp thường dùng TCP, tự giảm tốc độ khi mạng tắc nghẽn, nên mức độ tắc nghẽn có thể khác.
-5. **Môi trường giả lập.** Mọi số liệu đo trong phòng thí nghiệm ảo trên một laptop, độ trễ truyền và băng thông là giá trị giả lập. Con số tuyệt đối sẽ khác trên thiết bị thật, nhưng xu hướng so sánh giữa các kịch bản vẫn có giá trị.
+1. **Đường đi được cấu hình tĩnh.** Router không tự biết đường nào đang tắc để đổi. Cách chọn đường do người vận hành đặt trước mỗi lượt.
+2. **Chia tải theo luồng.** Mỗi luồng chỉ đi được trên một đường. Nếu lưu lượng chỉ gồm vài luồng rất lớn thì tải vẫn có thể dồn về một đường.
+3. **Hai đường có cùng băng thông và trọng số.** Đề tài chưa thử trường hợp hai đường có băng thông khác nhau, khi đó cần đặt trọng số cho phù hợp.
+4. **Lưu lượng là UDP tốc độ cố định.** Ngoài thực tế, việc tải tệp thường dùng TCP, vốn tự giảm tốc khi mạng tắc nghẽn, nên mức tắc nghẽn có thể khác.
+5. **Môi trường giả lập.** Số liệu được đo trong một phòng thí nghiệm ảo trên laptop, độ trễ truyền và băng thông đều là giá trị giả lập. Trên thiết bị thật các con số sẽ khác, nhưng xu hướng khi so sánh các kịch bản vẫn đúng.
 
 ## Hướng phát triển
 
-- **Định tuyến động:** chạy giao thức định tuyến như OSPF trên các router để router tự cập nhật đường đi khi một đường truyền bị đứt hoặc thay đổi chi phí.
-- **Chọn đường theo độ trễ đo được:** router định kỳ đo độ trễ của từng đường và tự chuyển lưu lượng sang đường đang có độ trễ thấp hơn.
+- **Định tuyến động:** chạy giao thức định tuyến như OSPF để router tự cập nhật đường đi khi một đường truyền bị đứt hoặc đổi chi phí.
+- **Chọn đường theo độ trễ đo được:** router định kỳ đo độ trễ của từng đường và tự chuyển lưu lượng sang đường đang nhanh hơn.
 - **Đường có băng thông khác nhau:** thử chia tải theo trọng số tỷ lệ với băng thông của từng đường.
-- **Lưu lượng TCP:** thay một phần lưu lượng tải bằng các kết nối TCP để đánh giá trong điều kiện gần thực tế hơn.
-- **Mô hình lớn hơn:** mở rộng lên nhiều router và nhiều hơn hai đường đi để đánh giá phân phối tải trong mạng phức tạp.
+- **Lưu lượng TCP:** thay một phần lưu lượng tải bằng kết nối TCP để thử trong điều kiện gần thực tế hơn.
+- **Mô hình lớn hơn:** thêm router và thêm đường đi để thử phân phối tải trong mạng phức tạp hơn.

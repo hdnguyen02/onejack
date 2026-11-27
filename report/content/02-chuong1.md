@@ -2,31 +2,31 @@
 
 ## Tổng quan
 
-Đề tài xây dựng một mô hình mạng thử nghiệm gồm sáu máy Linux chạy trong EVE-NG, rồi đo độ trễ của người dùng khi router chọn đường đi theo các cách khác nhau. Phần này nêu cách hiểu của đề tài về các khái niệm chính, mô hình thử nghiệm và ý tưởng giải quyết.
+Đề tài xây dựng một mô hình mạng gồm sáu máy Linux chạy trong EVE-NG, rồi đo độ trễ của người dùng khi router chọn đường theo những cách khác nhau. Phần này giải thích các khái niệm chính, mô hình thử nghiệm và hướng giải quyết.
 
-**Độ trễ** trong đề tài được đo bằng thời gian khứ hồi (Round-Trip Time – RTT): thời gian từ lúc client gửi một truy vấn tới lúc nhận được trả lời của server. RTT được đo ngay tại chương trình của client nên phản ánh đúng thời gian người dùng phải chờ.
+Trong đề tài, độ trễ được đo bằng thời gian khứ hồi (Round-Trip Time – RTT), tức thời gian từ lúc client gửi một truy vấn tới lúc nhận được trả lời của server. Vì RTT được đo ngay trong chương trình của client, con số này đúng bằng thời gian người dùng phải chờ.
 
-**Mô hình thử nghiệm** gồm sáu node. Hai máy đầu cuối nằm chung mạng LAN1 sau router R1:
+Mô hình thử nghiệm gồm sáu node. Hai máy đầu cuối nằm chung mạng LAN1 phía sau router R1.
 
-- **Client** đóng vai người dùng cần phản hồi nhanh, như đang gọi thoại hay chơi trò chơi trực tuyến. Client gửi {{client_rate}} truy vấn nhỏ mỗi giây và đo RTT của từng truy vấn.
-- **Loadgen** đóng vai một máy đang tải dữ liệu lớn, như tải tệp hay xem video. Loadgen gửi {{load_mbit}} Mbit/s, chia thành {{load_flows}} luồng.
+- Client đóng vai người dùng cần phản hồi nhanh, ví dụ đang gọi thoại hay chơi trò chơi trực tuyến. Client gửi {{client_rate}} truy vấn nhỏ mỗi giây và đo RTT của từng truy vấn.
+- Loadgen đóng vai một máy đang tải dữ liệu lớn, ví dụ tải tệp hay xem video. Loadgen gửi {{load_mbit}} Mbit/s, chia thành {{load_flows}} luồng.
 
-Server nằm sau router R3. Giữa R1 và R3 có **hai đường đi**:
+Server nằm sau router R3. Từ R1 sang R3 có hai đường:
 
-- **Đường dài** R1 → R2 → R3, gồm hai đoạn đường truyền và một router trung gian.
-- **Đường ngắn** R1 → R3, gồm một đoạn đường truyền nối thẳng.
+- Đường dài R1 → R2 → R3, đi qua hai đoạn đường truyền và router trung gian R2.
+- Đường ngắn R1 → R3, chỉ có một đoạn nối thẳng.
 
-Mỗi đoạn đường truyền giữa hai router được cấu hình độ trễ truyền {{link_delay}} mili giây mỗi chiều để mô phỏng khoảng cách địa lý, và băng thông {{link_rate}} Mbit/s. Lưu lượng {{load_mbit}} Mbit/s của loadgen lớn hơn băng thông của một đường nhưng nhỏ hơn tổng băng thông của hai đường ({{two_links_mbit}} Mbit/s). Sơ đồ chi tiết được trình bày ở Hình 4.1.
+Mỗi đoạn đường truyền giữa hai router có độ trễ truyền {{link_delay}} mili giây mỗi chiều để mô phỏng khoảng cách địa lý, và băng thông {{link_rate}} Mbit/s. Lưu lượng {{load_mbit}} Mbit/s của loadgen vượt băng thông của một đường, nhưng vẫn nhỏ hơn hai đường cộng lại ({{two_links_mbit}} Mbit/s). Sơ đồ chi tiết được trình bày ở Hình 4.1.
 
-**Ý tưởng giải quyết** dựa trên vai trò của router: router chỉ làm hai việc là **chọn đường** và **chuyển tiếp** gói tin. Đề tài không thêm thiết bị, không tăng băng thông, mà chỉ thay đổi cách R1 và R3 chọn đường. Ba cách chọn đường được so sánh:
+Router có hai việc chính là chọn đường và chuyển tiếp gói tin. Đề tài giữ nguyên thiết bị và băng thông, chỉ thay đổi cách R1 và R3 chọn đường, rồi so sánh ba cách:
 
-- **Đi đường dài:** mọi lưu lượng đi qua R2. Đây là mốc so sánh.
-- **Đi đường ngắn:** mọi lưu lượng đi thẳng R1 → R3, ít đoạn truyền và ít thiết bị trung gian hơn.
-- **Chia tải:** các luồng được chia ra cả hai đường, để không đường nào bị quá tải.
+- Đi đường dài: mọi lưu lượng đi qua R2, dùng làm mốc so sánh.
+- Đi đường ngắn: mọi lưu lượng đi thẳng R1 → R3, qua ít đoạn truyền và ít thiết bị trung gian hơn.
+- Chia tải: các luồng được chia ra cả hai đường để không đường nào bị quá tải.
 
 ## Mục tiêu đề tài
 
-Mục tiêu chung là xây dựng mô hình thử nghiệm và đo được mức giảm độ trễ của người dùng khi router chọn đường phù hợp, so với khi mọi lưu lượng dồn vào một đường. Các mục tiêu cụ thể:
+Mục tiêu chung là xây dựng mô hình thử nghiệm và đo xem độ trễ của người dùng giảm được bao nhiêu khi router chọn đường hợp lý, so với khi mọi lưu lượng dồn vào một đường. Các mục tiêu cụ thể được nêu trong bảng dưới.
 
 Bảng: Các mục tiêu cụ thể và tiêu chí đánh giá
 | STT | Mục tiêu | Chỉ số đo | Tiêu chí đạt |
@@ -37,7 +37,7 @@ Bảng: Các mục tiêu cụ thể và tiêu chí đánh giá
 | 4 | Không làm giảm khả năng truyền dữ liệu | Thông lượng server nhận được | Không thấp hơn lượt đi đường dài |
 | 5 | Kết quả tái hiện được | Toàn bộ quá trình dựng mô hình, đo và vẽ biểu đồ | Thực hiện bằng script, chạy lại cho kết quả tương đương |
 
-Mỗi lượt thử nghiệm kéo dài {{duration}} giây. Loadgen bắt đầu gửi ở giây thứ {{load_at}}, nên mỗi lượt đo được cả độ trễ lúc mạng chưa có tải lẫn lúc có tải.
+Mỗi lượt thử nghiệm kéo dài {{duration}} giây, loadgen bắt đầu gửi từ giây thứ {{load_at}}. Nhờ vậy trong cùng một lượt đo được độ trễ cả lúc mạng chưa có tải lẫn lúc có tải.
 
 ## Phạm vi đề tài
 
@@ -53,11 +53,11 @@ Mỗi lượt thử nghiệm kéo dài {{duration}} giây. Loadgen bắt đầu 
 
 ### Chức năng xây dựng mô hình mạng
 
-Hệ thống phải dựng được mô hình sáu node trên EVE-NG, đặt địa chỉ IP, bật chuyển tiếp gói trên router và tạo hai đường đi giữa R1 và R3. Việc tạo máy ảo, tạo mạng và nối dây được thực hiện bằng script thông qua giao diện lập trình của EVE-NG, để có thể dựng lại mô hình giống hệt bằng một lệnh.
+Hệ thống cần dựng được mô hình sáu node trên EVE-NG, đặt địa chỉ IP, bật chuyển tiếp gói trên router và tạo hai đường giữa R1 và R3. Việc tạo máy ảo, tạo mạng và nối dây được làm bằng script qua giao diện lập trình của EVE-NG, nên có thể dựng lại đúng mô hình đó chỉ bằng một lệnh.
 
 ### Chức năng tạo lưu lượng
 
-Hệ thống có hai nguồn lưu lượng. Client gửi truy vấn nhỏ đều đặn và nhận trả lời từ server. Loadgen gửi lưu lượng lớn với tốc độ cố định, chia thành nhiều luồng có cổng nguồn khác nhau. Tốc độ, kích thước gói và số luồng đều chỉnh được bằng tham số.
+Lưu lượng đến từ hai nguồn. Client gửi đều đặn các truy vấn nhỏ và nhận trả lời từ server. Loadgen gửi lưu lượng lớn với tốc độ cố định, chia thành nhiều luồng có cổng nguồn khác nhau. Tốc độ, kích thước gói và số luồng đều chỉnh được qua tham số dòng lệnh.
 
 ### Chức năng đo lường hiệu năng
 
@@ -71,12 +71,12 @@ Số liệu được ghi thành tệp CSV (Comma-Separated Values) để vẽ bi
 
 ### Chức năng cấu hình chọn đường
 
-Router R1 và R3 phải chuyển được giữa ba chế độ chọn đường (đường dài, đường ngắn, chia tải) bằng một lệnh, không cần khởi động lại. Router R2 luôn chuyển tiếp như nhau.
+R1 và R3 cần chuyển được giữa ba cách chọn đường (đường dài, đường ngắn, chia tải) chỉ bằng một lệnh, không phải khởi động lại. R2 thì luôn chuyển tiếp như nhau.
 
 ### Chức năng so sánh và đánh giá kết quả
 
-Hệ thống chạy ba lượt thử nghiệm với cùng thông số, chỉ khác cách chọn đường. Sau khi chạy xong, script tính trung bình các chỉ số lúc chưa có tải và lúc có tải, in bảng so sánh và vẽ biểu đồ theo thời gian.
+Ba lượt thử nghiệm dùng cùng thông số, chỉ khác cách chọn đường. Chạy xong, script tính trung bình các chỉ số lúc chưa có tải và lúc có tải, in bảng so sánh và vẽ biểu đồ theo thời gian.
 
 ### Chức năng giám sát trực quan
 
-Trong lúc chạy, màn hình được chia làm bốn ô hiển thị theo từng giây: RTT của client, lưu lượng trên từng đường, thông lượng server nhận được và tiến trình của lượt thử nghiệm. Nhờ đó người xem thấy ngay sự thay đổi khi tải bắt đầu.
+Trong lúc chạy, màn hình chia làm bốn ô, cập nhật mỗi giây: RTT của client, lưu lượng trên từng đường, thông lượng server nhận được và tiến trình của lượt thử nghiệm. Người xem thấy được ngay chuyện gì xảy ra khi tải bắt đầu.
