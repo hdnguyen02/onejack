@@ -17,3 +17,7 @@ report/out/
 
 # Python cache
 __pycache__/
+
+# File khóa tạm của LibreOffice/Word
+.~lock.*
+~$*

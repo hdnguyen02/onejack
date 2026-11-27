@@ -26,7 +26,7 @@ modprobe nbd max_part=8
 
 cd "$WORK"
 ./alpine-make-vm-image --image-format qcow2 --image-size 1G --branch v3.20 \
-    --kernel-flavor virt --packages "openssh iproute2 iptables" \
+    --kernel-flavor virt --packages "openssh iproute2" \
     --script-chroot alpine-demo.qcow2 -- ./configure.sh
 
 mkdir -p "$IMG_DIR"

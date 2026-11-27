@@ -5,7 +5,7 @@ from report.check import font_violations, heading3_violations, raw_measurements
 
 class CheckTest(unittest.TestCase):
     def test_raw_measurements_rejected(self):
-        self.assertTrue(raw_measurements("RTT 407,97 ms khi bị tấn công"))
+        self.assertTrue(raw_measurements("RTT 455,85 ms khi có tải"))
         self.assertTrue(raw_measurements("link đầy {{bottleneck}} Mbit/s, đo được 10 Mbit/s"))
         self.assertEqual(raw_measurements("RTT {{rtt_off}} ms, mỗi 1 giây in một dòng"), [])
         self.assertEqual(raw_measurements("```\nsleep 0,5 s\n```"), [])
