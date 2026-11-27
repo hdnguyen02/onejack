@@ -30,7 +30,7 @@ Trong đề tài, băng thông, độ dài từng đường và thiết bị đ�
 
 ### Độ trễ
 
-Độ trễ là thời gian một gói đi từ máy gửi tới máy nhận. Trên mỗi chặng, tức mỗi lần gói đi qua một router và một đoạn đường truyền, độ trễ gồm bốn thành phần [[REF:6]]:
+Độ trễ là thời gian một gói đi từ máy gửi tới máy nhận. Trên mỗi chặng, tức mỗi lần gói đi qua một router và một đoạn đường truyền, độ trễ gồm bốn thành phần [[REF:6]], minh họa ở hình dưới.
 
 ![Các thành phần độ trễ trên một chặng](../figures/delay_parts.png)
 
@@ -45,7 +45,7 @@ Trong đề tài, băng thông, độ dài từng đường và thiết bị đ�
 
 Jitter cho biết độ trễ của các gói liên tiếp chênh nhau nhiều hay ít. Cùng một độ trễ trung bình, nhưng nếu jitter lớn thì có gói tới sớm, có gói tới muộn, làm âm thanh và hình ảnh bị ngắt quãng. RFC 3393 định nghĩa biến thiên độ trễ là hiệu độ trễ của các cặp gói [[REF:2]], còn RFC 3550 dùng một cách ước lượng jitter tương tự cho luồng thoại và video [[REF:8]].
 
-Trong đề tài, jitter được tính tại client là trung bình độ lệch tuyệt đối giữa RTT của hai trả lời liên tiếp.
+Trong đề tài, jitter được tính đơn giản hơn: tại client, lấy trung bình độ lệch tuyệt đối giữa RTT của hai trả lời liên tiếp. Cách tính này cùng ý tưởng với RFC 3393 nhưng dùng RTT thay cho độ trễ một chiều, nên không cần đồng bộ đồng hồ giữa hai máy.
 
 ### Tỷ lệ mất gói
 
@@ -53,13 +53,13 @@ Tỷ lệ mất gói là phần trăm số gói gửi đi nhưng không tới đ
 
 ### Mối quan hệ giữa các thông số
 
-Các thông số trên liên quan chặt với nhau. Khi lưu lượng gửi vào còn nhỏ hơn băng thông, thông lượng tăng theo lưu lượng, hàng đợi gần như trống và độ trễ chỉ gồm thời gian truyền, thời gian xử lý. Khi lưu lượng vượt băng thông, thông lượng dừng ở mức băng thông, hàng đợi đầy dần và độ trễ xếp hàng tăng vọt. Tới lúc hàng đợi đầy hẳn thì gói bắt đầu bị bỏ, tỷ lệ mất gói tăng lên. Vì thế, muốn giữ độ trễ thấp thì trước hết phải tránh để đường truyền vượt băng thông.
+Các thông số trên liên quan chặt với nhau. Khi lưu lượng gửi vào còn nhỏ hơn băng thông, thông lượng tăng theo lưu lượng, hàng đợi gần như trống và độ trễ chủ yếu chỉ gồm thời gian truyền, phát và xử lý. Khi lưu lượng vượt băng thông, thông lượng dừng ở mức băng thông, hàng đợi đầy dần và độ trễ xếp hàng tăng vọt. Tới lúc hàng đợi đầy hẳn thì gói bắt đầu bị bỏ, tỷ lệ mất gói tăng lên. Vì thế, muốn giữ độ trễ thấp thì trước hết phải tránh để đường truyền vượt băng thông.
 
 ## Tắc nghẽn và hàng đợi
 
 ### Khái niệm tắc nghẽn mạng
 
-Tắc nghẽn xảy ra khi tổng lưu lượng muốn đi qua một đường truyền lớn hơn băng thông của nó. Router không gửi nhanh hơn băng thông được, nên phần dư phải chờ hoặc bị bỏ. Thường thì tắc nghẽn không do riêng một người dùng gây ra mà do nhiều luồng cùng đi chung một đường truyền.
+Tắc nghẽn xảy ra khi tổng lưu lượng muốn đi qua một đường truyền lớn hơn băng thông của nó. Router không gửi nhanh hơn băng thông được, nên phần dư phải chờ hoặc bị bỏ. Tắc nghẽn có thể do một máy gửi quá nhiều, như máy tạo tải trong đề tài, hoặc do nhiều người dùng cùng đi chung một đường truyền.
 
 Khi đã tắc nghẽn thì mọi người dùng đi chung đường truyền đều bị ảnh hưởng, kể cả người gửi rất ít dữ liệu. Trong đề tài, client chỉ gửi vài chục truy vấn nhỏ mỗi giây, nhưng vì đi chung đường với loadgen nên truy vấn của client vẫn phải chờ trong cùng một hàng đợi.
 

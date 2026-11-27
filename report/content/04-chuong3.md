@@ -17,7 +17,7 @@ Từ đó, bài toán đặt ra là: với hạ tầng sẵn có, router nên ch
 - Chọn đường ngắn hơn để giảm độ trễ truyền và số thiết bị trung gian. Cách này làm giảm phần độ trễ cố định, phần luôn có kể cả khi mạng không có tải.
 - Phân phối tải ra nhiều đường để không đường nào vượt băng thông. Cách này làm giảm độ trễ xếp hàng, phần chiếm gần hết độ trễ khi mạng có tải.
 
-Cả hai cách đều chỉ sửa bảng định tuyến của router, không thay thiết bị và không tăng băng thông. Để đánh giá, đề tài cho cùng một lưu lượng chạy qua mạng với ba cách chọn đường, rồi so sánh với trường hợp mọi lưu lượng đi đường dài.
+Cả hai cách đều chỉ sửa bảng định tuyến của router, không thay thiết bị và không tăng băng thông. Để đánh giá, đề tài cho cùng một lưu lượng chạy qua mạng với ba cách chọn đường, trong đó cách mọi lưu lượng đi đường dài làm mốc để so sánh hai cách còn lại.
 
 ## Phân tích yêu cầu thực nghiệm
 
@@ -30,7 +30,7 @@ Môi trường thực nghiệm cần có:
 - Router chạy hệ điều hành cho phép đổi bảng định tuyến và chia tải nhiều đường bằng lệnh.
 - Các node điều khiển được từ xa bằng script để tự động hóa việc cấu hình và đo.
 
-EVE-NG cùng các node Alpine Linux đáp ứng được những yêu cầu này. Độ trễ và băng thông đường truyền được giả lập bằng `tc`, nên lượt chạy nào cũng giống nhau.
+EVE-NG cùng các node Alpine Linux đáp ứng được những yêu cầu này. Độ trễ và băng thông đường truyền được giả lập bằng `tc`, nên điều kiện đường truyền ở mọi lượt chạy đều như nhau.
 
 ### Yêu cầu tạo và kiểm soát lưu lượng
 

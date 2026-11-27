@@ -178,7 +178,7 @@ Khi có tải, RTT của base tăng thêm {{queue_added_base}} mili giây, của
 
 ![Jitter của client trong ba lượt thử nghiệm](../figures/jitter.png)
 
-Jitter của cả ba lượt đều nhỏ, từ {{jitter_balance}} tới {{jitter_base}} mili giây. Ở base và short, hàng đợi lúc nào cũng đầy nên truy vấn nào của client cũng chờ gần như bằng nhau, độ trễ cao nhưng đều. Balance có jitter thấp nhất vì hàng đợi không bị dồn. Riêng lúc tải vừa bắt đầu, jitter của base và short vọt lên vì hàng đợi đang đầy dần, RTT của các truy vấn liền nhau chênh lệch nhiều.
+Jitter trung bình của cả ba lượt đều nhỏ, từ {{jitter_balance}} tới {{jitter_base}} mili giây. Ở base và short, jitter chỉ vọt lên trong một hai giây đầu khi tải bắt đầu, vì lúc đó hàng đợi đang đầy dần nên RTT của các truy vấn liền nhau chênh lệch nhiều. Chính mấy giây chuyển tiếp này làm jitter trung bình của base và short cao hơn balance một chút. Sau khi hàng đợi đã đầy hẳn, truy vấn nào của client cũng chờ gần như bằng nhau, nên độ trễ tuy cao nhưng rất đều. Tóm lại, cả ba cách chọn đường đều cho jitter thấp; khác biệt thực sự giữa các lượt nằm ở độ lớn của RTT.
 
 ### Phân tích mất gói và thông lượng
 
@@ -210,7 +210,7 @@ Hai cách chọn đường làm giảm hai phần khác nhau của độ trễ. 
 
 Trong quá trình làm, em gặp một số vấn đề chỉ lộ ra khi chạy trên môi trường thật.
 
-- **Chênh lệch giữa hai đường quá nhỏ để đo.** Ban đầu các đường truyền chỉ bị giới hạn băng thông, chưa có độ trễ truyền. Vì mọi máy ảo đều chạy trên cùng một laptop, đi thêm một router chỉ chậm hơn chưa tới một mili giây, còn nhỏ hơn mức dao động bình thường của máy ảo. Sau khi thêm độ trễ truyền bằng `netem` để mô phỏng việc các router ở xa nhau, khác biệt giữa đường dài và đường ngắn mới đo được rõ ràng.
-- **Tải chia lệch khi có ít luồng.** Với 8 luồng, có lần hàm băm của R1 chia 6 luồng vào một đường và 2 luồng vào đường kia, làm đường bên nhiều luồng gần chạm băng thông. Hàm băm của Linux còn dùng một giá trị ngẫu nhiên sinh ra lúc khởi động, nên sau mỗi lần khởi động lại cách chia lại khác. Khi tăng lên {{load_flows}} luồng thì tải chia ổn định quanh mức một nửa, giống mạng thật vốn có rất nhiều luồng.
+- **Chênh lệch giữa hai đường quá nhỏ để đo.** Ban đầu các đường truyền chỉ bị giới hạn băng thông, chưa có độ trễ truyền. Vì mọi máy ảo đều chạy trên cùng một laptop, RTT lúc chưa có tải chỉ vài mili giây và dao động giữa các lượt còn lớn hơn phần chênh lệch do đi thêm một router. Sau khi thêm độ trễ truyền bằng `netem` để mô phỏng việc các router ở xa nhau, khác biệt giữa đường dài và đường ngắn mới đo được rõ ràng.
+- **Tải chia lệch khi có ít luồng.** Với 8 luồng, có lần hàm băm của R1 chia 6 luồng vào một đường và 2 luồng vào đường kia, làm đường bên nhiều luồng gần chạm băng thông. Hàm băm của Linux còn dùng một giá trị ngẫu nhiên sinh ra lúc khởi động, nên sau mỗi lần khởi động lại cách chia lại khác. Khi tăng lên {{load_flows}} luồng, số luồng trên mỗi đường gần bằng nhau và không đường nào vượt băng thông, giống mạng thật vốn có rất nhiều luồng.
 - **Số liệu thông lượng bị kéo xuống ở cuối lượt.** Server khởi động trước và dừng sau loadgen, nên tệp số liệu của server có thêm vài giây cuối không có tải. Lúc đầu các giây này bị tính cả vào trung bình, làm thông lượng của lượt balance thấp hơn thực tế. Sau đó cách tính được sửa để chỉ lấy các giây nằm trong thời gian của lượt.
 - **Lượt thử nghiệm bị treo trên Alpine.** Lệnh `pkill -x` của BusyBox trên Alpine so tên với cả đường dẫn chương trình nên không tìm ra tiến trình cần dừng. Đổi sang dùng `killall` thì hết lỗi.

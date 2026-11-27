@@ -6,7 +6,6 @@
 | ECMP | Equal-Cost Multi-Path | Định tuyến nhiều đường chi phí bằng nhau |
 | EVE-NG | Emulated Virtual Environment – Next Generation | Nền tảng giả lập mạng |
 | FIFO | First In First Out | Vào trước ra trước |
-| IETF | Internet Engineering Task Force | Tổ chức chuẩn hóa kỹ thuật Internet |
 | IP | Internet Protocol | Giao thức Internet |
 | IPPM | IP Performance Metrics | Các chỉ số hiệu năng IP |
 | ITU-T | International Telecommunication Union – Telecommunication Standardization Sector | Bộ phận tiêu chuẩn viễn thông của Liên minh Viễn thông Quốc tế |
@@ -22,4 +21,3 @@
 | TBF | Token Bucket Filter | Bộ lọc thùng thẻ (giới hạn tốc độ) |
 | TCP | Transmission Control Protocol | Giao thức điều khiển truyền vận |
 | UDP | User Datagram Protocol | Giao thức gói tin người dùng |
-| VoIP | Voice over Internet Protocol | Thoại qua giao thức Internet |

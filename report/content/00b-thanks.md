@@ -4,7 +4,7 @@ Em cũng xin cảm ơn quý thầy cô Khoa Công nghệ Thông tin, Trường �
 
 Cảm ơn gia đình và bạn bè đã luôn ở bên, động viên và tạo điều kiện để em yên tâm học tập.
 
-Do thời gian và kiến thức còn hạn chế, khóa luận chắc chắn còn nhiều thiếu sót. Em rất mong nhận được ý kiến đóng góp của quý thầy cô để hoàn thiện hơn.
+Khóa luận khó tránh khỏi những điểm chưa hoàn thiện. Em rất mong nhận được ý kiến đóng góp của quý thầy cô để đề tài được tốt hơn.
 
 >> TP. Hồ Chí Minh, ngày ..... tháng ..... năm 2026
 

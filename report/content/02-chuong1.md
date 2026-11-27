@@ -4,7 +4,7 @@
 
 Đề tài xây dựng một mô hình mạng gồm sáu máy Linux chạy trong EVE-NG, rồi đo độ trễ của người dùng khi router chọn đường theo những cách khác nhau. Phần này giải thích các khái niệm chính, mô hình thử nghiệm và hướng giải quyết.
 
-Trong đề tài, độ trễ được đo bằng thời gian khứ hồi (Round-Trip Time – RTT), tức thời gian từ lúc client gửi một truy vấn tới lúc nhận được trả lời của server. Vì RTT được đo ngay trong chương trình của client, con số này đúng bằng thời gian người dùng phải chờ.
+Trong đề tài, độ trễ được đo bằng thời gian khứ hồi (Round-Trip Time – RTT), tức thời gian từ lúc client gửi một truy vấn tới lúc nhận được trả lời của server. Vì RTT được đo ngay trong chương trình của client, con số này phản ánh sát thời gian người dùng phải chờ.
 
 Mô hình thử nghiệm gồm sáu node. Hai máy đầu cuối nằm chung mạng LAN1 phía sau router R1.
 
@@ -63,7 +63,7 @@ Lưu lượng đến từ hai nguồn. Client gửi đều đặn các truy vấ
 
 Mỗi giây, hệ thống ghi lại:
 
-- Ở client: số truy vấn gửi, số trả lời nhận, tỉ lệ mất gói, RTT trung bình và jitter.
+- Ở client: số truy vấn gửi, số trả lời nhận, tỷ lệ mất gói, RTT trung bình và jitter.
 - Ở server: số gói và thông lượng nhận được.
 - Ở R1: lưu lượng gửi ra trên từng đường.
 
