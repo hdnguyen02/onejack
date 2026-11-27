@@ -51,15 +51,15 @@ Mỗi lượt thử nghiệm kéo dài {{duration}} giây, loadgen bắt đầu 
 
 ## Mô tả yêu cầu chức năng
 
-### Chức năng xây dựng mô hình mạng
+### Dựng mô hình mạng
 
 Hệ thống cần dựng được mô hình sáu node trên EVE-NG, đặt địa chỉ IP, bật chuyển tiếp gói trên router và tạo hai đường giữa R1 và R3. Việc tạo máy ảo, tạo mạng và nối dây được làm bằng script qua giao diện lập trình của EVE-NG, nên có thể dựng lại đúng mô hình đó chỉ bằng một lệnh.
 
-### Chức năng tạo lưu lượng
+### Tạo lưu lượng của client và máy tải
 
 Lưu lượng đến từ hai nguồn. Client gửi đều đặn các truy vấn nhỏ và nhận trả lời từ server. Loadgen gửi lưu lượng lớn với tốc độ cố định, chia thành nhiều luồng có cổng nguồn khác nhau. Tốc độ, kích thước gói và số luồng đều chỉnh được qua tham số dòng lệnh.
 
-### Chức năng đo lường hiệu năng
+### Ghi số liệu đo theo từng giây
 
 Mỗi giây, hệ thống ghi lại:
 
@@ -69,14 +69,14 @@ Mỗi giây, hệ thống ghi lại:
 
 Số liệu được ghi thành tệp CSV (Comma-Separated Values) để vẽ biểu đồ và tính toán.
 
-### Chức năng cấu hình chọn đường
+### Chuyển đổi cách chọn đường trên router
 
 R1 và R3 cần chuyển được giữa ba cách chọn đường (đường dài, đường ngắn, chia tải) chỉ bằng một lệnh, không phải khởi động lại. R2 thì luôn chuyển tiếp như nhau.
 
-### Chức năng so sánh và đánh giá kết quả
+### Tổng hợp và so sánh kết quả
 
 Ba lượt thử nghiệm dùng cùng thông số, chỉ khác cách chọn đường. Chạy xong, script tính trung bình các chỉ số lúc chưa có tải và lúc có tải, in bảng so sánh và vẽ biểu đồ theo thời gian.
 
-### Chức năng giám sát trực quan
+### Theo dõi trực tiếp khi chạy thử nghiệm
 
 Trong lúc chạy, màn hình chia làm bốn ô, cập nhật mỗi giây: RTT của client, lưu lượng trên từng đường, thông lượng server nhận được và tiến trình của lượt thử nghiệm. Người xem thấy được ngay chuyện gì xảy ra khi tải bắt đầu.

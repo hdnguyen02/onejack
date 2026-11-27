@@ -1,8 +1,8 @@
 # THIẾT KẾ VÀ HIỆN THỰC
 
-## Thiết kế mô hình mạng
+## Mô hình mạng
 
-### Thiết kế topology mạng
+### Sơ đồ mạng
 
 Mô hình gồm sáu node, mỗi node là một máy Linux riêng. Client và loadgen nằm chung mạng LAN1 sau R1, server nằm sau R3. Giữa R1 và R3 có hai đường: đường dài đi qua R2 và đường ngắn nối thẳng. Ngoài ra node nào cũng có thêm một card mạng nối vào mạng quản lý MGMT để script điều khiển từ xa.
 
@@ -10,7 +10,7 @@ Mô hình gồm sáu node, mỗi node là một máy Linux riêng. Client và lo
 
 Trên mọi node, card mạng `eth0` luôn thuộc mạng quản lý 172.30.0.0/24, còn từ `eth1` trở đi là mạng dữ liệu. Mạng quản lý chỉ dùng để SSH (Secure Shell) vào node, không có lưu lượng thử nghiệm nào đi qua nên không ảnh hưởng tới số đo.
 
-### Thiết kế địa chỉ IP
+### Địa chỉ IP
 
 Bảng: Địa chỉ IP của các node
 | Node | Card mạng | Địa chỉ IP | Mạng | Ghi chú |
@@ -27,7 +27,7 @@ Bảng: Địa chỉ IP của các node
 | R3 | eth3 | 10.0.13.3/24 | R1 – R3 | Đường ngắn |
 | Server | eth1 | 10.0.3.10/24 | R3 – Server | Gateway 10.0.3.1 |
 
-### Thiết kế định tuyến
+### Định tuyến theo từng lượt
 
 Client, loadgen và server lấy router gần nhất làm gateway mặc định. Ba router dùng định tuyến tĩnh. Bảng định tuyến của R2 cố định, còn của R1 và R3 thay đổi theo kịch bản như bảng dưới.
 
@@ -40,9 +40,9 @@ Bảng: Đường tới mạng đích của R1 và R3 theo từng kịch bản
 
 Ở kịch bản balance, hai router kế tiếp có trọng số bằng nhau. R1 và R3 đặt `net.ipv4.fib_multipath_hash_policy=1` để chọn đường dựa trên cả địa chỉ lẫn cổng của từng luồng.
 
-## Thiết lập môi trường
+## Xây dựng lab trên EVE-NG
 
-### Cài đặt EVE-NG
+### Cài đặt máy ảo EVE-NG
 
 EVE-NG Community Edition bản 6.2.0-4 được cài vào một máy ảo KVM (Kernel-based Virtual Machine) trên laptop chạy Ubuntu, cấp 6GB RAM, 4 CPU ảo và ổ đĩa 60GB. CPU của máy ảo đặt ở chế độ `host-passthrough` để các node bên trong dùng được ảo hóa phần cứng. Trên Windows, có thể làm tương tự bằng VMware Workstation, với điều kiện tắt Hyper-V và bật tùy chọn ảo hóa VT-x cho máy ảo. Sau khi cài xong, mọi script của đề tài đều chạy bên trong máy ảo EVE-NG, máy thật chỉ cần trình duyệt và SSH.
 
@@ -82,9 +82,9 @@ fi
 
 R3 có đoạn tương tự cho chiều về mạng 10.0.1.0/24. Muốn đổi kịch bản chỉ cần chạy lại tệp cấu hình với tham số mới, ví dụ `sh r1.sh balance`.
 
-## Hiện thực các chương trình đo
+## Chương trình đo
 
-### Giao thức và các chương trình
+### Server, client và loadgen
 
 Đề tài có ba chương trình C, được biên dịch tĩnh bằng `gcc -static` nên chép thẳng sang node Alpine là chạy được, không cần cài thêm thư viện.
 
@@ -117,9 +117,9 @@ Bảng: Các bộ kiểm thử đơn vị
 
 Cả 16 ca kiểm thử đều chạy đạt.
 
-## Tiến hành thực nghiệm
+## Chạy thử nghiệm
 
-### Các script điều khiển thực nghiệm
+### Các script điều khiển
 
 Các bước thực nghiệm đều được tự động hóa bằng script như trong bảng dưới.
 
@@ -141,7 +141,7 @@ Trong lúc chạy, màn hình terminal được chia thành bốn ô. Hình dư�
 
 ![Nội dung bốn ô của màn hình theo dõi ở cuối lượt balance](../figures/tmux_balance.png)
 
-### Kết quả ba lượt thử nghiệm
+### Số liệu ba lượt
 
 Ba lượt được chạy liền nhau trên lab EVE-NG với cùng thông số: client {{client_rate}} truy vấn/giây, loadgen {{load_mbit}} Mbit/s gồm {{load_flows}} luồng, bắt đầu từ giây {{load_at}}.
 
@@ -152,9 +152,9 @@ Bảng: Kết quả đo ba lượt thử nghiệm trên EVE-NG
 | short | {{idle_short}} | {{rtt_short}} | {{jitter_short}} | {{loss_short}} | {{server_short}} | {{long_short}} | {{short_short}} |
 | balance | {{idle_balance}} | {{rtt_balance}} | {{jitter_balance}} | {{loss_balance}} | {{server_balance}} | {{long_balance}} | {{short_balance}} |
 
-## Phân tích kết quả
+## Đánh giá kết quả
 
-### Phân tích độ trễ RTT
+### Độ trễ RTT
 
 ![RTT của client trong ba lượt thử nghiệm](../figures/rtt.png)
 
@@ -174,13 +174,13 @@ Khi có tải, RTT của base tăng thêm {{queue_added_base}} mili giây, của
 
 Ở lượt balance, RTT khi có tải chỉ tăng thêm {{queue_added_balance}} mili giây. RTT có tải là {{rtt_balance}} mili giây, giảm {{rtt_drop_balance}}% so với base, nghĩa là thấp hơn khoảng {{rtt_ratio_balance}} lần.
 
-### Phân tích Jitter
+### Jitter
 
 ![Jitter của client trong ba lượt thử nghiệm](../figures/jitter.png)
 
 Jitter trung bình của cả ba lượt đều nhỏ, từ {{jitter_balance}} tới {{jitter_base}} mili giây. Ở base và short, jitter chỉ vọt lên trong một hai giây đầu khi tải bắt đầu, vì lúc đó hàng đợi đang đầy dần nên RTT của các truy vấn liền nhau chênh lệch nhiều. Chính mấy giây chuyển tiếp này làm jitter trung bình của base và short cao hơn balance một chút. Sau khi hàng đợi đã đầy hẳn, truy vấn nào của client cũng chờ gần như bằng nhau, nên độ trễ tuy cao nhưng rất đều. Tóm lại, cả ba cách chọn đường đều cho jitter thấp; khác biệt thực sự giữa các lượt nằm ở độ lớn của RTT.
 
-### Phân tích mất gói và thông lượng
+### Mất gói và lưu lượng tới server
 
 ![Thông lượng server nhận được trong ba lượt thử nghiệm](../figures/throughput.png)
 
@@ -188,13 +188,13 @@ Client không mất gói ở cả ba lượt. Lý do là hàng đợi được g
 
 Với lưu lượng tải thì khác. Ở base và short, server chỉ nhận được {{server_base}} Mbit/s trong số {{load_mbit}} Mbit/s gửi đi, khoảng {{dropped_pct_base}}% lưu lượng tải bị bỏ vì vượt băng thông của một đường. Ở balance, server nhận đủ {{server_balance}} Mbit/s. Nhờ dùng thêm đường truyền vốn để không ở hai lượt kia, phân phối tải vừa giảm độ trễ vừa truyền được nhiều dữ liệu hơn.
 
-### Phân tích phân bố tải trên các đường
+### Lưu lượng trên từng đường
 
 ![Lưu lượng R1 gửi ra từng đường](../figures/paths.png)
 
 Ở lượt base, đường dài chạy kín {{long_base}} Mbit/s còn đường ngắn để không. Lượt short thì ngược lại, đường ngắn chạy kín {{short_short}} Mbit/s. Ở lượt balance, R1 chia {{load_flows}} luồng ra hai đường, đường dài nhận {{long_balance}} Mbit/s và đường ngắn nhận {{short_balance}} Mbit/s. Hai con số không bằng nhau hẳn vì hàm băm chia theo luồng chứ không theo từng gói, nhưng cả hai đều dưới băng thông {{link_rate}} Mbit/s nên không đường nào bị tắc.
 
-### So sánh tổng hợp
+### So sánh ba cách chọn đường
 
 Bảng: So sánh các kịch bản với kịch bản base
 | Tiêu chí | base | short | balance |

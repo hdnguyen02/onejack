@@ -1,14 +1,14 @@
 # CƠ SỞ LÝ THUYẾT
 
-## Hiệu năng mạng máy tính
+## Hiệu năng mạng
 
-### Khái niệm hiệu năng mạng
+### Hiệu năng mạng và yêu cầu của ứng dụng
 
 Hiệu năng mạng cho biết mạng đáp ứng nhu cầu truyền dữ liệu của người dùng tốt tới đâu, chẳng hạn dữ liệu có tới đủ không, có nhanh không và có đều không. Vì vậy hiệu năng thường được đánh giá qua nhiều thông số, mỗi thông số cho thấy một mặt khác nhau [[REF:6]] [[REF:9]].
 
 Mỗi loại ứng dụng quan tâm tới một thông số khác nhau. Khi tải tệp, người dùng cần tốc độ cao, còn chờ thêm vài trăm mili giây cũng không ảnh hưởng gì. Ngược lại, gọi thoại, họp trực tuyến hay chơi trò chơi trực tuyến chỉ cần lưu lượng nhỏ nhưng rất nhạy với độ trễ. Đề tài hướng tới nhóm ứng dụng thứ hai nên lấy độ trễ làm thông số đánh giá chính.
 
-### Các yếu tố ảnh hưởng đến hiệu năng mạng
+### Yếu tố quyết định hiệu năng của kết nối
 
 Hiệu năng của một kết nối phụ thuộc chủ yếu vào các yếu tố sau:
 
@@ -20,7 +20,7 @@ Hiệu năng của một kết nối phụ thuộc chủ yếu vào các yếu t
 
 Trong đề tài, băng thông, độ dài từng đường và thiết bị được giữ nguyên, chỉ có cách router chọn đường là thay đổi.
 
-## Các thông số đánh giá hiệu năng mạng
+## Các chỉ số đo hiệu năng
 
 ### Băng thông và thông lượng
 
@@ -28,7 +28,7 @@ Trong đề tài, băng thông, độ dài từng đường và thiết bị đ�
 
 **Thông lượng** (throughput) là lượng dữ liệu thực tế truyền được trong một giây. Thông lượng không thể vượt băng thông. Nếu lưu lượng gửi vào lớn hơn băng thông thì thông lượng chỉ lên tới mức băng thông, phần dư phải nằm chờ trong hàng đợi hoặc bị loại bỏ.
 
-### Độ trễ
+### Độ trễ và thời gian khứ hồi
 
 Độ trễ là thời gian một gói đi từ máy gửi tới máy nhận. Trên mỗi chặng, tức mỗi lần gói đi qua một router và một đoạn đường truyền, độ trễ gồm bốn thành phần [[REF:6]], minh họa ở hình dưới.
 
@@ -41,29 +41,29 @@ Trong đề tài, băng thông, độ dài từng đường và thiết bị đ�
 
 Độ trễ của cả đường đi bằng tổng độ trễ của các chặng. **Thời gian khứ hồi RTT** là thời gian gói đi tới máy nhận cộng với thời gian trả lời quay về [[REF:1]]. RTT dễ đo hơn độ trễ một chiều vì chỉ cần đồng hồ của một máy, nên đề tài dùng RTT làm thước đo chính.
 
-### Biến thiên độ trễ (Jitter)
+### Độ biến động của độ trễ (jitter)
 
 Jitter cho biết độ trễ của các gói liên tiếp chênh nhau nhiều hay ít. Cùng một độ trễ trung bình, nhưng nếu jitter lớn thì có gói tới sớm, có gói tới muộn, làm âm thanh và hình ảnh bị ngắt quãng. RFC 3393 định nghĩa biến thiên độ trễ là hiệu độ trễ của các cặp gói [[REF:2]], còn RFC 3550 dùng một cách ước lượng jitter tương tự cho luồng thoại và video [[REF:8]].
 
 Trong đề tài, jitter được tính đơn giản hơn: tại client, lấy trung bình độ lệch tuyệt đối giữa RTT của hai trả lời liên tiếp. Cách tính này cùng ý tưởng với RFC 3393 nhưng dùng RTT thay cho độ trễ một chiều, nên không cần đồng bộ đồng hồ giữa hai máy.
 
-### Tỷ lệ mất gói
+### Mất gói tin
 
 Tỷ lệ mất gói là phần trăm số gói gửi đi nhưng không tới được nơi nhận. Lý do hay gặp nhất là hàng đợi của router đã đầy nên gói mới tới bị bỏ. Trong đề tài, một truy vấn của client bị tính là mất nếu sau một giây vẫn chưa có trả lời.
 
-### Mối quan hệ giữa các thông số
+### Quan hệ giữa tải, độ trễ và mất gói
 
 Các thông số trên liên quan chặt với nhau. Khi lưu lượng gửi vào còn nhỏ hơn băng thông, thông lượng tăng theo lưu lượng, hàng đợi gần như trống và độ trễ chủ yếu chỉ gồm thời gian truyền, phát và xử lý. Khi lưu lượng vượt băng thông, thông lượng dừng ở mức băng thông, hàng đợi đầy dần và độ trễ xếp hàng tăng vọt. Tới lúc hàng đợi đầy hẳn thì gói bắt đầu bị bỏ, tỷ lệ mất gói tăng lên. Vì thế, muốn giữ độ trễ thấp thì trước hết phải tránh để đường truyền vượt băng thông.
 
-## Tắc nghẽn và hàng đợi
+## Tắc nghẽn và hàng đợi trên router
 
-### Khái niệm tắc nghẽn mạng
+### Hiện tượng tắc nghẽn
 
 Tắc nghẽn xảy ra khi tổng lưu lượng muốn đi qua một đường truyền lớn hơn băng thông của nó. Router không gửi nhanh hơn băng thông được, nên phần dư phải chờ hoặc bị bỏ. Tắc nghẽn có thể do một máy gửi quá nhiều, như máy tạo tải trong đề tài, hoặc do nhiều người dùng cùng đi chung một đường truyền.
 
 Khi đã tắc nghẽn thì mọi người dùng đi chung đường truyền đều bị ảnh hưởng, kể cả người gửi rất ít dữ liệu. Trong đề tài, client chỉ gửi vài chục truy vấn nhỏ mỗi giây, nhưng vì đi chung đường với loadgen nên truy vấn của client vẫn phải chờ trong cùng một hàng đợi.
 
-### Hàng đợi và độ trễ xếp hàng
+### Hàng đợi FIFO và độ trễ xếp hàng
 
 Mỗi cổng ra của router có một hàng đợi. Loại đơn giản nhất hoạt động theo kiểu vào trước ra trước (First In First Out – FIFO): gói tới trước được gửi trước, gói tới sau xếp phía sau.
 
@@ -73,33 +73,33 @@ Khi hàng đợi đã đầy, một gói mới vào phải chờ một khoảng 
 
 Hàng đợi trong đề tài được giới hạn theo số byte chứ không theo số gói. Khi hàng gần đầy, gói tải lớn tới sau bị bỏ, còn truy vấn rất nhỏ của client vẫn chen được vào chỗ trống. Do đó client thường không mất gói mà chỉ phải chờ lâu.
 
-## Các phương pháp giảm độ trễ
+## Các hướng giảm độ trễ
 
 Dựa vào các thành phần của độ trễ ở trên, có thể giảm độ trễ theo một số hướng sau.
 
-### Tối ưu đường đi và dùng tuyến ngắn hơn
+### Chọn đường ngắn hơn
 
 Nếu giữa hai điểm có nhiều đường đi, chọn đường ngắn hơn sẽ giảm được tổng độ trễ truyền. Trong định tuyến, router thường chọn đường có chi phí nhỏ nhất, với chi phí tính theo số chặng, theo băng thông hoặc theo độ trễ của từng đường truyền [[REF:9]].
 
 Tuy vậy, đường ngắn chỉ có lợi khi nó không bị tắc. Nếu mọi lưu lượng đều dồn vào đường ngắn và vượt băng thông, thời gian xếp hàng sẽ lớn hơn nhiều so với phần độ trễ truyền tiết kiệm được.
 
-### Giảm số thiết bị trung gian
+### Giảm số router trung gian
 
 Mỗi thiết bị trung gian lại thêm một lần xử lý, một hàng đợi và một đoạn đường truyền. Đi qua ít router hơn thì có ít chỗ phải chờ hơn và ít chỗ có thể bị quá tải hơn. Trong mô hình của đề tài, đường ngắn R1 → R3 không đi qua router trung gian R2.
 
-### Sử dụng thiết bị có khả năng xử lý nhanh hơn
+### Nâng cấp thiết bị mạng
 
 Thay router bằng thiết bị mạnh hơn sẽ giảm được độ trễ xử lý, còn đường truyền có băng thông lớn hơn sẽ giảm được độ trễ phát. Hướng này phải thay phần cứng và tốn chi phí đầu tư nên đề tài không thực hiện.
 
-### Phân phối tải
+### Phân phối tải lên nhiều đường
 
 Thay vì để một đường truyền quá tải trong khi đường khác bỏ trống, router chia lưu lượng ra nhiều đường. Mỗi đường chỉ phải chở một phần, không đường nào vượt băng thông, nên hàng đợi không bị dồn và thời gian xếp hàng gần như bằng 0. Cách này nhắm thẳng vào độ trễ xếp hàng, phần lớn nhất của độ trễ khi mạng có tải.
 
 Trong các hướng trên, đề tài thực hiện hai hướng liên quan tới chọn đường: dùng tuyến ngắn hơn, ít thiết bị trung gian hơn, và phân phối tải ra hai đường.
 
-## Định tuyến và chia tải nhiều đường
+## Định tuyến và chia tải
 
-### Định tuyến tĩnh
+### Định tuyến tĩnh trên Linux
 
 Router quyết định chuyển gói đi đâu dựa vào **bảng định tuyến**. Mỗi dòng trong bảng cho biết muốn tới một mạng đích thì phải gửi gói qua router kế tiếp (next hop) nào. Với định tuyến tĩnh, các dòng này do người quản trị tự khai báo. Trên Linux, bảng định tuyến được quản lý bằng lệnh `ip route` [[REF:14]]. Ví dụ, lệnh `ip route replace 10.0.3.0/24 via 10.0.12.2` khai báo rằng gói tới mạng 10.0.3.0/24 sẽ được gửi qua router có địa chỉ 10.0.12.2.
 
@@ -119,7 +119,7 @@ Nếu router chia luân phiên từng gói ra các đường, các gói của c�
 
 Trên Linux, việc tính hàm băm có dùng cả cổng nguồn và cổng đích hay không được điều khiển bằng tham số `net.ipv4.fib_multipath_hash_policy`; giá trị 1 nghĩa là dùng cả cổng [[REF:13]]. Hàm băm chỉ chia đều khi có nhiều luồng. Nếu chỉ có vài luồng lớn, chúng có thể cùng rơi vào một đường. Vì vậy máy tạo tải của đề tài chia lưu lượng thành nhiều luồng nhỏ, giống thực tế khi có nhiều người cùng dùng mạng.
 
-## Môi trường và công cụ thực nghiệm
+## Công cụ thực nghiệm
 
 ### EVE-NG và máy ảo Linux
 
